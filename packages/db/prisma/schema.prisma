@@ -1,0 +1,526 @@
+// 03번 문서(데이터모델) 구현체.
+//
+// 규칙 (예외 없음)
+//   · 모든 시각은 timestamptz, UTC 저장
+//   · 모든 금액은 정수 KRW (Int). Decimal/Float 금지
+//   · 학생 이메일은 평문으로 저장하지 않는다 (emailHash + emailEnc)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [citext]
+}
+
+// ────────────────────────────────────────────────────────────
+// 강사
+// ────────────────────────────────────────────────────────────
+
+model Teacher {
+  id              BigInt    @id @default(autoincrement())
+  email           String    @unique @db.Citext
+  passwordHash    String    @map("password_hash")
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(6)
+  name            String
+  nameEn          String?   @map("name_en")
+  phone           String?
+  countryCode     String    @default("KR") @map("country_code") @db.Char(2)
+  timezone        String    @default("Asia/Seoul")
+  spokenLangs     String[]  @default([]) @map("spoken_langs")
+
+  // 요금 티어 산정 근거. rateTier 는 애플리케이션에서 산정해 기록한다.
+  hourlyRateUsd Decimal? @map("hourly_rate_usd") @db.Decimal(6, 2)
+  rateTier      String?  @map("rate_tier") @db.Char(1) // A|B|C|D
+
+  italkiProfileUrl String? @map("italki_profile_url")
+  italkiStatus     String  @default("none") @map("italki_status")
+  preplyProfileUrl String? @map("preply_profile_url")
+  preplyStatus     String  @default("none") @map("preply_status")
+
+  onboardingStage String    @default("signup") @map("onboarding_stage")
+  certifiedAt     DateTime? @map("certified_at") @db.Timestamptz(6)
+
+  // 결제. 카드번호는 절대 보관하지 않는다 — PG 빌링키만.
+  pgCustomerId  String? @map("pg_customer_id")
+  cardLast4     String? @map("card_last4") @db.Char(4)
+  billingStatus String  @default("none") @map("billing_status") // none|ok|failed|locked
+  creditBalance Int     @default(0) @map("credit_balance")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  students      Student[]
+  lessons       Lesson[]
+  billingCycles BillingCycle[]
+  invoices      Invoice[]
+  creditTopups  CreditTopup[]
+  assetViews    AssetView[]
+
+  @@index([billingStatus], map: "idx_teachers_billing")
+  @@map("teachers")
+}
+
+// ────────────────────────────────────────────────────────────
+// 학생
+// ────────────────────────────────────────────────────────────
+
+model Student {
+  id        BigInt @id @default(autoincrement())
+  teacherId BigInt @map("teacher_id")
+
+  name      String
+  nameKo    String? @map("name_ko")
+  emailHash String  @map("email_hash") // sha256(lower(email) || pepper)
+  emailEnc  Bytes   @map("email_enc") // AES-GCM
+  l1Code    String  @map("l1_code") @db.Char(2)
+
+  countryCode String? @map("country_code") @db.Char(2)
+  platform    String
+  platformUrl String? @map("platform_url")
+
+  levelCode String  @default("topik1") @map("level_code")
+  goalTrack String? @map("goal_track")
+
+  status     String    @default("pending") // pending|active|dormant|locked|completed
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz(6)
+
+  // 문서에 없던 추가 컬럼.
+  // 05번 §6 "결제 성공 시 student.status 를 직전 상태로 복원" 을 구현하려면
+  // 잠금 직전 상태를 어딘가 보관해야 한다. 없으면 전원이 active 로 복원되어
+  // dormant/completed 학생까지 되살아난다.
+  statusBeforeLock String? @map("status_before_lock")
+
+  currentLessonNo Int       @default(0) @map("current_lesson_no")
+  firstLessonAt   DateTime? @map("first_lesson_at") @db.Timestamptz(6)
+  lastLessonAt    DateTime? @map("last_lesson_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  teacher         Teacher          @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  lessons         Lesson[]
+  vocabCards      VocabCard[]
+  activities      StudentActivity[]
+  hvptSessions    HvptSession[]
+  fluencySessions FluencySession[]
+  listeningLogs   ListeningLog[]
+  strandWeekly    StrandWeekly[]
+  billingCycles   BillingCycle[]
+  invoiceLines    InvoiceLine[]
+  assetViews      AssetView[]
+
+  @@unique([teacherId, emailHash], map: "uq_student_email")
+  @@index([teacherId, status], map: "idx_students_teacher_status")
+  @@index([lastLessonAt], map: "idx_students_last_lesson")
+  @@map("students")
+}
+
+// ────────────────────────────────────────────────────────────
+// 수업
+// ────────────────────────────────────────────────────────────
+
+model Lesson {
+  id        BigInt  @id @default(autoincrement())
+  studentId BigInt  @map("student_id")
+  teacherId BigInt  @map("teacher_id")
+  lessonNo  Int     @map("lesson_no")
+  unitId    BigInt? @map("unit_id")
+
+  startedAt DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt   DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  outcome    String? // pass|repeat
+  speakRatio Int?    @map("speak_ratio") @db.SmallInt // 0~100, 볼륨 기반 (STT 아님)
+
+  reportSubmittedAt DateTime? @map("report_submitted_at") @db.Timestamptz(6)
+  billingCycleId    BigInt?   @map("billing_cycle_id")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student      Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher      Teacher             @relation(fields: [teacherId], references: [id])
+  unit         CurriculumUnit?     @relation(fields: [unitId], references: [id])
+  billingCycle BillingCycle?       @relation(fields: [billingCycleId], references: [id])
+  reportItems  LessonReportItem[]
+  vocabCards   VocabCard[]
+
+  @@unique([studentId, lessonNo, startedAt], map: "uq_lesson_no")
+  @@index([studentId, startedAt(sort: Desc)], map: "idx_lessons_student")
+  @@index([billingCycleId], map: "idx_lessons_cycle")
+  @@map("lessons")
+}
+
+/// 표현 최대 5개 · 오답 최대 3개. 애플리케이션 레이어에서 강제한다 (422 REPORT_LIMIT).
+model LessonReportItem {
+  id       BigInt @id @default(autoincrement())
+  lessonId BigInt @map("lesson_id")
+  kind     String // expression|error
+  body     String
+  ord      Int    @default(0) @db.SmallInt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, kind], map: "idx_report_lesson")
+  @@map("lesson_report_items")
+}
+
+// ────────────────────────────────────────────────────────────
+// SRS
+// ────────────────────────────────────────────────────────────
+
+model VocabCard {
+  id             BigInt  @id @default(autoincrement())
+  studentId      BigInt  @map("student_id")
+  sourceLessonId BigInt? @map("source_lesson_id")
+
+  term     String
+  glossL1  String? @map("gloss_l1")
+  example  String?
+  audioKey String? @map("audio_key")
+
+  ease         Decimal  @default(2.50) @db.Decimal(4, 2)
+  intervalDays Int      @default(1) @map("interval_days")
+  reps         Int      @default(0)
+  lapses       Int      @default(0)
+  dueAt        DateTime @map("due_at") @db.Timestamptz(6)
+  state        String   @default("learning") // learning|review|graduated
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sourceLesson Lesson? @relation(fields: [sourceLessonId], references: [id])
+
+  @@index([studentId, dueAt], map: "idx_vocab_due")
+  @@map("vocab_cards")
+}
+
+// ────────────────────────────────────────────────────────────
+// 학생 활동 — 과금 활성 판정 (B) 조건. 반드시 기록한다.
+// ────────────────────────────────────────────────────────────
+
+model StudentActivity {
+  id         BigInt   @id @default(autoincrement())
+  studentId  BigInt   @map("student_id")
+  kind       String // verify|srs|hvpt|fluency|listen|worksheet|note_open
+  occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  meta       Json?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, occurredAt(sort: Desc)], map: "idx_activity_student_time")
+  @@map("student_activity")
+}
+
+// ────────────────────────────────────────────────────────────
+// HVPT
+// ────────────────────────────────────────────────────────────
+
+model HvptContrast {
+  id         String   @id // 'g3','d3','eo','eu','coda'
+  label      String
+  note       String?
+  tokens     String[]
+  l1Priority Json?    @map("l1_priority")
+
+  hvptTokens   HvptToken[]
+  hvptSessions HvptSession[]
+
+  @@map("hvpt_contrasts")
+}
+
+model HvptToken {
+  id         BigInt @id @default(autoincrement())
+  contrastId String @map("contrast_id")
+  token      String
+  talkerIdx  Int    @map("talker_idx") @db.SmallInt // 화자 8명: 0..7
+  context    String // isolated|word_initial|word_medial|sentence
+  audioKey   String @map("audio_key") // 사전 생성 음원. 런타임 TTS 금지.
+
+  contrast HvptContrast  @relation(fields: [contrastId], references: [id])
+  attempts HvptAttempt[]
+
+  @@unique([contrastId, token, talkerIdx, context], map: "uq_hvpt_token")
+  @@map("hvpt_tokens")
+}
+
+model HvptSession {
+  id         BigInt    @id @default(autoincrement())
+  studentId  BigInt    @map("student_id")
+  contrastId String    @map("contrast_id")
+  attempts   Int       @default(0) @db.SmallInt
+  correct    Int       @default(0) @db.SmallInt
+  startedAt  DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt    DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  student      Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  contrast     HvptContrast  @relation(fields: [contrastId], references: [id])
+  attemptItems HvptAttempt[]
+
+  @@map("hvpt_sessions")
+}
+
+model HvptAttempt {
+  id         BigInt   @id @default(autoincrement())
+  sessionId  BigInt   @map("session_id")
+  tokenId    BigInt   @map("token_id")
+  chosen     String
+  isCorrect  Boolean  @map("is_correct")
+  responseMs Int?     @map("response_ms")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  session HvptSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  token   HvptToken   @relation(fields: [tokenId], references: [id])
+
+  @@map("hvpt_attempts")
+}
+
+// ────────────────────────────────────────────────────────────
+// 4·3·2 · 다청 · Four Strands
+// ────────────────────────────────────────────────────────────
+
+model FluencySession {
+  id        BigInt    @id @default(autoincrement())
+  studentId BigInt    @map("student_id")
+  topicId   BigInt?   @map("topic_id")
+  r1DoneAt  DateTime? @map("r1_done_at") @db.Timestamptz(6)
+  r2DoneAt  DateTime? @map("r2_done_at") @db.Timestamptz(6)
+  r3DoneAt  DateTime? @map("r3_done_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("fluency_sessions")
+}
+
+model ListeningLog {
+  id          BigInt    @id @default(autoincrement())
+  studentId   BigInt    @map("student_id")
+  audioId     BigInt    @map("audio_id")
+  playedSec   Int       @default(0) @map("played_sec")
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("listening_logs")
+}
+
+model StrandWeekly {
+  studentId  BigInt   @map("student_id")
+  weekStart  DateTime @map("week_start") @db.Date // 월요일
+  inputMin   Int      @default(0) @map("input_min")
+  outputMin  Int      @default(0) @map("output_min")
+  formMin    Int      @default(0) @map("form_min")
+  fluencyMin Int      @default(0) @map("fluency_min")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, weekStart])
+  @@map("strand_weekly")
+}
+
+// ────────────────────────────────────────────────────────────
+// 커리큘럼
+// ────────────────────────────────────────────────────────────
+
+model CurriculumUnit {
+  id            BigInt @id @default(autoincrement())
+  levelCode     String @map("level_code")
+  unitNo        Int    @unique(map: "uq_unit_no") @map("unit_no") // 전역 차시 1..250
+  title         String
+  goalStatement String @map("goal_statement")
+  targetForms   Json   @map("target_forms")
+  targetVocab   Json   @map("target_vocab")
+  recycleFrom   Int[]  @default([]) @map("recycle_from") // 나선형 재등장
+
+  assets     CurriculumAsset[]
+  scenarios  Scenario[]
+  lessons    Lesson[]
+  assetViews AssetView[]
+
+  @@map("curriculum_units")
+}
+
+model CurriculumAsset {
+  id          BigInt @id @default(autoincrement())
+  unitId      BigInt @map("unit_id")
+  l1Code      String @map("l1_code") @db.Char(2) // 'xx' = 공통
+  kind        String // slide|audio_model|audio_slow|audio_chunk|worksheet_pdf|roleplay_script|pron_sheet
+  storageKey  String @map("storage_key")
+  pageCount   Int?   @map("page_count") @db.SmallInt
+  durationSec Int?   @map("duration_sec")
+
+  unit       CurriculumUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  assetViews AssetView[]
+
+  @@unique([unitId, l1Code, kind], map: "uq_asset")
+  @@map("curriculum_assets")
+}
+
+model Scenario {
+  id             BigInt    @id @default(autoincrement())
+  unitId         BigInt    @map("unit_id")
+  title          String
+  tree           Json // 분기 트리 (08번 문서 스키마)
+  ttsGeneratedAt DateTime? @map("tts_generated_at") @db.Timestamptz(6)
+
+  unit CurriculumUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@map("scenarios")
+}
+
+// ────────────────────────────────────────────────────────────
+// 과금
+// ────────────────────────────────────────────────────────────
+
+model BillingCycle {
+  id        BigInt @id @default(autoincrement())
+  studentId BigInt @map("student_id")
+  teacherId BigInt @map("teacher_id")
+  cycleNo   Int    @map("cycle_no")
+
+  periodStart DateTime @map("period_start") @db.Timestamptz(6)
+  periodEnd   DateTime @map("period_end") @db.Timestamptz(6) // periodStart + 28d
+
+  tier        String @db.Char(1) // 개시 시점 고정
+  baseAmount  Int    @map("base_amount")
+  discountPct Int    @default(0) @map("discount_pct") @db.SmallInt
+  amount      Int // 실제 청구액
+
+  lessonCount   Int @default(0) @map("lesson_count") @db.SmallInt
+  activityCount Int @default(0) @map("activity_count") @db.SmallInt
+
+  status   String    @default("open") // open|billable|waived_dormant|invoiced|paid|failed
+  closedAt DateTime? @map("closed_at") @db.Timestamptz(6)
+
+  student      Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher      Teacher       @relation(fields: [teacherId], references: [id])
+  lessons      Lesson[]
+  invoiceLines InvoiceLine[]
+
+  @@unique([studentId, cycleNo], map: "uq_cycle")
+  @@index([status, periodEnd], map: "idx_cycle_close")
+  @@index([teacherId, status], map: "idx_cycle_teacher")
+  @@map("billing_cycles")
+}
+
+model Invoice {
+  id            BigInt   @id @default(autoincrement())
+  teacherId     BigInt   @map("teacher_id")
+  billingMonth  DateTime @map("billing_month") @db.Date // 2026-09-01
+
+  totalAmount   Int @map("total_amount")
+  creditApplied Int @default(0) @map("credit_applied")
+  chargeAmount  Int @map("charge_amount")
+
+  status     String    @default("pending") // pending|paid|failed|grace|locked|void
+  pgTid      String?   @map("pg_tid")
+  paidAt     DateTime? @map("paid_at") @db.Timestamptz(6)
+  failedAt   DateTime? @map("failed_at") @db.Timestamptz(6)
+  retryCount Int       @default(0) @map("retry_count") @db.SmallInt
+  graceUntil DateTime? @map("grace_until") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  teacher Teacher       @relation(fields: [teacherId], references: [id])
+  lines   InvoiceLine[]
+
+  // 배치 재실행이 중복 청구를 만들지 않게 막는 유일한 방벽.
+  @@unique([teacherId, billingMonth], map: "uq_invoice")
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id             BigInt @id @default(autoincrement())
+  invoiceId      BigInt @map("invoice_id")
+  billingCycleId BigInt @map("billing_cycle_id")
+  studentId      BigInt @map("student_id")
+  amount         Int
+
+  invoice      Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  billingCycle BillingCycle @relation(fields: [billingCycleId], references: [id])
+  student      Student      @relation(fields: [studentId], references: [id])
+
+  @@map("invoice_lines")
+}
+
+model CreditTopup {
+  id            BigInt   @id @default(autoincrement())
+  teacherId     BigInt   @map("teacher_id")
+  paidAmount    Int      @map("paid_amount")
+  grantedAmount Int      @map("granted_amount")
+  bonusPct      Int      @map("bonus_pct") @db.SmallInt
+  pgTid         String?  @map("pg_tid")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+
+  @@map("credit_topups")
+}
+
+// ────────────────────────────────────────────────────────────
+// 열람 로그 — 우회 감지
+// ────────────────────────────────────────────────────────────
+
+/// studentId 는 NOT NULL. 학생 없이 자료를 여는 경로는 존재하지 않는다.
+model AssetView {
+  id        BigInt   @id @default(autoincrement())
+  teacherId BigInt   @map("teacher_id")
+  studentId BigInt   @map("student_id")
+  unitId    BigInt   @map("unit_id")
+  assetId   BigInt?  @map("asset_id")
+  openedAt  DateTime @default(now()) @map("opened_at") @db.Timestamptz(6)
+  ipHash    String?  @map("ip_hash")
+  uaHash    String?  @map("ua_hash")
+
+  teacher Teacher          @relation(fields: [teacherId], references: [id])
+  student Student          @relation(fields: [studentId], references: [id])
+  unit    CurriculumUnit   @relation(fields: [unitId], references: [id])
+  asset   CurriculumAsset? @relation(fields: [assetId], references: [id])
+
+  @@index([studentId, openedAt(sort: Desc)], map: "idx_views_student_time")
+  @@map("asset_views")
+}
+
+// ────────────────────────────────────────────────────────────
+// 보조
+// ────────────────────────────────────────────────────────────
+
+model Notification {
+  id          BigInt    @id @default(autoincrement())
+  targetType  String    @map("target_type") // teacher|student
+  targetId    BigInt    @map("target_id")
+  kind        String // srs_due|cycle_billed|payment_failed|langgate_open|package_hint
+  payload     Json?
+  scheduledAt DateTime  @map("scheduled_at") @db.Timestamptz(6)
+  sentAt      DateTime? @map("sent_at") @db.Timestamptz(6)
+  channel     String // email|webpush|kakao
+
+  @@index([scheduledAt], map: "idx_notif_due")
+  @@map("notifications")
+}
+
+model LangGateSnapshot {
+  id        BigInt   @id @default(autoincrement())
+  platform  String   @default("italki")
+  langCode  String   @default("ko") @map("lang_code") @db.Char(2)
+  isOpen    Boolean  @map("is_open")
+  checkedAt DateTime @default(now()) @map("checked_at") @db.Timestamptz(6)
+
+  @@map("lang_gate_snapshots")
+}
+
+model AuditLog {
+  id        BigInt   @id @default(autoincrement())
+  actorType String   @map("actor_type")
+  actorId   BigInt?  @map("actor_id")
+  action    String
+  entity    String?
+  entityId  BigInt?  @map("entity_id")
+  meta      Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("audit_log")
+}
