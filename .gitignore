@@ -10,3 +10,7 @@ coverage/
 # 원본 문서 번들 — docs/ 에 동일 내용이 있다
 files (1).zip
 files (1)/
+
+.vercel
+.env*
+!.env.example
