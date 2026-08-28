@@ -8,7 +8,9 @@
     "apps/*",
     "tools/*"
   ],
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "typecheck": "tsc -b",
@@ -17,8 +19,9 @@
     "lint": "echo \"(lint not configured yet)\""
   },
   "devDependencies": {
+    "@types/node": "^22.10.1",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.8",
-    "@types/node": "^22.10.1"
+    "vercel": "^59.9.1",
+    "vitest": "^2.1.8"
   }
 }
