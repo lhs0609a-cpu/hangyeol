@@ -10,7 +10,7 @@
 
 | 스프린트 | 내용 | 상태 |
 |---|---|---|
-| S1 | 인프라 · 인증 · DB 스키마 · 강사 가입/프로필/시급 | 스키마 완료, 인증·API 미착수 |
+| S1 | 인프라 · 인증 · DB 스키마 · 강사 가입/프로필/시급 | 스키마 · 배포 파이프라인 완료. 인증·API 미착수 |
 | S2 | 학생 레코드 CRUD · 이메일 인증 · 중복 병합 | 도메인 규칙만 구현 |
 | S3 | 슬라이드 뷰어 · 워터마크 · 서명 URL · 열람 로그 | 미착수 |
 | **S4** | **과금 엔진 + TC 14개** | **완료** |
@@ -27,7 +27,9 @@ packages/
   shared/     타입 · UTC 시각 유틸 · 정수 KRW      ← 제약 C4
   billing/    과금 엔진 (05번 문서 구현체)          ← 순수 함수, DB 없음
   db/         Prisma 스키마 (03번 문서 구현체)
-apps/         teacher / note / admin / api        ← 미착수
+apps/
+  teacher/    Next.js · T-01 오늘 화면 (목업 데이터, Vercel 배포 대상)
+              note / admin / api 는 미착수
 tools/        watermark / tts-batch / langgate    ← 미착수
 docs/         명세 11종
 ```

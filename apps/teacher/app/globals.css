@@ -1,0 +1,147 @@
+/*
+ * 06번 문서(UX/UI 디자인 시스템)의 토큰을 그대로 옮긴 것이다.
+ * 값을 임의로 바꾸지 않는다. 바꿔야 하면 문서를 먼저 고친다.
+ *
+ * 설계 명제: 이 인터페이스는 장식이 아니라 획으로 짓는다.
+ * 구분선·진행표시·스텝퍼가 전부 선이고, 선은 전부 의미를 갖는다.
+ */
+
+:root {
+  /* 잉크 — 청색 기운이 도는 먹 */
+  --ink: #14161c;
+  --ink-2: #3b4254;
+  --ink-3: #6b7284;
+  --ink-4: #9ba1af;
+
+  /* 선 */
+  --rule: #e3e5ea;
+  --rule-soft: #eff0f3;
+
+  /* 캔버스 */
+  --canvas: #fafafb;
+  --surface: #ffffff;
+  --hanji: #f2f0ea;
+  --hanji-card: #fbfaf7;
+  --hanji-rule: #e2ded2;
+
+  /* 쪽빛 — 주 강조 */
+  --indigo: #26418f;
+  --indigo-2: #3d5ccc;
+  --indigo-w: #edf0fb;
+
+  /* 청자 — 성공 · 통과 */
+  --jade: #1e7a5f;
+  --jade-w: #e6f2ed;
+
+  /* 치자 — 경고 · 휴면 */
+  --chija: #a9761a;
+  --chija-w: #f7f0df;
+
+  /* 홍화 — 오류 · 위험 */
+  --honghwa: #b23a2e;
+  --honghwa-w: #faebe8;
+
+  /* 그림자는 한 종류만. 카드에는 넣지 않는다 — 구분은 1px 선으로 한다. */
+  --shadow-toggle: 0 1px 2px rgba(20, 22, 28, 0.07);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 숫자는 전부 mono. 차시·금액·비율·시간·통계 예외 없음.
+   운영 도구의 성격을 드러내는 핵심 장치다. */
+.mono {
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+a {
+  color: var(--indigo-2);
+}
+
+:focus-visible {
+  outline: 2px solid var(--indigo-2);
+  outline-offset: 2px;
+}
+
+/* ── 모션 ─────────────────────────────────────────────
+   오케스트레이션 모먼트는 딱 하나 — 획이 그어지는 순간.
+   나머지는 전부 120~280ms 상태 전환. 페이지 페이드·슬라이드 금지. */
+
+@keyframes hg-write {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hg-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.hg-rise {
+  animation: hg-rise 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.hg-tap {
+  transition:
+    transform 0.12s cubic-bezier(0.2, 0.7, 0.3, 1),
+    background 0.12s,
+    border-color 0.12s,
+    color 0.12s;
+}
+
+.hg-tap:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
