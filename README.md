@@ -4,6 +4,20 @@
 
 명세는 [`docs/`](./docs) 에 있다. 읽는 순서는 [`docs/00-INDEX.md`](./docs/00-INDEX.md).
 
+## 배포
+
+| | |
+|---|---|
+| 저장소 | https://github.com/lhs0609a-cpu/hangyeol |
+| Vercel 프로젝트 | `fewfs-projects-83cc0821/hangyeol` |
+| 프로덕션 | https://hangyeol-8za1g1i1a-fewfs-projects-83cc0821.vercel.app |
+
+`main` 에 push 하면 자동 배포된다. 빌드 설정은 루트 [`vercel.json`](./vercel.json) 에 있고,
+워크스페이스 루트에서 `apps/teacher` 를 빌드한다.
+
+> 현재 배포본은 Vercel Deployment Protection 이 켜져 있어 팀 계정으로 로그인해야 열린다.
+> 공개하려면 프로젝트 Settings → Deployment Protection 에서 끈다.
+
 ---
 
 ## 현재 진행 상황
