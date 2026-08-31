@@ -1,36 +1,22 @@
-import { quoteCyclePrice, TIER_PRICE } from '@hangyeol/billing';
+import { TIER_PRICE } from '@hangyeol/billing';
 import type { StudentStatus } from '@hangyeol/shared';
+import { loadToday, type TodayStudent } from './data';
+
+export const dynamic = 'force-dynamic';
 
 /*
  * T-01 · 오늘 (강사 홈) — 07번 문서 구현.
  *
- * 아직 API 가 없으므로 데이터는 목업이다.
- * 다만 금액만은 목업으로 적지 않고 packages/billing 의 실제 함수로 계산한다.
- * 화면에 찍힌 숫자와 과금 엔진이 어긋나는 상태를 처음부터 만들지 않기 위해서다.
+ * DB 가 붙어 있으면 실제 학생 레코드를, 없으면 목업을 읽는다(app/data.ts).
+ * 어느 쪽이든 금액은 packages/billing 의 계산식을 그대로 쓴다.
+ * 화면 숫자와 과금 엔진이 어긋나는 상태를 만들지 않기 위해서다.
  */
 
-type Student = {
-  id: number;
-  flag: string;
-  nameKo: string;
-  name: string;
-  lessonNo: number;
-  level: string;
-  status: StudentStatus;
-  lastActivity: string;
-};
-
-const TEACHER = { name: '이지은', tier: 'B' as const };
-
-const STUDENTS: Student[] = [
-  { id: 1042, flag: '🇪🇸', nameKo: '마리아', name: 'Maria Santos', lessonNo: 14, level: 'TOPIK 1급', status: 'active', lastActivity: '2시간 전' },
-  { id: 1043, flag: '🇯🇵', nameKo: '미사키', name: 'Misaki Ito', lessonNo: 22, level: 'TOPIK 2급', status: 'active', lastActivity: '어제' },
-  { id: 1045, flag: '🇻🇳', nameKo: '민', name: 'Nguyen Minh', lessonNo: 6, level: 'TOPIK 1급', status: 'active', lastActivity: '3일 전' },
-  { id: 1046, flag: '🇺🇸', nameKo: '루카스', name: 'Lucas Brown', lessonNo: 3, level: 'TOPIK 1급', status: 'pending', lastActivity: '5일 전' },
-  { id: 1044, flag: '🇮🇩', nameKo: '사라', name: 'Sarah Putri', lessonNo: 9, level: 'TOPIK 1급', status: 'dormant', lastActivity: '34일 전' },
-];
-
-const STATUS_STYLE: Record<StudentStatus, { label: string; fg: string; bg: string; opacity: number; bar: string }> = {
+/** 07번 문서 T-01 의 상태 배지 표. 색만으로 의미를 전달하지 않도록 라벨을 함께 둔다. */
+const STATUS_STYLE: Record<
+  StudentStatus,
+  { label: string; fg: string; bg: string; opacity: number; bar: string }
+> = {
   active: { label: '활성', fg: 'var(--jade)', bg: 'var(--jade-w)', opacity: 1, bar: 'var(--indigo)' },
   dormant: { label: '휴면 · 청구 없음', fg: 'var(--chija)', bg: 'var(--chija-w)', opacity: 0.62, bar: 'var(--chija)' },
   pending: { label: '인증 대기', fg: 'var(--honghwa)', bg: 'var(--honghwa-w)', opacity: 0.62, bar: 'var(--chija)' },
@@ -40,13 +26,9 @@ const STATUS_STYLE: Record<StudentStatus, { label: string; fg: string; bg: strin
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
-export default function TodayPage() {
-  // 청구 대상은 active 학생뿐이다. 휴면·인증대기는 0원으로 명시한다(05번 §5).
-  const billable = STUDENTS.filter((s) => s.status === 'active');
-  // 할인 판정에 쓰는 active 수는 목록에서 유도한다.
-  // 별도 상수로 들고 있으면 목록과 어긋나도 아무도 모른 채 잘못된 요금이 찍힌다.
-  const quote = quoteCyclePrice(TEACHER.tier, billable.length);
-  const monthTotal = billable.length * quote.amount;
+export default async function TodayPage() {
+  const data = await loadToday();
+  const billable = data.students.filter((s) => s.status === 'active');
 
   const imminent = {
     flag: '🇪🇸',
@@ -66,20 +48,20 @@ export default function TodayPage() {
         <LaunchPanel {...imminent} />
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 26 }}>
-          <Metric eyebrow="이번 달 청구" value={won(monthTotal)} note={`활성 ${billable.length}명 · 티어 ${quote.tier}`} big />
+          <Metric eyebrow="이번 달 청구" value={won(data.monthTotal)} note={`활성 ${billable.length}명 · 티어 ${data.tier}`} big />
           <Metric eyebrow="이번 주 수업" value="11" note="지난주 9회" />
           <Metric eyebrow="평균 학생 발화" value="47%" note="목표 50% 이상" />
         </section>
 
         <section style={{ marginTop: 34 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div className="eyebrow">학생 {STUDENTS.length}명</div>
+            <div className="eyebrow">학생 {data.students.length}명</div>
             {/* 우회 심리를 사전에 차단하는 카피. 07번 문서에서 삭제 금지로 명시돼 있다. */}
             <div style={{ fontSize: 11.5, color: 'var(--ink-4)' }}>수업 자료는 학생을 선택해야 열립니다</div>
           </div>
 
           <div style={{ border: '1px solid var(--rule)', borderRadius: 10, background: 'var(--surface)', overflow: 'hidden' }}>
-            {STUDENTS.map((s, i) => (
+            {data.students.map((s, i) => (
               <StudentRow key={s.id} student={s} first={i === 0} />
             ))}
           </div>
@@ -88,9 +70,11 @@ export default function TodayPage() {
         <NewStudentCard />
 
         <p style={{ marginTop: 40, fontSize: 11.5, color: 'var(--ink-4)', lineHeight: 1.7 }}>
-          이 화면은 아직 목업 데이터로 렌더됩니다. API 는 미착수이고, 금액만 packages/billing 의
-          실제 계산식(티어 {quote.tier} {won(TIER_PRICE[quote.tier])}
-          {quote.discountPct > 0 ? ` · 볼륨 할인 ${quote.discountPct}%` : ''})으로 산출했습니다.
+          {data.live
+            ? '데이터베이스의 실제 학생 레코드입니다.'
+            : '데이터베이스가 연결되지 않아 목업 데이터로 렌더됩니다.'}{' '}
+          금액은 packages/billing 의 계산식(티어 {data.tier} {won(TIER_PRICE[data.tier])}
+          {data.discountPct > 0 ? ` · 볼륨 할인 ${data.discountPct}%` : ''})으로 산출합니다.
         </p>
       </main>
     </>
@@ -254,7 +238,7 @@ function Metric({ eyebrow, value, note, big = false }: { eyebrow: string; value:
   );
 }
 
-function StudentRow({ student, first }: { student: Student; first: boolean }) {
+function StudentRow({ student, first }: { student: TodayStudent; first: boolean }) {
   const st = STATUS_STYLE[student.status];
   const progress = Math.min(100, (student.lessonNo / 30) * 100);
 

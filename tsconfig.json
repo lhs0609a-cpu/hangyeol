@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/shared" },
-    { "path": "packages/billing" }
+    { "path": "packages/billing" },
+    { "path": "packages/core" }
   ]
 }

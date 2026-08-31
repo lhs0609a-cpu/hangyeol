@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "npm install",
-  "buildCommand": "npm run build --workspace @hangyeol/teacher",
-  "outputDirectory": "apps/teacher/.next"
+  "buildCommand": "npx prisma generate --schema packages/db/prisma/schema.prisma && npm run build --workspace @hangyeol/teacher",
+  "outputDirectory": "apps/teacher/.next",
+  "crons": [
+    { "path": "/api/cron/cycle-close?job=cycle-close", "schedule": "0 18 * * *" },
+    { "path": "/api/cron/cycle-close?job=lock-enforce", "schedule": "0 19 * * *" },
+    { "path": "/api/cron/cycle-close?job=invoice-create", "schedule": "0 15 * * *" }
+  ]
 }

@@ -33,22 +33,20 @@ jobs:
           DATABASE_URL: postgresql://u:p@localhost:5432/hangyeol
         run: npx --yes prisma@5 validate --schema packages/db/prisma/schema.prisma
 
+      - name: Prisma 클라이언트 생성
+        env:
+          DATABASE_URL: postgresql://u:p@localhost:5432/hangyeol
+        run: npx prisma generate --schema packages/db/prisma/schema.prisma
+
       - name: 강사 앱 빌드
         run: npm run build --workspace @hangyeol/teacher
 
-      # 10번 문서 §3 — 학생 앱에 브랜드 문자열이 새면 빌드를 실패시킨다.
-      # apps/note 가 생기기 전까지는 건너뛴다.
-      - name: 화이트라벨 브랜드 문자열 검사
-        run: |
-          if [ ! -d apps/note ]; then
-            echo "apps/note 미착수 — 검사 생략"
-            exit 0
-          fi
-          if grep -rniE '한결|hangyeol' apps/note/src apps/note/app 2>/dev/null; then
-            echo "::error::학생 앱에 브랜드 문자열이 있습니다 (10번 문서 §3)"
-            exit 1
-          fi
-          echo "브랜드 문자열 없음"
+      # 09번 문서 §2 — 학생 앱에 브랜드·금지 요소가 새면 배포를 중단한다.
+      - name: 화이트라벨 릴리즈 게이트
+        run: node tools/whitelabel-check.mjs
+
+      - name: 학생 앱 빌드
+        run: npm run build --workspace @hangyeol/note
 
       # 10번 문서 §4 — 학생 수에 비례하는 종량과금 API 가 새로 들어왔는지 본다.
       - name: 종량과금 API 추가 감지

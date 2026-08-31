@@ -24,29 +24,41 @@
 
 | 스프린트 | 내용 | 상태 |
 |---|---|---|
-| S1 | 인프라 · 인증 · DB 스키마 · 강사 가입/프로필/시급 | 스키마 · 배포 파이프라인 완료. 인증·API 미착수 |
-| S2 | 학생 레코드 CRUD · 이메일 인증 · 중복 병합 | 도메인 규칙만 구현 |
-| S3 | 슬라이드 뷰어 · 워터마크 · 서명 URL · 열람 로그 | 미착수 |
-| **S4** | **과금 엔진 + TC 14개** | **완료** |
-| S5~S8 | 수업 플로우 · 학습노트 · 결제 · 디자인 | 미착수 |
+| S1 | 인프라 · 인증 · DB 스키마 · 강사 프로필 | 코드 완료 · **DB 미연결** |
+| S2 | 학생 레코드 CRUD · 이메일 인증 · 중복 병합 | 코드 완료 · **DB 미연결** |
+| S3 | 서명 URL · 열람 로그 · 권한 5단계 | 코드 완료 / **워터마크 합성 미착수** |
+| S4 | 과금 엔진 + TC 14개 | 완료 |
+| S5 | 수업 플로우 · 3분 리포트 · SRS 적립 | 코드 완료 · **DB 미연결** |
+| S6 | 학생 학습노트 + 화이트라벨 게이트 | 홈·인증 완료 / HVPT·4·3·2 화면 미착수 |
+| S7 | PG 결제 연동 | 미착수 |
+| S8 | 디자인 시스템 적용 · 접근성 · 관리자 | T-01·S-01 만 |
 
-우선순위는 11번 문서를 따른다. **콘텐츠보다 잠금장치가 먼저다.**
+**`DATABASE_URL` 이 없으면 API 는 503 을, T-01 은 목업을 돌려준다.**
+Postgres 를 붙이고 마이그레이션·시드를 돌리면 그 순간부터 실제 데이터로 흐른다.
 
----
+### 교육 콘텐츠는 0건이다
+
+08번 문서의 제작물(250차시 · HVPT 음원 416개 · 시나리오 60개 · 체험팩 4종 ·
+다청 200편 · 교실영어 250문장)은 **하나도 만들어지지 않았다.**
+한국어교원 자격 2급 보유자가 AI 초안을 검수하는 별도 트랙이고,
+11번 문서에서 Phase 0~2 에 걸쳐 잡혀 있다. 코드는 그것을 담을 구조만 갖췄다.
 
 ## 구조
 
 ```
+apps/
+  teacher/    강사 앱 + API 라우트 16개 (단일 배포, 10번 문서 §2)
+  note/       학생 학습노트 — 별도 Next 앱, 브랜드 문자열 금지
 packages/
   shared/     타입 · UTC 시각 유틸 · 정수 KRW      ← 제약 C4
   billing/    과금 엔진 (05번 문서 구현체)          ← 순수 함수, DB 없음
-  db/         Prisma 스키마 (03번 문서 구현체)
-apps/
-  teacher/    Next.js · T-01 오늘 화면 (목업 데이터, Vercel 배포 대상)
-              note / admin / api 는 미착수
-tools/        watermark / tts-batch / langgate    ← 미착수
+  core/       도메인 서비스 — 인증 · 학생 · 수업 · 자료 · 노트 · 배치
+  db/         Prisma 스키마 24개 모델 + 시드
+tools/
+  whitelabel-check.mjs   09번 문서 §2 릴리즈 게이트
 docs/         명세 11종
 ```
+
 
 `packages/billing` 에는 DB도 시계도 없다. 모든 함수가 `now` 를 인자로 받는다.
 그래야 05번 문서의 TC 14개를 초 단위로 돌릴 수 있고, 배치 지연 시나리오를 그대로 재현할 수 있다.
@@ -64,9 +76,23 @@ npm run typecheck
 DB 를 붙일 때:
 
 ```bash
-cp .env.example .env  # DATABASE_URL 채우기
+cp .env.example .env          # DATABASE_URL · 시크릿 채우기
 npm run -w @hangyeol/db generate
 npm run -w @hangyeol/db migrate:dev
+npm run -w @hangyeol/db seed  # 강사 1명 + 학생 5명 + 대립쌍 5종
+```
+
+두 앱을 동시에 띄운다:
+
+```bash
+npm run dev -w @hangyeol/teacher   # :3000  강사 앱 + API
+npm run dev -w @hangyeol/note      # :3001  학생 학습노트
+```
+
+`EMAIL_ENC_KEY` 는 32바이트여야 한다:
+
+```bash
+node -e "console.log('base64:' + require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 ---
