@@ -109,16 +109,27 @@ export function planLockEnforce(
   invoices: readonly (InvoiceState & { id: number; teacherId: number })[],
   now: Date,
 ): LockPlan[] {
-  return invoices
-    .map((inv) => {
-      const result = enforceLock(inv, now);
-      return {
-        invoiceId: inv.id,
-        teacherId: inv.teacherId,
-        invoice: result.invoice,
-        lockStudents: result.lockStudents,
-      };
-    })
-    // 상태가 실제로 바뀐 것만 쓴다. 재실행해도 같은 결과가 되도록.
-    .filter((plan) => plan.lockStudents);
+  const plans: LockPlan[] = [];
+
+  for (const inv of invoices) {
+    const result = enforceLock(inv, now);
+
+    // 상태가 실제로 바뀐 것(grace → locked)만 쓴다.
+    //
+    // enforceLock 의 lockStudents 는 "지금 잠긴 상태인가"라는 사실을 알려줄 뿐
+    // "지금 잠가라"는 지시가 아니다. 그걸 그대로 필터로 쓰면 이미 잠긴 강사가
+    // 매일 다시 잠금 대상으로 나와서, 배치가 돌 때마다 학생 상태를 다시 쓰고
+    // 감사 로그를 오염시킨다. 최악의 경우 status_before_lock 이 'locked' 로
+    // 덮여 결제 후 복원이 깨진다.
+    if (result.invoice.status === inv.status) continue;
+
+    plans.push({
+      invoiceId: inv.id,
+      teacherId: inv.teacherId,
+      invoice: result.invoice,
+      lockStudents: result.lockStudents,
+    });
+  }
+
+  return plans;
 }

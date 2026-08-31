@@ -20,7 +20,7 @@ type Student = {
   lastActivity: string;
 };
 
-const TEACHER = { name: '이지은', tier: 'B' as const, activeStudentCount: 4 };
+const TEACHER = { name: '이지은', tier: 'B' as const };
 
 const STUDENTS: Student[] = [
   { id: 1042, flag: '🇪🇸', nameKo: '마리아', name: 'Maria Santos', lessonNo: 14, level: 'TOPIK 1급', status: 'active', lastActivity: '2시간 전' },
@@ -42,8 +42,10 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
 export default function TodayPage() {
   // 청구 대상은 active 학생뿐이다. 휴면·인증대기는 0원으로 명시한다(05번 §5).
-  const quote = quoteCyclePrice(TEACHER.tier, TEACHER.activeStudentCount);
   const billable = STUDENTS.filter((s) => s.status === 'active');
+  // 할인 판정에 쓰는 active 수는 목록에서 유도한다.
+  // 별도 상수로 들고 있으면 목록과 어긋나도 아무도 모른 채 잘못된 요금이 찍힌다.
+  const quote = quoteCyclePrice(TEACHER.tier, billable.length);
   const monthTotal = billable.length * quote.amount;
 
   const imminent = {

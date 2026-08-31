@@ -7,6 +7,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // teachers.email 을 CITEXT 로 두려면 postgresqlExtensions 가 필요하다.
+  // 대소문자 구분 없는 유니크 제약이 없으면 같은 강사가 A@x.com / a@x.com 으로
+  // 두 계정을 만들 수 있고, 그 순간 과금 이력이 갈라진다.
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
