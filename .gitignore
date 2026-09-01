@@ -14,3 +14,6 @@ files (1)/
 .vercel
 .env*
 !.env.example
+
+# vercel curl 이 -w 플래그를 파일명으로 해석해 만드는 산출물
+-w
