@@ -1,4 +1,5 @@
 import { buildTokenManifest, CONTRASTS, SCENARIOS, type TokenSpec } from '@hangyeol/content';
+export * from './corpus.js';
 
 /*
  * 음원 사전 생성 배치 — 08번 문서 §3·§4, 10번 문서 §4.
@@ -131,11 +132,18 @@ export async function run(params: {
 /**
  * 화자 8명을 실제로 어떻게 확보할 것인가.
  *
- * 08번 문서 §3: "TTS 생성 음원으로도 음운 인식 향상이 확인되므로
- * 초기엔 다화자 TTS 로 제작하고, 예산이 생기면 실제 화자 녹음으로 교체한다."
+ * 08번 문서 §3 은 "초기엔 다화자 TTS 로 제작"을 제안했지만,
+ * 실제로 조사해 보니 공개된 한국어 TTS 모델은 대부분 비상업이었다.
  *
- * 10번 문서 §12 의 미결 사항 4번이기도 하다. 제공자를 고르기 전까지
- * 이 목록은 비워 둔다 — 임의로 정하면 나중에 전량 재생성해야 한다.
+ *   Piper ko_KR   KSS 학습 → CC BY-NC-SA. 게다가 단일 화자라 요건 미달
+ *   Meta MMS      CC-BY-NC-4.0
+ *
+ * 코드가 MIT 여도 모델은 학습 데이터의 라이선스를 승계한다.
+ * 그래서 화자 8명은 상업 이용이 가능한 실화자 코퍼스에서 확보하는 편이
+ * 현실적이다 — corpus.ts 를 볼 것.
+ *
+ * 상업 라이선스 TTS 를 쓰기로 하면 여기에 음성 8개를 채운다.
+ * 비워 둔 이유는 임의로 정하면 전량 재생성해야 하기 때문이다.
  */
 export const TALKER_VOICES: readonly string[] = [];
 

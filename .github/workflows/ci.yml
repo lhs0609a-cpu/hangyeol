@@ -42,6 +42,10 @@ jobs:
       - name: 강사 앱 빌드
         run: npm run build --workspace @hangyeol/teacher
 
+      # 08번 문서 §6 · 09번 L5 — 비상업 라이선스 자산이 코드에 섞이면 배포를 중단한다.
+      - name: 라이선스 게이트
+        run: node tools/license-check.mjs
+
       # 09번 문서 §2 — 학생 앱에 브랜드·금지 요소가 새면 배포를 중단한다.
       - name: 화이트라벨 릴리즈 게이트
         run: node tools/whitelabel-check.mjs

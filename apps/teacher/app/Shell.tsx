@@ -14,6 +14,7 @@ const NAV = [
   { href: '/', label: '오늘' },
   { href: '/billing', label: '청구' },
   { href: '/settings', label: '설정' },
+  { href: '/licenses', label: '출처' },
 ];
 
 export function Shell({ children, wide = true }: { children: ReactNode; wide?: boolean }) {
