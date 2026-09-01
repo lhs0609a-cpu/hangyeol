@@ -1,3 +1,8 @@
+import { LESSON_PLANS_2_8 } from './lesson-plans-2-8.js';
+import { LESSON_PLANS_9_14 } from './lesson-plans-9-14.js';
+import { LESSON_PLANS_16_22 } from './lesson-plans-16-22.js';
+import { LESSON_PLANS_23_30 } from './lesson-plans-23-30.js';
+
 /*
  * 강사 지도안 — 08번 문서 §2. 이 제품의 본체다.
  *
@@ -249,7 +254,16 @@ const UNIT_15: LessonPlan = {
   ],
 };
 
-export const LESSON_PLANS: readonly LessonPlan[] = Object.freeze([UNIT_1, UNIT_15]);
+export const LESSON_PLANS: readonly LessonPlan[] = Object.freeze(
+  [
+    UNIT_1,
+    ...LESSON_PLANS_2_8,
+    ...LESSON_PLANS_9_14,
+    UNIT_15,
+    ...LESSON_PLANS_16_22,
+    ...LESSON_PLANS_23_30,
+  ].sort((a, b) => a.unitNo - b.unitNo),
+);
 
 export function planFor(unitNo: number): LessonPlan | null {
   return LESSON_PLANS.find((p) => p.unitNo === unitNo) ?? null;
@@ -259,7 +273,6 @@ export const LESSON_PLAN_STATUS = {
   written: LESSON_PLANS.length,
   target: 30,
   note:
-    '1차시와 15차시를 품질 기준으로 먼저 썼다. 나머지는 이 밀도로 채운다. ' +
-    '얕게 30개를 찍으면 08번 문서가 경계한 "AI 로만 만들면 티가 난다"가 된다. ' +
-    '한국어교원 자격 2급 검수 필요.',
+    '1급 30차시 전부 작성. 전부 AI 초안이며 한국어교원 자격 2급 검수를 거쳐야 한다. ' +
+    '검수 전에는 실제 수업에 쓰지 않는다. 2급(31~70차시)은 같은 밀도로 이어 쓴다.',
 } as const;

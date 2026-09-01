@@ -7,6 +7,7 @@ import {
   TRIAL_PACKS,
 } from '@hangyeol/content';
 
+
 /*
  * 콘텐츠는 데이터지만 규칙을 갖고 있다.
  * 그 규칙이 깨지면 커리큘럼 배열이 근거를 잃고, 지도안이 대본이 아니게 된다.
@@ -162,6 +163,52 @@ describe('지도안 — 요약이 아니라 대본이어야 한다', () => {
     for (const plan of LESSON_PLANS) {
       const unit = LEVEL1_UNITS.find((u) => u.unitNo === plan.unitNo)!;
       expect(plan.goalStatement, `${plan.unitNo}차시`).toBe(unit.goalStatement);
+    }
+  });
+});
+
+describe('1급 30차시가 빠짐없이 있다', () => {
+  it('커리큘럼의 모든 차시에 지도안이 있다', () => {
+    // 하나라도 비면 강사가 그 주에 스스로 준비해야 한다.
+    // 그 순간 "교재 없이는 감도 안 온다"가 깨진다.
+    const planned = new Set(LESSON_PLANS.map((p) => p.unitNo));
+    const missing = LEVEL1_UNITS.filter((u) => !planned.has(u.unitNo)).map((u) => u.unitNo);
+    expect(missing, `지도안 없는 차시: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('지도안이 차시 번호 순으로 정렬돼 있다', () => {
+    const nos = LESSON_PLANS.map((p) => p.unitNo);
+    expect(nos).toEqual([...nos].sort((a, b) => a - b));
+  });
+
+  it('차시 번호가 중복되지 않는다', () => {
+    const nos = LESSON_PLANS.map((p) => p.unitNo);
+    expect(new Set(nos).size).toBe(nos.length);
+  });
+
+  it('드릴 구간에 반복 지시가 들어 있다', () => {
+    // 08번 §2: 설명 30초 / 반복 9분.
+    // 드릴에서 반복을 시키지 않으면 강의가 된다.
+    for (const plan of LESSON_PLANS) {
+      const drill = plan.blocks.find((b) => b.phase === 'drill')!;
+      const text = [...drill.say, ...(drill.do ?? []), drill.studentOutput ?? ''].join(' ');
+      expect(text, `${plan.unitNo}차시 드릴에 반복 지시가 없다`).toMatch(/따라 하세요|더요|번|반복/);
+    }
+  });
+
+  it('자유 확장 구간에서 학생이 자기 얘기를 한다', () => {
+    for (const plan of LESSON_PLANS) {
+      const free = plan.blocks.find((b) => b.phase === 'free')!;
+      expect(free.studentOutput, `${plan.unitNo}차시`).toBeTruthy();
+    }
+  });
+
+  it('마무리에서 3분 리포트를 남기게 한다', () => {
+    // 리포트가 없으면 다음 주 복습 슬라이드가 비고, SRS 도 적립되지 않는다.
+    for (const plan of LESSON_PLANS) {
+      const wrap = plan.blocks.find((b) => b.phase === 'wrap')!;
+      const text = (wrap.do ?? []).join(' ');
+      expect(text, `${plan.unitNo}차시 마무리에 리포트 지시가 없다`).toMatch(/리포트/);
     }
   });
 });
