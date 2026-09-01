@@ -1,3 +1,5 @@
+import { FLUENCY_TOPICS_2 } from './fluency-topics-2.js';
+
 /*
  * 4·3·2 유창성 주제 — 08번 문서 §7.
  *
@@ -27,7 +29,7 @@ const t = (levelCode: string, unlockAfterUnit: number, prompt: string, useExpres
   useExpressions,
 });
 
-export const FLUENCY_TOPICS: FluencyTopic[] = [
+const FLUENCY_TOPICS_1: FluencyTopic[] = [
   // 1급 — 현재형만 아는 구간
   t('topik1', 8, '보통 하루에 뭐 해요?', ['-아/어요', '보통', '그리고']),
   t('topik1', 11, '가족을 소개해 주세요', ['-이에요/예요', '이/가', '있어요']),
@@ -55,6 +57,8 @@ export const FLUENCY_TOPICS: FluencyTopic[] = [
   t('topik3', 100, '스트레스를 어떻게 풀어요?', ['-(으)면', '-곤 해요', '주로']),
   t('topik3', 112, '10년 후의 나는?', ['-(으)ㄹ 것 같아요', '-고 싶어요', '아마']),
 ];
+
+export const FLUENCY_TOPICS: FluencyTopic[] = [...FLUENCY_TOPICS_1, ...FLUENCY_TOPICS_2];
 
 export const FLUENCY_ROUNDS = [
   { round: 1, seconds: 240, label: '4분' },

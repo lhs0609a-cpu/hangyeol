@@ -16,7 +16,9 @@
     "@hangyeol/core": "*",
     "@hangyeol/db": "*",
     "@hangyeol/ui": "*",
-    "@hangyeol/content": "*"
+    "@hangyeol/content": "*",
+    "@hangyeol/watermark": "*",
+    "@hangyeol/langgate": "*"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

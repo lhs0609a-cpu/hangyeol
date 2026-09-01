@@ -198,7 +198,14 @@ const GRAMMAR: ClassroomPhrase[] = [
   p('grammar', '발음', 'Korean has three-way stops: ㄱ ㅋ ㄲ.', '평음·격음·경음 세 갈래'),
 ];
 
-export const CLASSROOM_ENGLISH: ClassroomPhrase[] = [...STUDENT_SAYS, ...TEACHER_SAYS, ...GRAMMAR];
+import { CLASSROOM_ENGLISH_2 } from './classroom-english-2.js';
+
+export const CLASSROOM_ENGLISH: ClassroomPhrase[] = [
+  ...STUDENT_SAYS,
+  ...TEACHER_SAYS,
+  ...GRAMMAR,
+  ...CLASSROOM_ENGLISH_2,
+];
 
 /** 08번 문서가 요구한 분량. 초안 단계에서 얼마나 채웠는지 드러낸다. */
 export const CLASSROOM_ENGLISH_TARGET = 250;

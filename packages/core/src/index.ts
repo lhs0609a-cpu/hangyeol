@@ -9,4 +9,6 @@ export * from './note.js';
 export * from './teachers.js';
 export * from './billing-service.js';
 export * from './activities.js';
+export * from './storage.js';
+export * from './payments.js';
 export * from './http.js';
