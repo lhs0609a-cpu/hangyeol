@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Eyebrow, Panel, Stepper, Tag } from '@hangyeol/ui';
-import { post, ApiClientError } from '../../api-client';
+import { get, post, ApiClientError } from '../../api-client';
 import { Shell } from '../../Shell';
 
 /*
@@ -109,15 +109,14 @@ function StepPrev({
 }) {
   const [loaded, setLoaded] = useState(false);
 
-  if (!loaded) {
-    fetch(`/api/students/${studentId}`, {
-      headers: { authorization: `Bearer ${localStorage.getItem('hg_access') ?? ''}` },
-    })
-      .then((r) => r.json())
+  // 렌더 도중에 fetch 나 localStorage 를 부르면 서버 렌더에서 터진다.
+  // localStorage 는 서버에 존재하지 않는다.
+  useEffect(() => {
+    get<{ lastReport: PrevReport | null }>(`/api/students/${studentId}`)
       .then((d) => onPrev(d.lastReport ?? null))
       .catch(() => onPrev(null))
       .finally(() => setLoaded(true));
-  }
+  }, [studentId, onPrev]);
 
   return (
     <Panel>
@@ -218,25 +217,15 @@ function StepUnit({
 }) {
   const [slides, setSlides] = useState<{ goalStatement: string; pages: { no: number; url: string }[]; watermark: { line: string; note: string } } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  if (!loaded) {
-    setLoaded(true);
-    if (unitId) {
-      fetch(`/api/units/${unitId}/slides?student_id=${studentId}`, {
-        headers: { authorization: `Bearer ${localStorage.getItem('hg_access') ?? ''}` },
-      })
-        .then(async (r) => {
-          const body = await r.json();
-          if (!r.ok) throw new Error(body?.error?.message ?? '자료를 열지 못했습니다');
-          return body;
-        })
-        .then(setSlides)
-        .catch((e: Error) => setError(e.message));
-    } else {
+  useEffect(() => {
+    if (!unitId) {
       setError('이 수업에 배정된 차시가 없습니다');
+      return;
     }
-  }
+    get<typeof slides>(`/api/units/${unitId}/slides?student_id=${studentId}`)
+      .then(setSlides)
+      .catch((e: Error) => setError(e.message));
+  }, [unitId, studentId]);
 
   return (
     <Panel>

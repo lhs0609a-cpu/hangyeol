@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { noteHome, verifyStudentToken, type NoteHome } from '@hangyeol/core';
@@ -32,12 +31,6 @@ async function loadHome(): Promise<NoteHome | null> {
   } catch {
     return null;
   }
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  const home = await loadHome();
-  // 강사 이름을 모르는 상태에서 기본 제목을 박으면 그게 곧 브랜드 누출이다.
-  return { title: home ? `${home.teacherDisplayName} 선생님의 학습 노트` : '학습 노트' };
 }
 
 export default async function NoteHomePage() {
