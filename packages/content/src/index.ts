@@ -8,5 +8,6 @@ export * from './lesson-plans-16-22.js';
 export * from './lesson-plans-23-30.js';
 export * from './pronunciation.js';
 export * from './trial-packs.js';
+export * from './image-assets.js';
 export * from './licenses.js';
 export * from './status.js';

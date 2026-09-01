@@ -1,44 +1,68 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Eyebrow, Metric, Panel } from '@hangyeol/ui';
+import { Eyebrow, Panel, Tag } from '@hangyeol/ui';
 import { get } from '../api-client';
 import { Shell } from '../Shell';
 
 /*
- * A-01 · 관리자 지표 — 07번 문서.
+ * A-01 · 관리자 지표.
  *
- * 우회 의심은 플래그만 띄운다. 자동 제재는 하지 않는다. 사람이 확인한다.
- * 09번 문서가 요구하는 IP 화이트리스트 + 2FA 게이트는 아직 없다 —
- * 그 전까지 이 화면은 개인정보를 일절 내보내지 않는다.
+ * 05번 §10 과 11번 핵심 지표 표가 무엇을 볼지 정해 두었고,
+ * 거기에 SaaS 표준(MRR · ARPU)을 얹었다.
+ *
+ * 경고선을 숫자 옆에 붙인다. 숫자만 보여주면 매번 사람이 판단해야 하고,
+ * 판단을 매번 시키면 언젠가 놓친다.
+ *
+ * 09번 문서는 관리자에 IP 화이트리스트 + 2FA 를 요구한다. 아직 없다.
+ * 그래서 이 화면은 개인정보를 일절 내보내지 않는다 — 전부 집계값이다.
  */
 
-interface Metrics {
-  students: { active: number; dormant: number; locked: number };
-  teachers: number;
-  avgStudentsPerTeacher: number;
-  cycles: Record<string, number>;
-  invoices: Record<string, number>;
-  dormantRatePct: number;
-  creditBalanceTotal: number;
-  bypassSuspects: number;
-  content: Record<string, { drafted?: number; written?: number; target?: number; note?: string }>;
+interface Metric {
+  key: string;
+  label: string;
+  value: number;
+  unit: 'count' | 'percent' | 'krw' | 'ratio';
+  threshold?: { value: number; direction: 'below' | 'above'; note: string };
+  warning: boolean;
+  meaning: string;
 }
 
-const CONTENT_LABEL: Record<string, string> = {
-  lessonPlans: '차시 지도안',
-  curriculum: '커리큘럼 차시',
-  classroomEnglish: '교실영어 문장',
-  pronunciation: '발음 시트',
-  trialPacks: '체험수업 팩',
-};
+interface Dashboard {
+  generatedAt: string;
+  billingMonth: string;
+  revenue: Metric[];
+  students: Metric[];
+  teachers: Metric[];
+  funnel: Metric[];
+  payments: Metric[];
+  integrity: Metric[];
+  content: {
+    items: { key: string; label: string; drafted: number; target: number }[];
+    images: { total: number; uploaded: number };
+  };
+}
+
+function format(m: Metric): string {
+  switch (m.unit) {
+    case 'krw':
+      return `${m.value.toLocaleString('ko-KR')}원`;
+    case 'percent':
+      return `${m.value}%`;
+    case 'ratio':
+      return `${m.value}명`;
+    default:
+      return m.value.toLocaleString('ko-KR');
+  }
+}
 
 export default function AdminPage() {
-  const [data, setData] = useState<Metrics | null>(null);
+  const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    get<Metrics>('/api/admin/metrics')
+    get<Dashboard>('/api/admin/metrics')
       .then(setData)
       .catch((e: Error) => setError(e.message));
   }, []);
@@ -61,120 +85,149 @@ export default function AdminPage() {
     );
   }
 
-  const dormantWarn = data.dormantRatePct > 30;
-  const bypassWarn = data.bypassSuspects > 0;
+  const warnings = [
+    ...data.students,
+    ...data.teachers,
+    ...data.funnel,
+    ...data.payments,
+    ...data.integrity,
+  ].filter((m) => m.warning);
 
   return (
     <Shell>
-      <Eyebrow>관리자 지표</Eyebrow>
-      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 20px' }}>
+      <Eyebrow>관리자 · {data.billingMonth.slice(0, 7)}</Eyebrow>
+      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 4px' }}>
         운영 현황
       </h1>
+      <p className="mono" style={{ fontSize: 11, color: 'var(--ink-4)', margin: 0 }}>
+        {data.generatedAt.slice(0, 16).replace('T', ' ')} 기준
+      </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-        <Metric eyebrow="활성 학생" value={String(data.students.active)} note={`휴면 ${data.students.dormant} · 잠금 ${data.students.locked}`} size={30} />
-        <Metric eyebrow="강사" value={String(data.teachers)} note={`강사당 평균 ${data.avgStudentsPerTeacher}명`} />
-        <Metric
-          eyebrow="휴면 전환율"
-          value={`${data.dormantRatePct}%`}
-          note={dormantWarn ? '경고선 30% 초과' : '경고선 30%'}
-        />
-        <Metric
-          eyebrow="크레딧 예치 총액"
-          value={`${data.creditBalanceTotal.toLocaleString('ko-KR')}원`}
-        />
-      </div>
-
-      {/*
-        11번 문서: "마지막에서 두 번째가 가장 중요하다.
-        이 수치가 올라가면 잠금장치가 새고 있다는 뜻이다."
-      */}
-      <Panel
-        style={{
-          marginTop: 14,
-          background: bypassWarn ? 'var(--honghwa-w)' : 'var(--surface)',
-          border: bypassWarn ? '1px solid transparent' : '1px solid var(--rule)',
-        }}
-      >
-        <Eyebrow>우회 의심 — 열람은 있으나 학생활동 0 (30일)</Eyebrow>
-        <div
-          className="mono"
-          style={{ fontSize: 30, fontWeight: 500, marginTop: 8, color: bypassWarn ? 'var(--honghwa)' : 'var(--ink)' }}
-        >
-          {data.bypassSuspects}건
-        </div>
-        <p style={{ fontSize: 12, color: bypassWarn ? 'var(--honghwa)' : 'var(--ink-4)', marginTop: 6, lineHeight: 1.7 }}>
-          이 수치가 올라가면 잠금장치가 새고 있다는 뜻입니다.
-          플래그만 띄웁니다 — 자동 제재는 하지 않습니다. 사람이 확인합니다.
-        </p>
-      </Panel>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14, marginTop: 14 }}>
-        <Panel>
-          <Eyebrow>주기 상태</Eyebrow>
-          <CountList counts={data.cycles} />
+      {warnings.length > 0 && (
+        <Panel style={{ marginTop: 18, background: 'var(--honghwa-w)', border: '1px solid transparent' }}>
+          <Eyebrow>경고선을 벗어난 지표 {warnings.length}개</Eyebrow>
+          <div style={{ marginTop: 8 }}>
+            {warnings.map((m) => (
+              <div key={m.key} style={{ fontSize: 12.5, color: 'var(--honghwa)', marginBottom: 4 }}>
+                · {m.label} <span className="mono">{format(m)}</span> — {m.threshold?.note}
+              </div>
+            ))}
+          </div>
         </Panel>
-        <Panel>
-          <Eyebrow>청구 상태</Eyebrow>
-          <CountList counts={data.invoices} />
-        </Panel>
-      </div>
+      )}
+
+      <Section title="매출" metrics={data.revenue} />
+      <Section title="퍼널 — 매출이 나오는 길목" metrics={data.funnel} />
+      <Section title="학생" metrics={data.students} />
+      <Section title="강사 (고객)" metrics={data.teachers} />
+      <Section title="결제" metrics={data.payments} />
+      <Section title="잠금장치 무결성" metrics={data.integrity} />
 
       <Panel style={{ marginTop: 14 }}>
-        <Eyebrow>콘텐츠 제작 현황</Eyebrow>
-        <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 6 }}>
-          목표 대비 실제. 전부 AI 초안이며 한국어교원 자격 2급 검수를 거쳐야 합니다.
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <Eyebrow>콘텐츠 제작 현황</Eyebrow>
+          <Link href="/admin/images" style={{ fontSize: 12 }}>
+            이미지 자산 →
+          </Link>
+        </div>
 
         <div style={{ marginTop: 12 }}>
-          {Object.entries(data.content).map(([key, v]) => {
-            // 지도안은 written, 나머지는 drafted 로 센다.
-            const drafted = Number(v.drafted ?? v.written ?? 0);
-            const target = Number(v.target ?? 0);
-            const pct = target === 0 ? 0 : Math.min(100, Math.round((drafted / target) * 100));
-
+          {data.content.items.map((c) => {
+            const pct = c.target === 0 ? 0 : Math.min(100, Math.round((c.drafted / c.target) * 100));
             return (
-              <div key={key} style={{ padding: '10px 0', borderTop: '1px solid var(--rule-soft)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{CONTENT_LABEL[key] ?? key}</span>
+              <div key={c.key} style={{ padding: '9px 0', borderTop: '1px solid var(--rule-soft)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontSize: 13 }}>{c.label}</span>
                   <span className="mono" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-                    {drafted} / {target}
+                    {c.drafted} / {c.target}
                   </span>
                 </div>
-                <div style={{ height: 3, borderRadius: 99, background: 'var(--rule)', marginTop: 6 }}>
-                  <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: pct >= 100 ? 'var(--jade)' : 'var(--indigo)' }} />
+                <div style={{ height: 3, borderRadius: 99, background: 'var(--rule)', marginTop: 5 }}>
+                  <div
+                    style={{
+                      width: `${pct}%`,
+                      height: '100%',
+                      borderRadius: 99,
+                      background: pct >= 100 ? 'var(--jade)' : 'var(--indigo)',
+                    }}
+                  />
                 </div>
               </div>
             );
           })}
+
+          <div style={{ padding: '9px 0', borderTop: '1px solid var(--rule-soft)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 13 }}>이미지 자산</span>
+              <span className="mono" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                {data.content.images.uploaded} / {data.content.images.total}
+              </span>
+            </div>
+            <div style={{ height: 3, borderRadius: 99, background: 'var(--rule)', marginTop: 5 }}>
+              <div
+                style={{
+                  width: `${(data.content.images.uploaded / Math.max(1, data.content.images.total)) * 100}%`,
+                  height: '100%',
+                  borderRadius: 99,
+                  background: 'var(--indigo)',
+                }}
+              />
+            </div>
+          </div>
         </div>
+
+        <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 12, lineHeight: 1.7 }}>
+          전부 AI 초안입니다. 한국어교원 자격 2급 검수 전에는 실제 수업에 쓰지 않습니다.
+        </p>
       </Panel>
     </Shell>
   );
 }
 
-function CountList({ counts }: { counts: Record<string, number> }) {
-  const entries = Object.entries(counts);
-  if (entries.length === 0) {
-    return <p style={{ fontSize: 12.5, color: 'var(--ink-4)', marginTop: 10 }}>아직 없습니다</p>;
-  }
+function Section({ title, metrics }: { title: string; metrics: Metric[] }) {
   return (
-    <div style={{ marginTop: 10 }}>
-      {entries.map(([k, v]) => (
-        <div
-          key={k}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '7px 0',
-            borderTop: '1px solid var(--rule-soft)',
-            fontSize: 12.5,
-          }}
-        >
-          <span className="mono" style={{ color: 'var(--ink-3)' }}>{k}</span>
-          <span className="mono">{v}</span>
-        </div>
-      ))}
-    </div>
+    <Panel style={{ marginTop: 14 }}>
+      <Eyebrow>{title}</Eyebrow>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+          gap: 14,
+          marginTop: 12,
+        }}
+      >
+        {metrics.map((m) => (
+          <div key={m.key}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>{m.label}</span>
+              {m.warning && <Tag tone="h">경고</Tag>}
+            </div>
+
+            <div
+              className="mono"
+              style={{
+                fontSize: 24,
+                fontWeight: 500,
+                letterSpacing: '-0.03em',
+                marginTop: 4,
+                color: m.warning ? 'var(--honghwa)' : 'var(--ink)',
+              }}
+            >
+              {format(m)}
+            </div>
+
+            <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3, lineHeight: 1.6 }}>
+              {m.meaning}
+            </div>
+
+            {m.threshold && (
+              <div className="mono" style={{ fontSize: 10.5, color: 'var(--ink-4)', marginTop: 3 }}>
+                {m.threshold.note}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </Panel>
   );
 }

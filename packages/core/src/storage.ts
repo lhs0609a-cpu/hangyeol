@@ -31,21 +31,37 @@ const sha256hex = (v: string | Buffer) => createHash('sha256').update(v).digest(
 const hmac = (key: Buffer | string, v: string) => createHmac('sha256', key).update(v).digest();
 
 /**
- * AWS SigV4 로 서명한 GET 요청을 만든다.
+ * AWS SigV4 로 서명한 요청을 만든다.
  * R2 는 region 을 'auto' 로 받는다.
  */
-function signedGet(cfg: StorageConfig, key: string, now = new Date()): { url: string; headers: Record<string, string> } {
+function sign(
+  cfg: StorageConfig,
+  method: 'GET' | 'PUT',
+  key: string,
+  payload: Buffer | null,
+  extraHeaders: Record<string, string> = {},
+  now = new Date(),
+): { url: string; headers: Record<string, string> } {
   const host = `${cfg.accountId}.r2.cloudflarestorage.com`;
   const path = `/${cfg.bucket}/${key.split('/').map(encodeURIComponent).join('/')}`;
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
   const dateStamp = amzDate.slice(0, 8);
   const region = 'auto';
   const service = 's3';
-  const payloadHash = sha256hex('');
+  // PUT 은 본문 해시를 서명에 넣어야 한다. 빈 해시로 서명하면 R2 가 거부한다.
+  const payloadHash = sha256hex(payload ?? '');
 
-  const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
-  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
-  const canonicalRequest = `GET\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+  // 서명 대상 헤더는 이름 순으로 정렬돼야 한다. 순서가 틀리면 서명이 깨진다.
+  const headerMap: Record<string, string> = {
+    host,
+    'x-amz-content-sha256': payloadHash,
+    'x-amz-date': amzDate,
+    ...Object.fromEntries(Object.entries(extraHeaders).map(([k, v]) => [k.toLowerCase(), v])),
+  };
+  const names = Object.keys(headerMap).sort();
+  const canonicalHeaders = names.map((n) => `${n}:${headerMap[n]}\n`).join('');
+  const signedHeaders = names.join(';');
+  const canonicalRequest = `${method}\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
 
   const scope = `${dateStamp}/${region}/${service}/aws4_request`;
   const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${scope}\n${sha256hex(canonicalRequest)}`;
@@ -56,9 +72,7 @@ function signedGet(cfg: StorageConfig, key: string, now = new Date()): { url: st
   return {
     url: `https://${host}${path}`,
     headers: {
-      host,
-      'x-amz-date': amzDate,
-      'x-amz-content-sha256': payloadHash,
+      ...headerMap,
       authorization: `AWS4-HMAC-SHA256 Credential=${cfg.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
     },
   };
@@ -69,9 +83,26 @@ export async function getObject(key: string): Promise<Buffer | null> {
   const cfg = storageConfig();
   if (!cfg) return null;
 
-  const { url, headers } = signedGet(cfg, key);
+  const { url, headers } = sign(cfg, 'GET', key, null);
   const res = await fetch(url, { headers });
   if (!res.ok) return null;
 
   return Buffer.from(await res.arrayBuffer());
+}
+
+/** 객체를 올린다. 실패하면 조용히 넘어가지 않고 터뜨린다 — 업로드는 사용자가 지켜보는 동작이다. */
+export async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
+  const cfg = storageConfig();
+  if (!cfg) throw new Error('자산 스토리지(R2)가 연결되지 않았습니다');
+
+  const { url, headers } = sign(cfg, 'PUT', key, body, { 'content-type': contentType });
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { ...headers, 'content-length': String(body.byteLength) },
+    body: new Uint8Array(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`업로드에 실패했습니다 (${res.status})`);
+  }
 }
