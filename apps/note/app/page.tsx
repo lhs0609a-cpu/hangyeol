@@ -1,9 +1,18 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { noteHome, verifyStudentToken, type NoteHome } from '@hangyeol/core';
 import { SyllableProgress } from './SyllableProgress';
 
 export const dynamic = 'force-dynamic';
+
+/** 과제 id → 화면. noteHome 이 내는 id 와 맞춰 둔다. */
+const TASK_HREF: Record<string, string> = {
+  srs: '/srs',
+  hvpt: '/hvpt',
+  fluency: '/fluency',
+  listening: '/listening',
+};
 
 /*
  * S-01 · 학습 노트 홈 — 07번 문서.
@@ -62,9 +71,12 @@ export default async function NoteHomePage() {
 
       <section style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {home.tasks.map((task, i) => (
-          <div
+          <Link
             key={task.id}
+            href={TASK_HREF[task.id] ?? '/'}
             style={{
+              textDecoration: 'none',
+              color: 'inherit',
               display: 'flex',
               alignItems: 'center',
               gap: 12,
@@ -99,7 +111,7 @@ export default async function NoteHomePage() {
             <span className="mono" style={{ fontSize: 11.5, color: 'var(--ink-4)' }}>
               {task.minutes}분
             </span>
-          </div>
+          </Link>
         ))}
       </section>
 

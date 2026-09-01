@@ -3,6 +3,8 @@
   "references": [
     { "path": "packages/shared" },
     { "path": "packages/billing" },
-    { "path": "packages/core" }
+    { "path": "packages/core" },
+    { "path": "packages/ui" },
+    { "path": "packages/content" }
   ]
 }

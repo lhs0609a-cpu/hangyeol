@@ -1,0 +1,524 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Button, Eyebrow, Panel, Stepper, Tag } from '@hangyeol/ui';
+import { post, ApiClientError } from '../../api-client';
+import { Shell } from '../../Shell';
+
+/*
+ * T-02 · 수업 진행 4단계 — 07번 문서.
+ *
+ * 목적은 하나다. 수업 시작 버튼 이후 강사가 아무것도 결정하지 않게 한다.
+ * 각 단계는 앞으로만 진행한다. 뒤로가기는 [나가기]뿐이다.
+ */
+
+const STEPS = ['지난 기록', '복습 5분', '본 차시', '기록 3분'];
+
+interface PrevReport {
+  date: string;
+  expressions: string[];
+  errors: string[];
+}
+
+interface StartResult {
+  lessonId: string;
+  lessonNo: number;
+  unitId: string | null;
+  billing: { cycleOpened: boolean; amount: number | null; cycleNo: number | null };
+}
+
+export default function LessonPage({ params }: { params: { studentId: string } }) {
+  const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [lesson, setLesson] = useState<StartResult | null>(null);
+  const [prev, setPrev] = useState<PrevReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function start() {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await post<StartResult>('/api/lessons', { studentId: params.studentId });
+      setLesson(result);
+      setStep(1);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : '수업을 시작하지 못했습니다');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Shell wide={false}>
+      <Stepper steps={STEPS} current={step} />
+
+      <div style={{ marginTop: 26 }}>
+        {step === 0 && <StepPrev prev={prev} onPrev={setPrev} studentId={params.studentId} onStart={start} busy={busy} />}
+        {step === 1 && <StepReview prev={prev} onNext={() => setStep(2)} lessonNo={lesson?.lessonNo ?? 0} />}
+        {step === 2 && (
+          <StepUnit
+            studentId={params.studentId}
+            unitId={lesson?.unitId}
+            onNext={() => setStep(3)}
+          />
+        )}
+        {step === 3 && lesson && (
+          <StepReport lessonId={lesson.lessonId} onDone={() => router.push('/')} />
+        )}
+      </div>
+
+      {lesson?.billing.cycleOpened && step === 1 && (
+        <Panel style={{ marginTop: 18, background: 'var(--chija-w)', border: '1px solid transparent' }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--chija)' }}>
+            {lesson.billing.cycleNo}번째 28일 주기가 시작됐습니다 ·{' '}
+            <span className="mono">{lesson.billing.amount?.toLocaleString('ko-KR')}원</span>
+          </p>
+        </Panel>
+      )}
+
+      {error && (
+        <Panel style={{ marginTop: 18, background: 'var(--honghwa-w)', border: '1px solid transparent' }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--honghwa)' }}>{error}</p>
+        </Panel>
+      )}
+
+      <div style={{ marginTop: 26, textAlign: 'center' }}>
+        <Button kind="quiet" size="sm" onClick={() => router.push('/')}>
+          나가기
+        </Button>
+      </div>
+    </Shell>
+  );
+}
+
+/** 단계 0 — 지난 기록. 강사에게만 보인다. 5초. */
+function StepPrev({
+  prev,
+  onPrev,
+  studentId,
+  onStart,
+  busy,
+}: {
+  prev: PrevReport | null;
+  onPrev: (p: PrevReport | null) => void;
+  studentId: string;
+  onStart: () => void;
+  busy: boolean;
+}) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (!loaded) {
+    fetch(`/api/students/${studentId}`, {
+      headers: { authorization: `Bearer ${localStorage.getItem('hg_access') ?? ''}` },
+    })
+      .then((r) => r.json())
+      .then((d) => onPrev(d.lastReport ?? null))
+      .catch(() => onPrev(null))
+      .finally(() => setLoaded(true));
+  }
+
+  return (
+    <Panel>
+      <Eyebrow>강사에게만 보입니다 · 5초</Eyebrow>
+
+      {prev ? (
+        <>
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginBottom: 6 }}>지난 수업 새 표현</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+              {prev.expressions.map((e) => (
+                <Tag key={e} tone="i">
+                  {e}
+                </Tag>
+              ))}
+            </div>
+          </div>
+
+          {prev.errors.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginBottom: 6 }}>고칠 것</div>
+              <div style={{ fontSize: 14 }}>{prev.errors[0]}</div>
+            </div>
+          )}
+        </>
+      ) : (
+        <p style={{ fontSize: 13, color: 'var(--ink-4)', marginTop: 12 }}>
+          {loaded ? '지난 기록이 없습니다. 첫 수업이에요' : '불러오는 중'}
+        </p>
+      )}
+
+      <div style={{ marginTop: 20 }}>
+        <Button kind="primary" size="lg" full disabled={busy} onClick={onStart}>
+          {busy ? '시작하는 중' : '수업 시작 — 복습 5분부터'}
+        </Button>
+      </div>
+    </Panel>
+  );
+}
+
+/**
+ * 단계 1 — 복습 5분.
+ * 직전 리포트의 expression 이 그대로 복습 문항이 된다. 강사가 만들지 않는다.
+ * 이 구조가 리포트를 성실히 쓸 동기를 만든다 — 3분 입력한 것이 다음 주에 돌아온다.
+ */
+function StepReview({ prev, onNext, lessonNo }: { prev: PrevReport | null; onNext: () => void; lessonNo: number }) {
+  return (
+    <Panel>
+      <Eyebrow>복습 5분</Eyebrow>
+      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 10 }}>
+        눈으로 훑지 말고 학생이 말하게 하세요. 대답이 나와야 넘어갑니다.
+      </p>
+
+      <div style={{ marginTop: 16 }}>
+        {(prev?.expressions ?? []).map((e, i) => (
+          <div
+            key={e}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '12px 0',
+              borderTop: '1px solid var(--rule-soft)',
+            }}
+          >
+            <span className="mono" style={{ fontSize: 11, color: 'var(--ink-4)', width: 20 }}>
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span style={{ flex: 1, fontSize: 17, fontWeight: 500 }}>{e}</span>
+          </div>
+        ))}
+
+        {(!prev || prev.expressions.length === 0) && (
+          <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>
+            복습할 표현이 없습니다. 바로 본 차시로 갑니다
+          </p>
+        )}
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <Button kind="primary" size="lg" full onClick={onNext}>
+          {lessonNo}차시 열기
+        </Button>
+      </div>
+    </Panel>
+  );
+}
+
+/** 단계 2 — 본 차시. 뷰어는 다운로드·인쇄·우클릭을 차단한다. */
+function StepUnit({
+  studentId,
+  unitId,
+  onNext,
+}: {
+  studentId: string;
+  unitId: string | null | undefined;
+  onNext: () => void;
+}) {
+  const [slides, setSlides] = useState<{ goalStatement: string; pages: { no: number; url: string }[]; watermark: { line: string; note: string } } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  if (!loaded) {
+    setLoaded(true);
+    if (unitId) {
+      fetch(`/api/units/${unitId}/slides?student_id=${studentId}`, {
+        headers: { authorization: `Bearer ${localStorage.getItem('hg_access') ?? ''}` },
+      })
+        .then(async (r) => {
+          const body = await r.json();
+          if (!r.ok) throw new Error(body?.error?.message ?? '자료를 열지 못했습니다');
+          return body;
+        })
+        .then(setSlides)
+        .catch((e: Error) => setError(e.message));
+    } else {
+      setError('이 수업에 배정된 차시가 없습니다');
+    }
+  }
+
+  return (
+    <Panel>
+      <Eyebrow>차시 목표</Eyebrow>
+      <p style={{ fontSize: 15, marginTop: 8, marginBottom: 16 }}>
+        {slides?.goalStatement ?? (error ? '—' : '불러오는 중')}
+      </p>
+
+      <SlideViewer slides={slides} error={error} />
+
+      <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
+        <Button kind="jade" size="lg" style={{ flex: 1 }} onClick={onNext}>
+          통과 — 다음 차시 열기
+        </Button>
+        <Button size="lg" onClick={onNext}>
+          재수행
+        </Button>
+      </div>
+    </Panel>
+  );
+}
+
+/**
+ * SlideViewer — 06번 §4.9 · 09번 U3.
+ *
+ * 워터마크는 서버에서 이미지에 합성해야 한다. 여기 DOM 으로 얹은 문구는
+ * 개발자도구로 지워진다. 합성 파이프라인(tools/watermark)이 붙기 전까지의
+ * 자리 표시이며, 그 사실을 화면에 그대로 적는다.
+ */
+function SlideViewer({
+  slides,
+  error,
+}: {
+  slides: { pages: { no: number; url: string }[]; watermark: { line: string; note: string } } | null;
+  error: string | null;
+}) {
+  return (
+    <div
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      onKeyDown={(e) => {
+        // Ctrl/Cmd + S · P 차단
+        if ((e.ctrlKey || e.metaKey) && ['s', 'p'].includes(e.key.toLowerCase())) {
+          e.preventDefault();
+        }
+      }}
+      tabIndex={0}
+      style={{
+        position: 'relative',
+        aspectRatio: '16 / 9',
+        background: 'var(--canvas)',
+        border: '1px solid var(--rule)',
+        borderRadius: 8,
+        display: 'grid',
+        placeItems: 'center',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+      }}
+    >
+      <div style={{ textAlign: 'center', color: 'var(--ink-4)', fontSize: 12.5, padding: 20 }}>
+        {error ? (
+          <span style={{ color: 'var(--honghwa)' }}>{error}</span>
+        ) : slides ? (
+          slides.pages.length > 0 ? (
+            `슬라이드 ${slides.pages.length}장 · 서명 URL 발급됨`
+          ) : (
+            '이 차시의 슬라이드 자산이 아직 제작되지 않았습니다'
+          )
+        ) : (
+          '불러오는 중'
+        )}
+      </div>
+
+      {slides && (
+        <div
+          className="mono"
+          style={{
+            position: 'absolute',
+            right: 10,
+            bottom: 8,
+            fontSize: 9.5,
+            color: 'var(--ink-4)',
+            opacity: 0.8,
+          }}
+        >
+          {slides.watermark.line} · {slides.watermark.note}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 단계 3 — 3분 리포트 (T-03).
+ * STT 를 대체하는 장치다. 저장 시 외부 API 호출이 0건이어야 한다.
+ */
+function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void }) {
+  const [expressions, setExpressions] = useState<string[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [expInput, setExpInput] = useState('');
+  const [errInput, setErrInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ vocabCreated: number; srsScheduled: string[]; externalApiCalls: number } | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+
+  const MAX_EXP = 5;
+  const MAX_ERR = 3;
+
+  async function save() {
+    setBusy(true);
+    setFailure(null);
+    try {
+      const r = await post<{ vocabCreated: number; srsScheduled: string[]; externalApiCalls: number }>(
+        `/api/lessons/${lessonId}/report`,
+        { expressions, errors, outcome: 'pass' },
+      );
+      setResult(r);
+    } catch (err) {
+      setFailure(err instanceof Error ? err.message : '저장하지 못했습니다');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (result) {
+    return (
+      <Panel>
+        <Eyebrow>전달 완료</Eyebrow>
+        <h2 style={{ fontSize: 17, fontWeight: 600, marginTop: 10 }}>학생에게 전달됐습니다</h2>
+        <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.7 }}>
+          표현 {result.vocabCreated}개가 학습 노트에 적립됐고, 복습 알림이{' '}
+          {result.srsScheduled.slice(0, 3).join(' · ')}에 자동 발송됩니다.
+          이 표현들이 다음 수업 복습 슬라이드가 됩니다.
+        </p>
+
+        {/* 이 배지는 제품 철학의 증거다. 삭제 금지 (07번 T-03) */}
+        <div style={{ marginTop: 14 }}>
+          <Tag tone="j">음성 인식 미사용 · 외부 API 호출 {result.externalApiCalls}건 · 추가 비용 0원</Tag>
+        </div>
+
+        <div style={{ marginTop: 20 }}>
+          <Button kind="primary" full onClick={onDone}>
+            학생 목록으로
+          </Button>
+        </div>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel>
+      <Eyebrow>기록 3분</Eyebrow>
+      <p style={{ fontSize: 13, fontWeight: 600, marginTop: 8 }}>여기 넣은 것만 학생 노트로 갑니다</p>
+
+      <ChipField
+        title={`오늘 나온 새 표현 · ${expressions.length}/${MAX_EXP}`}
+        hint="전부 적지 마세요. 다음 주에 반드시 기억해야 할 것만."
+        tone="i"
+        items={expressions}
+        onRemove={(i) => setExpressions((v) => v.filter((_, x) => x !== i))}
+        value={expInput}
+        onChange={setExpInput}
+        onAdd={() => {
+          const v = expInput.trim();
+          if (v && expressions.length < MAX_EXP) {
+            setExpressions((prev) => [...prev, v]);
+            setExpInput('');
+          }
+        }}
+        disabled={expressions.length >= MAX_EXP}
+      />
+
+      <ChipField
+        title={`학생이 틀린 문장 · ${errors.length}/${MAX_ERR}`}
+        hint="말하기에서 조사 오류는 발달 단계입니다. 심한 것만."
+        tone="c"
+        items={errors}
+        onRemove={(i) => setErrors((v) => v.filter((_, x) => x !== i))}
+        value={errInput}
+        onChange={setErrInput}
+        onAdd={() => {
+          const v = errInput.trim();
+          if (v && errors.length < MAX_ERR) {
+            setErrors((prev) => [...prev, v]);
+            setErrInput('');
+          }
+        }}
+        disabled={errors.length >= MAX_ERR}
+      />
+
+      {failure && (
+        <p style={{ fontSize: 12.5, color: 'var(--honghwa)', marginTop: 12 }}>{failure}</p>
+      )}
+
+      <div style={{ marginTop: 18 }}>
+        <Button
+          kind="primary"
+          size="lg"
+          full
+          disabled={expressions.length === 0 || busy}
+          onClick={save}
+        >
+          {busy
+            ? '저장하는 중'
+            : expressions.length === 0
+              ? '새 표현을 1개 이상 입력하세요'
+              : '저장하고 학생에게 보내기'}
+        </Button>
+      </div>
+    </Panel>
+  );
+}
+
+function ChipField({
+  title,
+  hint,
+  tone,
+  items,
+  onRemove,
+  value,
+  onChange,
+  onAdd,
+  disabled,
+}: {
+  title: string;
+  hint: string;
+  tone: 'i' | 'c';
+  items: string[];
+  onRemove: (i: number) => void;
+  value: string;
+  onChange: (v: string) => void;
+  onAdd: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--rule-soft)' }}>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>{title}</div>
+      <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3 }}>{hint}</div>
+
+      {items.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
+          {items.map((item, i) => (
+            <button
+              key={`${item}-${i}`}
+              type="button"
+              onClick={() => onRemove(i)}
+              aria-label={`${item} 제거`}
+              style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              <Tag tone={tone}>{item} ×</Tag>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onAdd();
+            }
+          }}
+          disabled={disabled}
+          placeholder={disabled ? '최대치에 도달했습니다' : '입력하고 Enter'}
+          style={{
+            flex: 1,
+            padding: '9px 11px',
+            fontSize: 13,
+            fontFamily: 'inherit',
+            border: '1px solid var(--rule)',
+            borderRadius: 7,
+            background: disabled ? 'var(--rule-soft)' : 'var(--surface)',
+            color: 'var(--ink)',
+          }}
+        />
+        <Button size="sm" onClick={onAdd} disabled={disabled}>
+          추가
+        </Button>
+      </div>
+    </div>
+  );
+}

@@ -8,4 +8,5 @@ export * from './assets.js';
 export * from './note.js';
 export * from './teachers.js';
 export * from './billing-service.js';
+export * from './activities.js';
 export * from './http.js';

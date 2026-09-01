@@ -1,6 +1,8 @@
+import Link from 'next/link';
 import { TIER_PRICE } from '@hangyeol/billing';
 import type { StudentStatus } from '@hangyeol/shared';
 import { loadToday, type TodayStudent } from './data';
+import { Shell } from './Shell';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,9 +44,8 @@ export default async function TodayPage() {
   };
 
   return (
-    <>
-      <Header />
-      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '26px 20px 70px' }}>
+    <Shell>
+      <>
         <LaunchPanel {...imminent} />
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 26 }}>
@@ -76,63 +77,8 @@ export default async function TodayPage() {
           금액은 packages/billing 의 계산식(티어 {data.tier} {won(TIER_PRICE[data.tier])}
           {data.discountPct > 0 ? ` · 볼륨 할인 ${data.discountPct}%` : ''})으로 산출합니다.
         </p>
-      </main>
-    </>
-  );
-}
-
-function Header() {
-  return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        height: 54,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 20,
-        padding: '0 20px',
-        background: 'var(--surface)',
-        borderBottom: '1px solid var(--rule)',
-        backdropFilter: 'blur(8px)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, maxWidth: 1100, width: '100%', margin: '0 auto' }}>
-        {/* 로고는 아이콘 세트가 아니라 획으로 그린다 (06번 §9) */}
-        <svg width="17" height="17" viewBox="0 0 100 100" aria-hidden="true">
-          <path
-            d="M22 20 V80 M78 20 V80 M22 50 H78"
-            stroke="var(--ink)"
-            strokeWidth="11"
-            strokeLinecap="round"
-            fill="none"
-          />
-        </svg>
-        <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}>한결</span>
-        <nav style={{ display: 'flex', gap: 4, marginLeft: 14 }}>
-          <NavItem label="오늘" active />
-          <NavItem label="청구" />
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-function NavItem({ label, active = false }: { label: string; active?: boolean }) {
-  return (
-    <span
-      style={{
-        fontSize: 13,
-        padding: '5px 10px',
-        borderRadius: 7,
-        color: active ? 'var(--ink)' : 'var(--ink-3)',
-        background: active ? 'var(--rule-soft)' : 'transparent',
-        fontWeight: active ? 600 : 400,
-      }}
-    >
-      {label}
-    </span>
+      </>
+    </Shell>
   );
 }
 
@@ -293,8 +239,12 @@ function StudentRow({ student, first }: { student: TodayStudent; first: boolean 
       </div>
 
       <div style={{ display: 'flex', gap: 6 }}>
-        <SmallButton label="상세" kind="ghost" />
-        <SmallButton label="기록" kind="primary" />
+        <Link href={`/students/${student.id}`} style={{ textDecoration: 'none' }}>
+          <SmallButton label="상세" kind="ghost" />
+        </Link>
+        <Link href={`/lesson/${student.id}`} style={{ textDecoration: 'none' }}>
+          <SmallButton label="수업" kind="primary" />
+        </Link>
       </div>
     </div>
   );
@@ -334,9 +284,11 @@ function NewStudentCard() {
       }}
     >
       <div style={{ fontSize: 13 }}>예약이 잡혔는데 목록에 없나요</div>
-      <button
+      <Link
+        href="/students/new"
         className="hg-tap"
         style={{
+          display: 'inline-block',
           marginTop: 10,
           padding: '10px 16px',
           fontSize: 13,
@@ -344,12 +296,12 @@ function NewStudentCard() {
           border: '1px solid var(--rule)',
           background: 'var(--surface)',
           color: 'var(--ink-2)',
-          fontFamily: 'inherit',
-          cursor: 'pointer',
+          textDecoration: 'none',
+          fontWeight: 600,
         }}
       >
         새 학생 등록 · 30초
-      </button>
+      </Link>
       <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 8 }}>
         등록과 1차시는 무료입니다. 2차시부터 요금이 발생합니다
       </div>
