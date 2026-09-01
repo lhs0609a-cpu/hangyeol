@@ -239,8 +239,8 @@ function StudentRow({ student, first }: { student: TodayStudent; first: boolean 
       </div>
 
       <div style={{ display: 'flex', gap: 6 }}>
-        <Link href={`/students/${student.id}`} style={{ textDecoration: 'none' }}>
-          <SmallButton label="상세" kind="ghost" />
+        <Link href={`/plan/${student.id}`} style={{ textDecoration: 'none' }}>
+          <SmallButton label="플랜" kind="ghost" />
         </Link>
         <Link href={`/lesson/${student.id}`} style={{ textDecoration: 'none' }}>
           <SmallButton label="수업" kind="primary" />

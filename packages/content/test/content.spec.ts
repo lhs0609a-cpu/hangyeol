@@ -1,131 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildTokenManifest,
   CLASSROOM_ENGLISH,
-  CONTEXTS,
-  CONTRASTS,
-  FLUENCY_TOPICS,
-  INITIAL_QUIZ_STATE,
+  LESSON_FRAME,
+  LESSON_PLANS,
   LEVEL1_UNITS,
-  matchNode,
-  pickNext,
-  SCENARIOS,
-  TALKER_COUNT,
   TRIAL_PACKS,
-  type QuizState,
 } from '@hangyeol/content';
 
 /*
  * 콘텐츠는 데이터지만 규칙을 갖고 있다.
- * 그 규칙이 깨지면 HVPT 가 HVPT 가 아니게 되고, 커리큘럼 배열이 근거를 잃는다.
+ * 그 규칙이 깨지면 커리큘럼 배열이 근거를 잃고, 지도안이 대본이 아니게 된다.
  * 사람이 손으로 채우는 데이터일수록 기계가 지켜야 한다.
  */
-
-describe('HVPT 음원 매니페스트 — 08번 문서 §3 필수 3요건', () => {
-  const manifest = buildTokenManifest();
-
-  it('화자 8명 × 맥락 4종을 빠짐없이 만든다', () => {
-    for (const contrast of CONTRASTS) {
-      for (const token of contrast.tokens) {
-        for (let talker = 0; talker < TALKER_COUNT; talker += 1) {
-          for (const context of CONTEXTS) {
-            const hit = manifest.find(
-              (m) =>
-                m.contrastId === contrast.id &&
-                m.token === token &&
-                m.talkerIdx === talker &&
-                m.context === context,
-            );
-            expect(hit, `${contrast.id}/${token}/t${talker}/${context}`).toBeDefined();
-          }
-        }
-      }
-    }
-  });
-
-  it('audioKey 가 전부 유일하다 — 겹치면 덮어써진다', () => {
-    const keys = manifest.map((m) => m.audioKey);
-    expect(new Set(keys).size).toBe(keys.length);
-  });
-
-  it('08번 문서의 추정치(약 416개)와 맞는다', () => {
-    expect(manifest.length).toBe(416);
-  });
-
-  it('맥락별 발화문이 비어 있지 않다', () => {
-    for (const m of manifest) {
-      expect(m.utterance.trim().length).toBeGreaterThan(0);
-    }
-  });
-});
-
-describe('HVPT 출제기 — 동일 화자 연속 2회 금지', () => {
-  const pool = buildTokenManifest().filter((t) => t.contrastId === 'g3');
-
-  it('직전 화자를 다시 내지 않는다', () => {
-    let state: QuizState = INITIAL_QUIZ_STATE;
-    let previous = -1;
-
-    for (let i = 0; i < 60; i += 1) {
-      const next = pickNext(pool, state);
-      expect(next.spec.talkerIdx).not.toBe(previous);
-      previous = next.spec.talkerIdx;
-      state = next.state;
-    }
-  });
-
-  it('세션이 진행되면 화자 8명이 전원 등장한다', () => {
-    let state: QuizState = INITIAL_QUIZ_STATE;
-    for (let i = 0; i < 40; i += 1) {
-      state = pickNext(pool, state).state;
-    }
-    expect(new Set(state.usedTalkers).size).toBe(TALKER_COUNT);
-  });
-
-  it('빈 풀은 조용히 넘어가지 않고 터뜨린다', () => {
-    expect(() => pickNext([], INITIAL_QUIZ_STATE)).toThrow(/empty/);
-  });
-});
-
-describe('시나리오 판정 — 1차 룰 매칭이 90% 를 처리해야 한다', () => {
-  const cafe = SCENARIOS.find((s) => s.unitNo === 15)!;
-  const n1 = cafe.nodes.find((n) => n.id === 'n1')!;
-
-  it('기대 표현이 들어 있으면 다음 노드로 간다', () => {
-    expect(matchNode(n1, '아메리카노 주세요')).toEqual({ next: 'n2', matched: true });
-  });
-
-  it('공백 차이를 흡수한다', () => {
-    expect(matchNode(n1, '아 메 리 카 노 주세요').matched).toBe(true);
-  });
-
-  it('못 알아들으면 재시도 노드로 보낸다 — 대화가 끊기지 않는다', () => {
-    expect(matchNode(n1, '음...')).toEqual({ next: 'n1_retry', matched: false });
-  });
-
-  it('모든 노드에 fallback 이 있거나 종료 노드다', () => {
-    for (const s of SCENARIOS) {
-      for (const node of s.nodes) {
-        if (node.expect.length === 0) continue; // 종료 노드
-        expect(
-          node.expect.some((e) => e.kind === 'fallback'),
-          `${s.unitNo}/${node.id} 에 fallback 이 없다`,
-        ).toBe(true);
-      }
-    }
-  });
-
-  it('모든 next 가 실재하는 노드를 가리킨다', () => {
-    for (const s of SCENARIOS) {
-      const ids = new Set(s.nodes.map((n) => n.id));
-      for (const node of s.nodes) {
-        for (const rule of node.expect) {
-          expect(ids.has(rule.next), `${s.unitNo}/${node.id} → ${rule.next}`).toBe(true);
-        }
-      }
-    }
-  });
-});
 
 describe('커리큘럼 배열 — 08번 문서의 확정 순서', () => {
   it('차시 번호가 1부터 연속이다', () => {
@@ -159,19 +45,6 @@ describe('커리큘럼 배열 — 08번 문서의 확정 순서', () => {
       // "말할 수 있다" · "쓰고 읽을 수 있다" 처럼 학생이 해내야 할 행동으로 끝나야 한다.
       expect(unit.goalStatement, `${unit.unitNo}차시`).toMatch(/수 있다$/);
     }
-  });
-});
-
-describe('4·3·2 주제 — 아는 것만 쓴다', () => {
-  it('쓸 표현이 비어 있는 주제가 없다', () => {
-    for (const topic of FLUENCY_TOPICS) {
-      expect(topic.useExpressions.length, topic.prompt).toBeGreaterThan(0);
-    }
-  });
-
-  it('id 가 유일하다', () => {
-    const ids = FLUENCY_TOPICS.map((t) => t.id);
-    expect(new Set(ids).size).toBe(ids.length);
   });
 });
 
@@ -217,6 +90,78 @@ describe('교실영어 — 08번 문서 §10', () => {
   it('세 묶음이 전부 존재한다', () => {
     for (const bucket of ['student_says', 'teacher_says', 'grammar'] as const) {
       expect(CLASSROOM_ENGLISH.some((p) => p.bucket === bucket), bucket).toBe(true);
+    }
+  });
+});
+
+describe('지도안 — 요약이 아니라 대본이어야 한다', () => {
+  it('50분 틀이 빈틈없이 이어진다', () => {
+    expect(LESSON_FRAME[0]!.fromMin).toBe(0);
+    expect(LESSON_FRAME[LESSON_FRAME.length - 1]!.toMin).toBe(50);
+    for (let i = 1; i < LESSON_FRAME.length; i += 1) {
+      expect(LESSON_FRAME[i]!.fromMin).toBe(LESSON_FRAME[i - 1]!.toMin);
+    }
+  });
+
+  it('모든 지도안이 6단계를 전부 갖는다', () => {
+    const phases = LESSON_FRAME.map((f) => f.phase);
+    for (const plan of LESSON_PLANS) {
+      expect(plan.blocks.map((b) => b.phase), `${plan.unitNo}차시`).toEqual(phases);
+    }
+  });
+
+  it('모든 블록에 강사가 그대로 읽을 말이 있다', () => {
+    // "핵심 표현을 도입한다" 같은 문장은 지도안이 아니다.
+    // 무엇을 말할지 적혀 있어야 준비 시간이 0 이 된다.
+    for (const plan of LESSON_PLANS) {
+      for (const block of plan.blocks) {
+        expect(block.say.length, `${plan.unitNo}차시 ${block.phase}`).toBeGreaterThan(0);
+        for (const line of block.say) {
+          expect(line.trim().length, `${plan.unitNo}차시 ${block.phase}`).toBeGreaterThan(1);
+        }
+      }
+    }
+  });
+
+  it('학생이 말할 것이 지정돼 있다 — 없으면 강의가 된다', () => {
+    for (const plan of LESSON_PLANS) {
+      // 마무리(wrap)는 정리 구간이라 예외.
+      const teaching = plan.blocks.filter((b) => b.phase !== 'wrap' && b.phase !== 'model');
+      for (const block of teaching) {
+        expect(block.studentOutput, `${plan.unitNo}차시 ${block.phase}`).toBeTruthy();
+      }
+    }
+  });
+
+  it('통과 판정 기준이 있다', () => {
+    for (const plan of LESSON_PLANS) {
+      expect(plan.exitTicket.length, `${plan.unitNo}차시`).toBeGreaterThan(0);
+    }
+  });
+
+  it('강사가 흔히 하는 실수가 적혀 있다 — 판단할 여지를 남기지 않는다', () => {
+    for (const plan of LESSON_PLANS) {
+      expect(plan.teacherPitfalls.length, `${plan.unitNo}차시`).toBeGreaterThan(0);
+    }
+  });
+
+  it('모국어별 주의사항이 최소 하나는 있다', () => {
+    for (const plan of LESSON_PLANS) {
+      expect(Object.keys(plan.l1Notes).length, `${plan.unitNo}차시`).toBeGreaterThan(0);
+    }
+  });
+
+  it('지도안이 커리큘럼에 실재하는 차시를 가리킨다', () => {
+    const unitNos = new Set(LEVEL1_UNITS.map((u) => u.unitNo));
+    for (const plan of LESSON_PLANS) {
+      expect(unitNos.has(plan.unitNo), `${plan.unitNo}차시가 커리큘럼에 없다`).toBe(true);
+    }
+  });
+
+  it('목표문이 커리큘럼과 일치한다', () => {
+    for (const plan of LESSON_PLANS) {
+      const unit = LEVEL1_UNITS.find((u) => u.unitNo === plan.unitNo)!;
+      expect(plan.goalStatement, `${plan.unitNo}차시`).toBe(unit.goalStatement);
     }
   });
 });

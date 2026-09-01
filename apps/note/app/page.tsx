@@ -8,9 +8,6 @@ export const dynamic = 'force-dynamic';
 /** 과제 id → 화면. noteHome 이 내는 id 와 맞춰 둔다. */
 const TASK_HREF: Record<string, string> = {
   srs: '/srs',
-  hvpt: '/hvpt',
-  fluency: '/fluency',
-  listening: '/listening',
 };
 
 /*
@@ -50,7 +47,7 @@ export default async function NoteHomePage() {
       <div style={{ textAlign: 'center' }}>
         <SyllableProgress done={home.syllableProgress.done} />
         <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 8 }}>
-          {home.syllableProgress.done} / {home.syllableProgress.total} · 오늘의 글자
+          {home.syllableProgress.done} / {home.syllableProgress.total} · 이번 주 글자
         </div>
       </div>
 

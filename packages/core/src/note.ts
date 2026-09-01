@@ -2,7 +2,6 @@ import { studentNoteAccess } from '@hangyeol/billing';
 import { addDays, type BillingStatus } from '@hangyeol/shared';
 import { apiError } from './errors.js';
 import { db } from './guard.js';
-import { recordActivity } from './students.js';
 
 /**
  * 학생 학습노트 — 02번 문서 D, 화이트라벨.
@@ -175,12 +174,18 @@ export async function noteHome(studentId: bigint, now = new Date()): Promise<Not
     }),
   ]);
 
+  // 학생 도구는 복습 카드 하나다.
+  // 수업은 강사가 실시간으로 하고, 학생이 혼자 하는 것은 잊지 않게 붙잡는 일뿐이다.
+  // 이 하나가 student_activity 를 남겨 과금 활성 판정 (B) 조건을 채운다.
   const doneKinds = new Set(activities.map((a) => a.kind));
   const tasks = [
-    { id: 'srs', label: '복습 카드', sub: due > 0 ? `${due}개` : '오늘은 없어요', minutes: 3, done: doneKinds.has('srs') },
-    { id: 'hvpt', label: '소리 구분', sub: 'ㄱ · ㅋ · ㄲ', minutes: 4, done: doneKinds.has('hvpt') },
-    { id: 'fluency', label: '4·3·2 말하기', sub: '주말에 뭐 했어요?', minutes: 9, done: doneKinds.has('fluency') },
-    { id: 'listening', label: '그냥 듣기', sub: '2급', minutes: 3, done: doneKinds.has('listen') },
+    {
+      id: 'srs',
+      label: '복습 카드',
+      sub: due > 0 ? `${due}개` : '오늘은 없어요',
+      minutes: 3,
+      done: doneKinds.has('srs') || due === 0,
+    },
   ];
 
   const errors = lastLesson?.reportItems.filter((i) => i.kind === 'error') ?? [];
@@ -189,7 +194,10 @@ export async function noteHome(studentId: bigint, now = new Date()): Promise<Not
     teacherDisplayName: student.teacher.name,
     studentNameKo: student.nameKo ?? student.name,
     streakDays: await streakDays(studentId, now),
-    syllableProgress: { done: tasks.filter((t) => t.done).length, total: tasks.length },
+    // 06번 §4.7 의 '한' 글자는 원래 오늘 과제 4개에 매여 있었다.
+    // 과제가 하나로 줄었으니 기준을 주간 학습일로 옮긴다 —
+    // 글자가 한 주에 걸쳐 완성되고, 그게 매일 돌아올 이유가 된다.
+    syllableProgress: { done: await weeklyStudyDays(studentId, now), total: 4 },
     tasks,
     lastLesson: lastLesson
       ? {
@@ -200,6 +208,16 @@ export async function noteHome(studentId: bigint, now = new Date()): Promise<Not
       : null,
     access: studentNoteAccess(student.teacher.billingStatus as BillingStatus),
   };
+}
+
+/** 이번 주에 복습한 날 수. 최대 4일까지 센다 — 그 이상은 글자가 이미 완성된다. */
+async function weeklyStudyDays(studentId: bigint, now: Date): Promise<number> {
+  const rows = await db().studentActivity.findMany({
+    where: { studentId, occurredAt: { gte: addDays(now, -6) } },
+    select: { occurredAt: true },
+  });
+  const days = new Set(rows.map((r) => r.occurredAt.toISOString().slice(0, 10)));
+  return Math.min(4, days.size);
 }
 
 /** 연속 학습일. 학생 화면의 유일한 게이미피케이션이다. */
@@ -217,28 +235,4 @@ async function streakDays(studentId: bigint, now: Date): Promise<number> {
     streak += 1;
   }
   return streak;
-}
-
-/** HVPT 출제 — 08번 문서 §3: 동일 화자 연속 2회 금지. */
-export async function nextHvptToken(studentId: bigint, contrastId: string, lastTalkerIdx?: number) {
-  const prisma = db();
-  const tokens = await prisma.hvptToken.findMany({
-    where: { contrastId, ...(lastTalkerIdx === undefined ? {} : { talkerIdx: { not: lastTalkerIdx } }) },
-    select: { id: true, token: true, talkerIdx: true, context: true, audioKey: true },
-  });
-  if (tokens.length === 0) throw apiError('NOT_FOUND', '음원이 아직 준비되지 않았습니다');
-
-  const pick = tokens[Math.floor(Math.random() * tokens.length)]!;
-  const contrast = await prisma.hvptContrast.findUnique({ where: { id: contrastId } });
-
-  await recordActivity(studentId, 'hvpt');
-
-  return {
-    tokenId: String(pick.id),
-    contrastId,
-    choices: contrast?.tokens ?? [],
-    talkerIdx: pick.talkerIdx,
-    context: pick.context,
-    audioKey: pick.audioKey,
-  };
 }

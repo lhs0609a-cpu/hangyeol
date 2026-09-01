@@ -169,8 +169,11 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
       )}
 
       <div style={{ marginTop: 20, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Link href={`/plan/${data.id}`} style={{ textDecoration: 'none' }}>
+          <Button kind="primary">오늘 뭘 할지 보기</Button>
+        </Link>
         <Link href={`/lesson/${data.id}`} style={{ textDecoration: 'none' }}>
-          <Button kind="primary">수업 시작</Button>
+          <Button>수업 시작</Button>
         </Link>
         {data.status !== 'completed' && (
           <Button disabled={busy} onClick={complete}>

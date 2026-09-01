@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Eyebrow, Metric, Panel, Tag } from '@hangyeol/ui';
+import { Eyebrow, Metric, Panel } from '@hangyeol/ui';
 import { get } from '../api-client';
 import { Shell } from '../Shell';
 
@@ -22,18 +22,15 @@ interface Metrics {
   dormantRatePct: number;
   creditBalanceTotal: number;
   bypassSuspects: number;
-  content: Record<string, { drafted?: number; target?: number; note?: string; [k: string]: unknown }>;
+  content: Record<string, { drafted?: number; written?: number; target?: number; note?: string }>;
 }
 
 const CONTENT_LABEL: Record<string, string> = {
+  lessonPlans: '차시 지도안',
   curriculum: '커리큘럼 차시',
   classroomEnglish: '교실영어 문장',
-  hvpt: 'HVPT 음원',
-  scenarios: '시나리오 드릴',
-  fluency: '4·3·2 주제',
   pronunciation: '발음 시트',
   trialPacks: '체험수업 팩',
-  listening: '다청 오디오',
 };
 
 export default function AdminPage() {
@@ -126,15 +123,15 @@ export default function AdminPage() {
       <Panel style={{ marginTop: 14 }}>
         <Eyebrow>콘텐츠 제작 현황</Eyebrow>
         <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 6 }}>
-          목표 대비 실제. 오디오는 코드로 만들 수 없습니다 — 녹음 또는 TTS 배치가 필요합니다.
+          목표 대비 실제. 전부 AI 초안이며 한국어교원 자격 2급 검수를 거쳐야 합니다.
         </p>
 
         <div style={{ marginTop: 12 }}>
           {Object.entries(data.content).map(([key, v]) => {
-            const drafted = Number(v.drafted ?? v.plannedTokens ?? 0);
-            const target = Number(v.target ?? v.plannedTokens ?? 0);
+            // 지도안은 written, 나머지는 drafted 로 센다.
+            const drafted = Number(v.drafted ?? v.written ?? 0);
+            const target = Number(v.target ?? 0);
             const pct = target === 0 ? 0 : Math.min(100, Math.round((drafted / target) * 100));
-            const audio = key === 'hvpt' ? Number(v.generatedAudio ?? 0) : key === 'listening' ? Number(v.recordedAudio ?? 0) : null;
 
             return (
               <div key={key} style={{ padding: '10px 0', borderTop: '1px solid var(--rule-soft)' }}>
@@ -147,11 +144,6 @@ export default function AdminPage() {
                 <div style={{ height: 3, borderRadius: 99, background: 'var(--rule)', marginTop: 6 }}>
                   <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: pct >= 100 ? 'var(--jade)' : 'var(--indigo)' }} />
                 </div>
-                {audio !== null && (
-                  <div style={{ marginTop: 6 }}>
-                    <Tag tone={audio === 0 ? 'h' : 'j'}>오디오 {audio}개</Tag>
-                  </div>
-                )}
               </div>
             );
           })}

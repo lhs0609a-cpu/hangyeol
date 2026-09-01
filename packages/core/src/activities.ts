@@ -4,118 +4,12 @@ import { apiError } from './errors.js';
 import { db } from './guard.js';
 
 /*
- * 학생 학습 활동 기록 — HVPT · 4·3·2 · 다청.
+ * 관리자 지표.
  *
- * 이 셋의 공통점: 매 호출이 student_activity 를 남긴다는 것이다.
- * 그 기록이 과금 활성판정 (B) 조건의 유일한 근거다.
- * 여기서 기록을 빠뜨리면 실제로 학습한 학생이 휴면 처리된다.
+ * 학생 활동 기록은 note.ts 의 SRS 채점과 students.ts 의 노트 열람에서 남는다.
+ * 그 기록이 과금 활성 판정 (B) 조건의 유일한 근거다 —
+ * 학생 도구를 복습 카드 하나로 줄인 뒤에도 (B) 가 성립하는 이유가 그것이다.
  */
-
-export interface HvptAttemptResult {
-  correct: boolean;
-  answer: string;
-  session: { attempts: number; correct: number };
-}
-
-export async function recordHvptAttempt(params: {
-  studentId: bigint;
-  tokenId: bigint;
-  chosen: string;
-  responseMs: number | null;
-}): Promise<HvptAttemptResult> {
-  const prisma = db();
-
-  const token = await prisma.hvptToken.findUnique({
-    where: { id: params.tokenId },
-    select: { id: true, token: true, contrastId: true },
-  });
-  if (!token) throw apiError('NOT_FOUND');
-
-  const correct = token.token === params.chosen;
-
-  // 세션은 대립쌍 단위로 열어 둔다. 없으면 만든다.
-  let session = await prisma.hvptSession.findFirst({
-    where: { studentId: params.studentId, contrastId: token.contrastId, endedAt: null },
-    orderBy: { startedAt: 'desc' },
-  });
-
-  if (!session) {
-    session = await prisma.hvptSession.create({
-      data: { studentId: params.studentId, contrastId: token.contrastId },
-    });
-  }
-
-  const [, updated] = await prisma.$transaction([
-    prisma.hvptAttempt.create({
-      data: {
-        sessionId: session.id,
-        tokenId: token.id,
-        chosen: params.chosen,
-        isCorrect: correct,
-        responseMs: params.responseMs,
-      },
-    }),
-    prisma.hvptSession.update({
-      where: { id: session.id },
-      data: { attempts: { increment: 1 }, correct: { increment: correct ? 1 : 0 } },
-    }),
-    prisma.studentActivity.create({ data: { studentId: params.studentId, kind: 'hvpt' } }),
-  ]);
-
-  return {
-    correct,
-    answer: token.token,
-    session: { attempts: updated.attempts, correct: updated.correct },
-  };
-}
-
-export async function recordFluencyRound(
-  studentId: bigint,
-  round: 1 | 2 | 3,
-  topicId: number | null,
-  now = new Date(),
-) {
-  const prisma = db();
-
-  let session = await prisma.fluencySession.findFirst({
-    where: { studentId, r3DoneAt: null },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  if (!session) {
-    session = await prisma.fluencySession.create({
-      data: { studentId, topicId: topicId === null ? null : BigInt(topicId) },
-    });
-  }
-
-  const field = ({ 1: 'r1DoneAt', 2: 'r2DoneAt', 3: 'r3DoneAt' } as const)[round];
-
-  await prisma.$transaction([
-    prisma.fluencySession.update({ where: { id: session.id }, data: { [field]: now } }),
-    prisma.studentActivity.create({ data: { studentId, kind: 'fluency' } }),
-  ]);
-
-  return { round, done: true };
-}
-
-export async function recordListening(
-  studentId: bigint,
-  audioId: bigint,
-  playedSec: number,
-  completed: boolean,
-  now = new Date(),
-) {
-  const prisma = db();
-
-  await prisma.$transaction([
-    prisma.listeningLog.create({
-      data: { studentId, audioId, playedSec, completedAt: completed ? now : null },
-    }),
-    prisma.studentActivity.create({ data: { studentId, kind: 'listen' } }),
-  ]);
-
-  return { ok: true };
-}
 
 /**
  * 관리자 지표 — 05번 문서 §10 · 11번 문서 핵심 지표.

@@ -7,7 +7,6 @@
     { "path": "packages/ui" },
     { "path": "packages/content" },
     { "path": "tools/watermark" },
-    { "path": "tools/tts-batch" },
     { "path": "tools/langgate" }
   ]
 }

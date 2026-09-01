@@ -80,12 +80,10 @@ export const EXTERNAL_ASSETS: readonly ExternalAsset[] = Object.freeze([
     license: 'CC-BY-4.0',
     url: 'https://openslr.org/40/',
     attribution: 'Zeroth-Korean corpus (Lucas Jo, Wonkyum Lee / Atlas Guide) — CC BY 4.0',
-    usage:
-      '다청 원본 후보 · HVPT 실화자 토큰 추출 후보. 51.6시간 · 화자 105명이라 ' +
-      'HVPT 의 "화자 8명" 요건을 실제 사람 목소리로 채울 수 있는 유일한 상업 가능 경로다.',
+    usage: '사용하지 않음 — 수업은 강사가 실시간으로 한다',
     caveat:
-      '읽기 발화 코퍼스라 최소대립쌍(개/캐/깨)이 그대로 들어 있지 않다. ' +
-      '토큰을 잘라 쓰려면 정렬·추출 작업이 필요하고, 그 결과물도 CC BY 4.0 을 승계한다.',
+      '한때 HVPT 화자 8명을 채울 경로로 검토했으나, 학생 자습 도구를 걷어내면서 ' +
+      '필요가 사라졌다. 기록으로 남긴다.',
     verifiedAt: '2026-09-01',
   },
   {
@@ -95,10 +93,8 @@ export const EXTERNAL_ASSETS: readonly ExternalAsset[] = Object.freeze([
     license: 'CC0-1.0',
     url: 'https://commonvoice.mozilla.org/ko/datasets',
     attribution: 'Mozilla Common Voice — CC0 1.0 (표시 의무 없음, 그래도 표기한다)',
-    usage: '다화자 음성 후보. CC0 라 승계 의무가 없어 가공이 가장 자유롭다.',
-    caveat:
-      '한국어 분량이 언어별로 편차가 크다. 실제 내려받아 화자 수와 시간을 세기 전에는 ' +
-      '"충분하다"고 가정하지 않는다.',
+    usage: '사용하지 않음 — 오디오 자산을 만들지 않기로 했다',
+    caveat: 'CC0 라 제약은 없다. 필요해지면 다시 검토할 수 있다.',
     verifiedAt: '2026-09-01',
   },
   {
@@ -108,7 +104,7 @@ export const EXTERNAL_ASSETS: readonly ExternalAsset[] = Object.freeze([
     license: 'CC-BY-2.0-FR',
     url: 'https://tatoeba.org/en/downloads',
     attribution: '예문 일부는 Tatoeba (https://tatoeba.org) 에서 가져왔으며 CC BY 2.0 FR 로 배포됩니다',
-    usage: '단어장 예문 · 다청 대본 후보 · 시나리오 발화 후보 (한국어-영어 대역)',
+    usage: '단어장 예문 후보 (한국어-영어 대역). 텍스트만.',
     caveat:
       '텍스트는 상업 이용 가능하지만 오디오는 다르다. ' +
       '기여자가 비마케팅 조건을 붙인 클립이 섞여 있어 음성은 클립 단위로 확인해야 한다. ' +
@@ -142,7 +138,7 @@ export const EXTERNAL_ASSETS: readonly ExternalAsset[] = Object.freeze([
     license: 'MIT',
     url: 'https://github.com/rhasspy/piper',
     attribution: 'Piper TTS — MIT License',
-    usage: '음원 사전 생성 엔진 후보. 엔진 자체는 쓸 수 있다.',
+    usage: '사용하지 않음 — 음원을 만들지 않는다',
     caveat:
       '엔진이 MIT 여도 음성 모델은 학습 데이터의 라이선스를 승계한다. ' +
       '아래 piper-voice-ko 를 볼 것.',
@@ -220,7 +216,8 @@ export const LICENSE_REVIEW = {
   /** 09번 문서 §1 이 약관에 요구한 것과 같은 주기. 라이선스도 바뀐다. */
   reviewEveryDays: 90,
   note:
-    '조사 결과 공개 한국어 TTS 모델은 대부분 비상업이다. ' +
-    'HVPT 의 화자 8명은 TTS 가 아니라 상업 가능 실화자 코퍼스(Zeroth CC BY 4.0 · Common Voice CC0)' +
-    '에서 확보하는 편이 현실적이다.',
+    '조사 결과 공개 한국어 TTS 모델은 대부분 비상업이었다. ' +
+    '그와 별개로, TTS 음원을 파는 것은 파파고와 같은 것을 파는 셈이라 ' +
+    '이 플랫폼을 쓸 이유가 사라진다. 오디오 자산을 만들지 않기로 했다(docs/12). ' +
+    '음성 자산 항목은 판단 기록으로 남긴다.',
 } as const;

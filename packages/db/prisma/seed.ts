@@ -37,15 +37,6 @@ const STUDENTS = [
   { name: 'Sarah Putri', nameKo: '사라', email: 'sarah@example.com', l1: 'id', country: 'ID', platform: 'italki', lesson: 9, status: 'dormant' },
 ];
 
-/** 08번 문서 §3 대립쌍 5종. 음원은 아직 없다 — 구조만 넣는다. */
-const CONTRASTS = [
-  { id: 'g3', label: 'ㄱ ㅋ ㄲ', note: '평음 · 격음 · 경음', tokens: ['개', '캐', '깨'], l1: { en: 1, es: 1, ja: 3 } },
-  { id: 'd3', label: 'ㄷ ㅌ ㄸ', note: '평음 · 격음 · 경음', tokens: ['달', '탈', '딸'], l1: { en: 1, es: 1 } },
-  { id: 'eo', label: 'ㅓ ㅗ', note: '입술 둥글기', tokens: ['서', '소'], l1: { en: 1, ja: 1 } },
-  { id: 'eu', label: 'ㅡ ㅜ', note: '없는 모음', tokens: ['글', '굴'], l1: { en: 1, ja: 1, es: 1 } },
-  { id: 'coda', label: '받침 ㄱ ㄴ ㅁ', note: '불파음', tokens: ['박', '반', '밤'], l1: { ja: 1, zh: 1, vi: 1 } },
-];
-
 async function main() {
   const email = 'teacher@example.com';
 
@@ -71,14 +62,6 @@ async function main() {
       onboardingStage: 'teaching',
     },
   });
-
-  for (const c of CONTRASTS) {
-    await prisma.hvptContrast.upsert({
-      where: { id: c.id },
-      update: {},
-      create: { id: c.id, label: c.label, note: c.note, tokens: c.tokens, l1Priority: c.l1 },
-    });
-  }
 
   // 차시 하나만 넣는다. 슬라이드 자산이 없으므로 pageCount 는 0이다.
   const unit = await prisma.curriculumUnit.upsert({
@@ -143,8 +126,8 @@ async function main() {
     }
   }
 
-  console.log(`시드 완료 — 강사 1명(${email} / devpassword1), 학생 ${STUDENTS.length}명, 차시 ${unit.unitNo}, 대립쌍 ${CONTRASTS.length}종`);
-  console.log('교육 콘텐츠(슬라이드·음원·시나리오)는 포함되지 않습니다. 08번 문서의 별도 제작 트랙입니다.');
+  console.log(`시드 완료 — 강사 1명(${email} / devpassword1), 학생 ${STUDENTS.length}명, 차시 ${unit.unitNo}`);
+  console.log('슬라이드 자산은 포함되지 않습니다. 08번 문서의 별도 제작 트랙입니다.');
 }
 
 main()
