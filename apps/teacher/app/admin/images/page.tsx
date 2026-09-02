@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button, Eyebrow, Panel, Tag } from '@hangyeol/ui';
-import { get, getToken } from '../../api-client';
+import { get } from '../../api-client';
 import { Shell } from '../../Shell';
 
 /*
@@ -205,7 +205,6 @@ function ImageRow({
         method: 'POST',
         headers: {
           'content-type': file.type,
-          authorization: `Bearer ${getToken() ?? ''}`,
         },
         body: file,
       });

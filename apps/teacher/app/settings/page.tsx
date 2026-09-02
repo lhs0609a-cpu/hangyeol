@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button, Eyebrow, Panel, Tag } from '@hangyeol/ui';
-import { get, patch, clearToken } from '../api-client';
+import { get, patch, post } from '../api-client';
 import { Shell } from '../Shell';
 
 /*
@@ -158,8 +158,9 @@ export default function SettingsPage() {
         <Button
           kind="quiet"
           size="sm"
-          onClick={() => {
-            clearToken();
+          onClick={async () => {
+            // 서버가 쿠키를 지운다. 클라이언트에서 지울 수 없다(HttpOnly).
+            await post('/api/auth/logout', {});
             location.href = '/login';
           }}
         >

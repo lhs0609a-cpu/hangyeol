@@ -1,4 +1,5 @@
 import { quoteCyclePrice, tierFromHourlyRate, type BillingCycle } from '@hangyeol/billing';
+import { TEACHER_COOKIE } from '@hangyeol/core';
 import { isDatabaseConfigured } from '@hangyeol/db';
 import type { RateTier, StudentStatus } from '@hangyeol/shared';
 
@@ -79,6 +80,27 @@ function summarize(
   };
 }
 
+/**
+ * 쿠키의 세션에서 강사 id 를 꺼낸다.
+ *
+ * 서버 컴포넌트에서만 쓴다. 실패하면 null 을 준다 — 여기서 던지면
+ * 화면 전체가 오류가 되는데, 로그인 만료는 오류가 아니라 상태다.
+ * (미들웨어가 이미 로그인 화면으로 보냈어야 하는 경우다.)
+ */
+async function currentTeacherId(): Promise<bigint | null> {
+  const { cookies } = await import('next/headers');
+  const token = cookies().get(TEACHER_COOKIE)?.value;
+  if (!token) return null;
+
+  try {
+    const { verifyAccessToken } = await import('@hangyeol/core');
+    const claims = await verifyAccessToken(token);
+    return BigInt(claims.teacherId);
+  } catch {
+    return null;
+  }
+}
+
 export async function loadToday(now = new Date()): Promise<TodayData> {
   if (!isDatabaseConfigured()) {
     return {
@@ -95,10 +117,21 @@ export async function loadToday(now = new Date()): Promise<TodayData> {
   const { getPrisma } = await import('@hangyeol/db');
   const prisma = getPrisma();
 
-  const teacher = await prisma.teacher.findFirst({
-    orderBy: { createdAt: 'asc' },
-    select: { id: true, name: true, rateTier: true, hourlyRateUsd: true },
-  });
+  /*
+   * 로그인한 강사를 쿠키에서 찾는다.
+   *
+   * 전에는 findFirst 로 "가장 먼저 가입한 강사" 를 집어 왔다. 강사가 한 명일
+   * 때는 맞는 것처럼 보이지만, 두 명이 되는 순간 남의 학생 목록이 보인다.
+   * 그건 버그가 아니라 사고다.
+   */
+  const teacherId = await currentTeacherId();
+
+  const teacher = teacherId
+    ? await prisma.teacher.findUnique({
+        where: { id: teacherId },
+        select: { id: true, name: true, rateTier: true, hourlyRateUsd: true },
+      })
+    : null;
 
   if (!teacher) {
     return {

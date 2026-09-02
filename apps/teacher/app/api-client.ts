@@ -3,25 +3,18 @@
 /*
  * 브라우저에서 API 를 부르는 얇은 층.
  *
- * 토큰을 localStorage 에 두는 것은 XSS 에 약하다. 09번 문서가 요구하는
- * 최종 형태는 HttpOnly 쿠키다. 지금은 강사 앱이 단일 배포라 세션 쿠키로
- * 옮기는 게 맞고, 그 전환은 S7(결제) 전에 끝낸다.
- * 그때까지의 임시 저장소임을 여기 적어 둔다.
+ * 세션은 HttpOnly 쿠키에 있다(09번 문서의 최종 형태).
+ * 그래서 여기서 토큰을 들고 다니지 않는다 — JS 가 읽을 수 없고,
+ * 읽을 필요도 없다. fetch 가 같은 출처 쿠키를 자동으로 붙인다.
+ *
+ * localStorage 를 쓰던 때는 서버가 요청자를 알 수 없었다.
+ * 서버 컴포넌트도 미들웨어도 localStorage 를 못 읽기 때문이다.
  */
 
-const TOKEN_KEY = 'hg_access';
-
-export function setToken(token: string) {
-  window.localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(TOKEN_KEY);
-}
-
-export function clearToken() {
-  window.localStorage.removeItem(TOKEN_KEY);
+/** 예전 localStorage 잔재를 지운다. 남아 있어도 쓰이지 않지만 헷갈린다. */
+export function clearLegacyToken() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem('hg_access');
 }
 
 export interface ApiFailure {
@@ -43,13 +36,12 @@ export class ApiClientError extends Error {
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = getToken();
-
   const res = await fetch(path, {
     ...init,
+    // 세션 쿠키를 붙인다. 같은 출처라 기본값으로도 가지만 명시해 둔다.
+    credentials: 'same-origin',
     headers: {
       'content-type': 'application/json',
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...(init.headers ?? {}),
     },
   });
@@ -59,6 +51,16 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const failure: ApiFailure = body?.error ?? { code: 'INTERNAL', message: '처리하지 못했습니다' };
+
+    /*
+     * 세션이 끊겼으면 로그인으로 보낸다. 화면마다 처리하면 반드시 빠뜨리고,
+     * 그러면 "아무것도 안 보이는데 이유를 모르는" 상태가 된다.
+     */
+    if (res.status === 401 && typeof window !== 'undefined') {
+      const next = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `/login?next=${next}`;
+    }
+
     throw new ApiClientError(res.status, failure);
   }
 

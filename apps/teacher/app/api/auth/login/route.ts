@@ -4,11 +4,15 @@ import {
   enforce,
   handle,
   identityFrom,
+  json,
   normalizeEmail,
   readJson,
   requireFields,
+  sessionCookie,
   signAccessToken,
   signRefreshToken,
+  TEACHER_COOKIE,
+  TEACHER_REFRESH_COOKIE,
   verifyPassword,
 } from '@hangyeol/core';
 
@@ -66,16 +70,34 @@ export function POST(req: Request) {
     }
 
     const claims = { teacherId: String(teacher.id), email: teacher.email };
+    const access = await signAccessToken(claims);
+    const refresh = await signRefreshToken(claims);
 
-    return {
-      teacher: {
-        id: String(teacher.id),
-        email: teacher.email,
-        name: teacher.name,
-        billingStatus: teacher.billingStatus,
+    /*
+     * 쿠키로 내려보낸다. 응답 본문에도 남기는 이유는 기존 클라이언트가
+     * 아직 헤더 방식을 쓰기 때문이다 — 그쪽이 정리되면 본문에서 뺀다.
+     */
+    const headers = new Headers();
+    // 30분. 만료되면 refresh 로 갱신한다.
+    headers.append('set-cookie', sessionCookie(TEACHER_COOKIE, access, 30 * 60));
+    // 30일.
+    headers.append(
+      'set-cookie',
+      sessionCookie(TEACHER_REFRESH_COOKIE, refresh, 30 * 24 * 60 * 60),
+    );
+
+    return json(
+      {
+        teacher: {
+          id: String(teacher.id),
+          email: teacher.email,
+          name: teacher.name,
+          billingStatus: teacher.billingStatus,
+        },
+        access,
+        refresh,
       },
-      access: await signAccessToken(claims),
-      refresh: await signRefreshToken(claims),
-    };
+      { headers },
+    );
   });
 }

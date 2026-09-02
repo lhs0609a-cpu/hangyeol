@@ -1,7 +1,7 @@
 import { canViewAssets } from '@hangyeol/billing';
 import { getPrisma, isDatabaseConfigured } from '@hangyeol/db';
 import type { StudentStatus } from '@hangyeol/shared';
-import { bearer, verifyAccessToken, verifyStudentToken, type TeacherClaims } from './auth.js';
+import { sessionToken, verifyAccessToken, verifyStudentToken, type TeacherClaims } from './auth.js';
 import { apiError } from './errors.js';
 
 /**
@@ -32,7 +32,8 @@ export interface TeacherContext {
 
 /** 1단계. 모든 강사 API 의 입구. */
 export async function requireTeacher(req: Request): Promise<TeacherContext> {
-  const claims = await verifyAccessToken(bearer(req.headers.get('authorization')));
+  // 쿠키가 우선, Authorization 헤더는 대안. sessionToken 이 둘 다 본다.
+  const claims = await verifyAccessToken(sessionToken(req));
   return { claims, teacherId: BigInt(claims.teacherId) };
 }
 

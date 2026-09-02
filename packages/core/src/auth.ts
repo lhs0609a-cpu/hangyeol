@@ -109,3 +109,50 @@ export function bearer(header: string | null | undefined): string {
 }
 
 export const STUDENT_COOKIE = 'hg_note';
+
+/*
+ * 강사 세션 쿠키.
+ *
+ * 토큰을 localStorage 에 두면 서버가 요청자를 알 수 없다.
+ * 서버 컴포넌트도, 미들웨어도 localStorage 를 못 읽기 때문이다.
+ * 그래서 화면은 로그인 여부와 무관하게 렌더되고, 데이터는
+ * "첫 번째 강사" 를 집어 오게 된다 — 프로그램이 아니라 데모가 된다.
+ *
+ * HttpOnly 쿠키로 옮기면 세 가지가 한 번에 풀린다.
+ *   · 미들웨어가 로그인 여부를 보고 막을 수 있다
+ *   · 서버 컴포넌트가 누구의 데이터인지 안다
+ *   · XSS 로 토큰을 훔칠 수 없다 (09번 문서의 최종 형태)
+ */
+export const TEACHER_COOKIE = 'hg_access';
+export const TEACHER_REFRESH_COOKIE = 'hg_refresh';
+
+/** 요청에서 강사 세션을 꺼낸다. Authorization 헤더도 받는다 — 외부 호출용. */
+export function sessionToken(req: Request): string {
+  const header = req.headers.get('authorization');
+  if (header?.toLowerCase().startsWith('bearer ')) return bearer(header);
+
+  const raw = req.headers.get('cookie') ?? '';
+  for (const part of raw.split(';')) {
+    const [k, ...v] = part.trim().split('=');
+    if (k === TEACHER_COOKIE) {
+      const token = v.join('=').trim();
+      if (token) return token;
+    }
+  }
+  throw apiError('UNAUTHENTICATED');
+}
+
+/**
+ * Set-Cookie 값. Secure 는 프로덕션에서만 붙인다 —
+ * localhost 는 http 라 Secure 를 붙이면 쿠키가 저장되지 않는다.
+ */
+export function sessionCookie(name: string, token: string, maxAgeSec: number): string {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  // Lax 면 외부 링크로 들어와도 세션이 유지되고, CSRF 는 막힌다.
+  return `${name}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${secure}`;
+}
+
+export function clearCookie(name: string): string {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
+}

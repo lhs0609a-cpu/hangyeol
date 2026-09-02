@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Button, Eyebrow, Logo, Panel } from '@hangyeol/ui';
-import { post, setToken } from '../api-client';
+import { post } from '../api-client';
 
 /*
  * 강사 로그인 — 02번 문서 A-01. 소셜 로그인은 P2 다.
@@ -12,8 +13,21 @@ import { post, setToken } from '../api-client';
  * 가입은 여기서 하지 않는다. 승인제라 절차가 다르고, 같은 화면에서
  * 토글로 처리하면 "가입했는데 왜 로그인이 안 되지" 가 된다. /signup 으로 보낸다.
  */
+/*
+ * useSearchParams 는 Suspense 안에서만 쓸 수 있다.
+ * 이 값(next=)은 클라이언트에서만 정해지므로 서버가 미리 렌더할 수 없다.
+ */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const [form, setForm] = useState({ email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +38,15 @@ export default function LoginPage() {
     setBusy(true);
     setError(null);
     try {
-      const result = await post<{ access: string }>('/api/auth/login', {
-        email: form.email,
-        password: form.password,
-      });
-      setToken(result.access);
-      router.push('/today');
+      // 세션은 서버가 HttpOnly 쿠키로 세운다. 여기서 토큰을 들고 있지 않는다.
+      await post('/api/auth/login', { email: form.email, password: form.password });
+      /*
+       * 원래 가려던 곳으로 돌려보낸다. 외부 주소로 튕기지 않도록
+       * 반드시 / 로 시작하는 내부 경로만 받는다.
+       */
+      const next = params.get('next');
+      router.replace(next?.startsWith('/') && !next.startsWith('//') ? next : '/today');
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : '처리하지 못했습니다');
     } finally {

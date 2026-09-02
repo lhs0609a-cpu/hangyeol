@@ -13,10 +13,15 @@ function replacer(_key: string, value: unknown): unknown {
 }
 
 export function json(body: unknown, init?: ResponseInit): Response {
-  return new Response(JSON.stringify(body, replacer), {
-    ...init,
-    headers: { 'content-type': 'application/json; charset=utf-8', ...(init?.headers ?? {}) },
-  });
+  /*
+   * Headers 로 만든다. 객체 스프레드로 합치면 같은 이름의 헤더가 덮인다 —
+   * set-cookie 를 두 개(access, refresh) 내려보낼 때 하나가 조용히 사라진다.
+   * Headers 는 append 로 같은 이름을 여러 번 담을 수 있다.
+   */
+  const headers = new Headers(init?.headers);
+  headers.set('content-type', 'application/json; charset=utf-8');
+
+  return new Response(JSON.stringify(body, replacer), { ...init, headers });
 }
 
 export function handle(fn: () => Promise<unknown>): Promise<Response> {
