@@ -157,3 +157,42 @@
 .tone-accent {
   color: var(--indigo);
 }
+
+/*
+ * 랜딩 — 같은 역할, 마케팅 크기.
+ *
+ * 강사 스케일(본문 13.5px)을 랜딩에 그대로 쓰면 작고 위계가 없다.
+ * 콕핏은 하루 8시간 쓰는 도구라 조밀해야 맞지만, 랜딩은 3초 안에
+ * 무엇인지 알려야 한다. 밀도가 아니라 대비가 필요하다.
+ *
+ * clamp 를 쓰는 이유: 랜딩은 320px 폰과 1440px 모니터에서 같이 읽힌다.
+ * 분기점을 두면 그 사이 폭에서 어색해진다.
+ */
+.register-landing {
+  --fs-display: clamp(34px, 6.2vw, 68px);
+  --fs-h1: clamp(24px, 3.4vw, 38px);
+  --fs-h2: clamp(17px, 1.7vw, 21px);
+  --fs-body-lg: clamp(16px, 1.4vw, 19px);
+  --fs-body: clamp(15px, 1.15vw, 16.5px);
+  --fs-body-sm: 14px;
+  --fs-caption: 12.5px;
+  --fs-eyebrow: 11px;
+
+  /* 통계 숫자용. 본문 위계와 섞이면 안 되므로 따로 둔다. */
+  --fs-stat: clamp(30px, 4.4vw, 50px);
+
+  /* 섹션 사이 여백. 앱의 --sp-10(40px)으로는 구간이 안 나뉜다. */
+  --sp-section: clamp(56px, 8vw, 112px);
+  --sp-block: clamp(28px, 4vw, 52px);
+
+  /* 본문 한 줄이 너무 길면 안 읽힌다. 한국어는 42~48자가 한계다. */
+  --measure: 34em;
+}
+
+.register-landing .t-stat {
+  font-size: var(--fs-stat);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-display);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}

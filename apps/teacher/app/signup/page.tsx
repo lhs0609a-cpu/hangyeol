@@ -211,7 +211,7 @@ function Center({ children }: { children: React.ReactNode }) {
     <main
       style={{
         minHeight: '100vh',
-        background: 'var(--bg)',
+        background: 'var(--canvas)',
         display: 'grid',
         placeItems: 'center',
         padding: '40px 20px',

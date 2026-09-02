@@ -188,6 +188,59 @@ for (const root of SCAN) {
   }
 }
 
+/*
+ * 정의되지 않은 CSS 변수를 쓰고 있지 않은지 확인.
+ *
+ * 이 검사가 생긴 이유: 랜딩에서 var(--bg) 를 썼는데 그런 토큰이 없었다.
+ * 정의 안 된 변수는 오류를 내지 않고 조용히 무시된다 — 마침 body 배경이
+ * 같은 색이라 화면상으로도 멀쩡해 보였다. 이런 건 사람이 못 찾는다.
+ */
+{
+  const defined = new Set();
+  for (const file of [
+    'packages/ui/src/tokens.css',
+    'apps/teacher/app/globals.css',
+    'apps/note/app/globals.css',
+  ]) {
+    let text;
+    try {
+      text = readFileSync(file, 'utf8');
+    } catch {
+      continue; // 없는 앱은 건너뛴다
+    }
+    for (const m of text.matchAll(/(--[a-z0-9-]+)\s*:/g)) defined.add(m[1]);
+  }
+
+  /*
+   * next/font 가 layout.tsx 에서 variable: '--font-sans' 로 주입하는 것들.
+   * CSS 파일에는 없지만 실제로 정의된다. 하드코딩하지 않고 layout 에서 읽는다 —
+   * 폰트를 바꾸면 검사도 따라와야 한다.
+   */
+  for (const file of ['apps/teacher/app/layout.tsx', 'apps/note/app/layout.tsx']) {
+    let text;
+    try {
+      text = readFileSync(file, 'utf8');
+    } catch {
+      continue;
+    }
+    for (const m of text.matchAll(/variable:\s*'(--[a-z0-9-]+)'/g)) defined.add(m[1]);
+  }
+
+  for (const root of SCAN) {
+    for (const file of walk(root)) {
+      const normalized = file.replace(/\\/g, '/');
+      const text = readFileSync(file, 'utf8');
+      for (const m of text.matchAll(/var\((--[a-z0-9-]+)\)/g)) {
+        if (defined.has(m[1])) continue;
+        const lineNo = text.slice(0, m.index).split('\n').length;
+        violations.push(
+          `${normalized}:${lineNo}  [undefined-token] 정의되지 않은 토큰입니다: var(${m[1]})`,
+        );
+      }
+    }
+  }
+}
+
 // 허용 목록 밖의 fs 토큰이 없는지 확인.
 for (const root of SCAN) {
   for (const file of walk(root)) {
