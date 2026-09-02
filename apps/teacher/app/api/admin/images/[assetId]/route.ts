@@ -1,5 +1,5 @@
 import { IMAGE_ASSETS, imageStorageKey } from '@hangyeol/content';
-import { apiError, db, handle, isStorageConfigured, putObject, requireTeacher } from '@hangyeol/core';
+import { apiError, db, handle, isStorageConfigured, putObject, requireAdmin } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ const ALLOWED = ['image/webp', 'image/png', 'image/jpeg'];
  */
 export function POST(req: Request, { params }: { params: { assetId: string } }) {
   return handle(async () => {
-    await requireTeacher(req);
+    await requireAdmin(req);
 
     const asset = IMAGE_ASSETS.find((a) => a.id === params.assetId);
     if (!asset) throw apiError('NOT_FOUND', '등록되지 않은 이미지 자산입니다');

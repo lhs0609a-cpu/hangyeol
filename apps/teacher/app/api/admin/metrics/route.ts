@@ -1,4 +1,4 @@
-import { adminDashboard, handle, requireTeacher } from '@hangyeol/core';
+import { adminDashboard, handle, requireAdmin } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  */
 export function GET(req: Request) {
   return handle(async () => {
-    await requireTeacher(req);
+    await requireAdmin(req);
     return adminDashboard();
   });
 }

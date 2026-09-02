@@ -1,4 +1,4 @@
-import { apiError, db, handle, readJson, requireFields } from '@hangyeol/core';
+import { apiError, db, handle, readJson, requireAdmin, requireFields } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,6 +16,8 @@ export const dynamic = 'force-dynamic';
 /** GET /api/admin/teachers?status=pending */
 export function GET(req: Request) {
   return handle(async () => {
+    await requireAdmin(req);
+
     const status = new URL(req.url).searchParams.get('status') ?? 'pending';
     if (!['pending', 'approved', 'rejected'].includes(status)) {
       throw apiError('VALIDATION_FAILED', '없는 상태입니다');
@@ -58,6 +60,8 @@ interface DecideBody {
 /** POST /api/admin/teachers — 승인 또는 거절. */
 export function POST(req: Request) {
   return handle(async () => {
+    await requireAdmin(req);
+
     const body = await readJson<DecideBody>(req);
     requireFields(body, ['teacherId', 'decision']);
 

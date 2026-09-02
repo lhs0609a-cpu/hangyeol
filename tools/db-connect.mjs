@@ -52,6 +52,9 @@ const lines = [
   '# 이 파일은 커밋되지 않는다(.gitignore). 비밀번호가 들어 있다.',
   '',
   'NODE_ENV=development',
+  // 관리자 이메일은 사람이 직접 넣는다. 자동 생성할 수 없고,
+  // 비어 있으면 관리자 화면 전체가 닫힌다 — 열어 두는 쪽으로 실패하지 않는다.
+  `ADMIN_EMAILS="${keepOrMake(prev, 'ADMIN_EMAILS', () => '')}"`,
   `DATABASE_URL="${APP}"`,
   `DIRECT_URL="${DIRECT}"`,
   '',

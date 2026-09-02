@@ -1,5 +1,5 @@
 import { fullPrompt, IMAGE_ASSETS, imageStorageKey } from '@hangyeol/content';
-import { db, handle, isStorageConfigured, requireTeacher } from '@hangyeol/core';
+import { db, handle, isStorageConfigured, requireAdmin } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
  */
 export function GET(req: Request) {
   return handle(async () => {
-    await requireTeacher(req);
+    await requireAdmin(req);
 
     const uploaded = new Set(
       (await db().curriculumAsset.findMany({ select: { storageKey: true } })).map((a) => a.storageKey),

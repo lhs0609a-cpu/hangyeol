@@ -54,6 +54,34 @@ describe('로그인은 승인 전 계정을 막는다', () => {
   });
 });
 
+describe('관리자 API 는 전부 관리자만 통과한다', () => {
+  const routes = [
+    'apps/teacher/app/api/admin/teachers/route.ts',
+    'apps/teacher/app/api/admin/metrics/route.ts',
+    'apps/teacher/app/api/admin/images/route.ts',
+    'apps/teacher/app/api/admin/images/[assetId]/route.ts',
+  ];
+
+  it('모든 관리자 라우트가 requireAdmin 을 부른다', () => {
+    // requireTeacher 로는 부족하다. 그건 "로그인한 강사" 까지만 본다.
+    // 강사 아무나 통과하면 자기 계정을 스스로 승인할 수 있다.
+    for (const r of routes) {
+      expect(read(r), r).toMatch(/await requireAdmin\(req\)/);
+    }
+  });
+
+  it('관리자 라우트에 requireTeacher 가 남아 있지 않다', () => {
+    for (const r of routes) {
+      expect(read(r), r).not.toMatch(/requireTeacher/);
+    }
+  });
+
+  it('허용목록이 비면 전부 거부한다 — 열어 두는 쪽으로 실패하지 않는다', () => {
+    const guard = read('packages/core/src/guard.ts');
+    expect(guard).toMatch(/allowed\.size === 0 \|\|/);
+  });
+});
+
 describe('관리자 승인 API', () => {
   const src = read('apps/teacher/app/api/admin/teachers/route.ts');
 

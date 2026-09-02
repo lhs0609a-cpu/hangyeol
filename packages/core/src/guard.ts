@@ -36,6 +36,40 @@ export async function requireTeacher(req: Request): Promise<TeacherContext> {
   return { claims, teacherId: BigInt(claims.teacherId) };
 }
 
+/*
+ * 관리자 게이트.
+ *
+ * requireTeacher 로는 부족하다 — 그건 "로그인한 강사" 까지만 본다.
+ * 관리자 화면에는 다른 강사의 이메일과 가입 신청서가 있고, 승인 버튼이 있다.
+ * 강사 아무나 통과하면 자기 계정을 스스로 승인할 수 있다.
+ *
+ * 09번 문서는 IP 허용목록 + 2FA 를 요구한다. 둘 다 아직 없다.
+ * 그때까지는 이메일 허용목록으로 막는다 — 약하지만 없는 것보다 낫고,
+ * DB 필드가 아니라 환경변수라 계정이 탈취돼도 권한이 따라오지 않는다.
+ *
+ * 환경변수가 비어 있으면 전부 거부한다. 열어 두는 쪽으로 실패하지 않는다 —
+ * 배포 환경에 변수를 넣는 걸 잊었을 때 관리자 화면이 공개되면 안 된다.
+ */
+function adminEmails(): Set<string> {
+  return new Set(
+    (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+export async function requireAdmin(req: Request): Promise<TeacherContext> {
+  const ctx = await requireTeacher(req);
+  const allowed = adminEmails();
+
+  if (allowed.size === 0 || !allowed.has(ctx.claims.email.toLowerCase())) {
+    // 관리자 화면의 존재를 알려 주지 않는다. 없는 주소와 같은 응답을 준다.
+    throw apiError('NOT_FOUND', '없는 주소입니다');
+  }
+  return ctx;
+}
+
 export interface StudentContext extends TeacherContext {
   student: {
     id: bigint;
