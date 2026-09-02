@@ -86,7 +86,7 @@ export default function SrsPage() {
           minHeight: 200,
         }}
       >
-        <div style={{ fontSize: 30, fontWeight: 600 }}>{card.term}</div>
+        <div style={{ fontSize: 'var(--fs-h1)', fontWeight: 600 }}>{card.term}</div>
 
         {!flipped ? (
           <button
@@ -99,7 +99,7 @@ export default function SrsPage() {
               border: '1px solid var(--hanji-rule)',
               background: 'var(--surface)',
               color: 'var(--ink-2)',
-              fontSize: 14,
+              fontSize: 'var(--fs-body)',
             }}
           >
             뜻 보기
@@ -107,7 +107,7 @@ export default function SrsPage() {
         ) : (
           <div style={{ marginTop: 20 }}>
             {card.glossL1 && (
-              <div className="mono" style={{ fontSize: 14, color: 'var(--ink-3)' }}>{card.glossL1}</div>
+              <div className="mono" style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-3)' }}>{card.glossL1}</div>
             )}
             {card.example && (
               <div
@@ -116,7 +116,7 @@ export default function SrsPage() {
                   padding: 14,
                   background: 'var(--surface)',
                   borderRadius: 8,
-                  fontSize: 15,
+                  fontSize: 'var(--fs-body-lg)',
                   textAlign: 'left',
                 }}
               >
@@ -133,7 +133,7 @@ export default function SrsPage() {
                   borderRadius: 8,
                   border: '1px solid var(--hanji-rule)',
                   background: 'var(--surface)',
-                  fontSize: 13,
+                  fontSize: 'var(--fs-body)',
                 }}
               >
                 ▶ 선생님 목소리로
@@ -157,12 +157,12 @@ export default function SrsPage() {
                 border: '1px solid transparent',
                 background: g.bg,
                 color: g.fg,
-                fontSize: 14,
+                fontSize: 'var(--fs-body)',
                 fontWeight: 600,
               }}
             >
               {g.label}
-              <span className="mono" style={{ display: 'block', fontSize: 10.5, fontWeight: 400, marginTop: 3 }}>
+              <span className="mono" style={{ display: 'block', fontSize: 'var(--fs-eyebrow)', fontWeight: 400, marginTop: 3 }}>
                 {g.sub}
               </span>
             </button>

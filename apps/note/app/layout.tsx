@@ -46,7 +46,7 @@ const mono = IBM_Plex_Mono({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={`${sans.variable} ${mono.variable}`}>
-      <body>
+      <body className="register-student">
         <main style={{ maxWidth: 460, margin: '0 auto', padding: '26px 18px 60px' }}>{children}</main>
       </body>
     </html>

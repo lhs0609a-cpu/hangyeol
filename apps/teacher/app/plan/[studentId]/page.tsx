@@ -40,7 +40,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
     return (
       <Shell wide={false}>
         <Panel>
-          <p style={{ margin: 0, fontSize: 13 }}>{error}</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body)' }}>{error}</p>
         </Panel>
       </Shell>
     );
@@ -49,7 +49,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
   if (!data) {
     return (
       <Shell wide={false}>
-        <p style={{ color: 'var(--ink-3)', fontSize: 13 }}>불러오는 중</p>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-body)' }}>불러오는 중</p>
       </Shell>
     );
   }
@@ -60,16 +60,16 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
     <Shell wide={false}>
       <Eyebrow>{teaching.studentName} · {teaching.nextLessonNo}차시</Eyebrow>
 
-      <h1 style={{ fontSize: 21, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px', lineHeight: 1.4 }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px', lineHeight: 1.4 }}>
         {teaching.headline}
       </h1>
-      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', margin: 0 }}>{teaching.modeReason}</p>
+      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', margin: 0 }}>{teaching.modeReason}</p>
 
       {teaching.unit && (
         <Panel style={{ marginTop: 20 }}>
           <Eyebrow>차시 목표</Eyebrow>
-          <p style={{ fontSize: 16, fontWeight: 600, margin: '8px 0 0' }}>{teaching.unit.goalStatement}</p>
-          <p style={{ fontSize: 12.5, color: 'var(--ink-4)', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 'var(--fs-h2)', fontWeight: 600, margin: '8px 0 0' }}>{teaching.unit.goalStatement}</p>
+          <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)', margin: '4px 0 0' }}>
             {teaching.unit.unitNo}차시 · {teaching.unit.title}
           </p>
 
@@ -78,7 +78,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
               <Eyebrow>이걸 말하면 통과</Eyebrow>
               <div style={{ marginTop: 8 }}>
                 {teaching.exitTicket.map((t) => (
-                  <div key={t} style={{ fontSize: 14, marginBottom: 4 }}>· {t}</div>
+                  <div key={t} style={{ fontSize: 'var(--fs-body)', marginBottom: 4 }}>· {t}</div>
                 ))}
               </div>
             </div>
@@ -93,10 +93,10 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
           {teaching.allocation.map((a) => (
             <div key={a.phase} style={{ marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span className="mono" style={{ fontSize: 12, width: 34, color: 'var(--ink-3)' }}>
+                <span className="mono" style={{ fontSize: 'var(--fs-body-sm)', width: 34, color: 'var(--ink-3)' }}>
                   {a.minutes}분
                 </span>
-                <span style={{ fontSize: 13.5, fontWeight: 600, flex: 1 }}>{a.label}</span>
+                <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, flex: 1 }}>{a.label}</span>
               </div>
               <div style={{ height: 3, borderRadius: 99, background: 'var(--rule)', marginTop: 5, marginLeft: 42 }}>
                 <div
@@ -109,7 +109,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
                 />
               </div>
               {a.adjustedBecause && (
-                <div style={{ fontSize: 11.5, color: 'var(--chija)', marginTop: 4, marginLeft: 42 }}>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--chija)', marginTop: 4, marginLeft: 42 }}>
                   {a.adjustedBecause}
                 </div>
               )}
@@ -121,7 +121,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
       {teaching.reviewItems.length > 0 && (
         <Panel style={{ marginTop: 14 }}>
           <Eyebrow>복습 항목 — 지난 리포트에서 자동</Eyebrow>
-          <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 6 }}>
+          <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 6 }}>
             강사가 만들지 않습니다. 지난주에 3분 적은 것이 오늘 돌아온 것입니다.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
@@ -139,10 +139,10 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
             {teaching.focus.map((f) => (
               <div key={f.item} style={{ padding: '10px 0', borderTop: '1px solid var(--rule-soft)' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, flex: 1 }}>{f.item}</span>
+                  <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, flex: 1 }}>{f.item}</span>
                   <Tag tone="c">{f.occurrences}회</Tag>
                 </div>
-                <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 5, lineHeight: 1.7 }}>
+                <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-2)', marginTop: 5, lineHeight: 1.7 }}>
                   {f.howToFix}
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
                     <div
                       key={j}
                       style={{
-                        fontSize: 14.5,
+                        fontSize: 'var(--fs-body-lg)',
                         lineHeight: 1.75,
                         paddingLeft: 10,
                         borderLeft: '2px solid var(--indigo-w)',
@@ -180,7 +180,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
                 {block.do && (
                   <div style={{ marginTop: 10 }}>
                     {block.do.map((d, j) => (
-                      <div key={j} style={{ fontSize: 12.5, color: 'var(--ink-3)', marginBottom: 3 }}>
+                      <div key={j} style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginBottom: 3 }}>
                         · {d}
                       </div>
                     ))}
@@ -195,7 +195,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
                       background: 'var(--jade-w)',
                       color: 'var(--jade)',
                       borderRadius: 6,
-                      fontSize: 12.5,
+                      fontSize: 'var(--fs-body-sm)',
                     }}
                   >
                     학생이 말할 것 · {block.studentOutput}
@@ -210,7 +210,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
                       background: 'var(--chija-w)',
                       color: 'var(--chija)',
                       borderRadius: 6,
-                      fontSize: 12.5,
+                      fontSize: 'var(--fs-body-sm)',
                     }}
                   >
                     막히면 · {block.ifStuck}
@@ -222,7 +222,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
         </Panel>
       ) : (
         <Panel style={{ marginTop: 14, background: 'var(--chija-w)', border: '1px solid transparent' }}>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--chija)', lineHeight: 1.7 }}>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body-sm)', color: 'var(--chija)', lineHeight: 1.7 }}>
             이 차시의 지도안이 아직 작성되지 않았습니다.
             차시 목표와 시간 배분만 참고하세요.
           </p>
@@ -232,7 +232,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
       {teaching.l1Note && (
         <Panel style={{ marginTop: 14 }}>
           <Eyebrow>이 학생의 모국어에서</Eyebrow>
-          <p style={{ fontSize: 13, margin: '8px 0 0', lineHeight: 1.7 }}>{teaching.l1Note}</p>
+          <p style={{ fontSize: 'var(--fs-body)', margin: '8px 0 0', lineHeight: 1.7 }}>{teaching.l1Note}</p>
         </Panel>
       )}
 
@@ -241,7 +241,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
           <Eyebrow>이 차시에서 강사가 흔히 하는 실수</Eyebrow>
           <div style={{ marginTop: 8 }}>
             {teaching.pitfalls.map((p) => (
-              <div key={p} style={{ fontSize: 12.5, color: 'var(--ink-2)', marginBottom: 5, lineHeight: 1.7 }}>
+              <div key={p} style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-2)', marginBottom: 5, lineHeight: 1.7 }}>
                 · {p}
               </div>
             ))}
@@ -252,7 +252,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
       {/* 궤적 — 차시 하나가 아니라 이 학생이 어디로 가는가 */}
       <Panel style={{ marginTop: 14 }}>
         <Eyebrow>학습 계획</Eyebrow>
-        <div className="mono" style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 8 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginTop: 8 }}>
           {mastery.currentLessonNo}차시 · 주 {mastery.lessonsPerWeek}회 · 누적 어휘 {mastery.vocabTotal}
           {mastery.weeksToNextLevel !== null && ` · 다음 급까지 약 ${mastery.weeksToNextLevel}주`}
         </div>
@@ -260,9 +260,9 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
         <div style={{ marginTop: 12 }}>
           {mastery.priorities.map((p) => (
             <div key={p.title} style={{ padding: '10px 0', borderTop: '1px solid var(--rule-soft)' }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600 }}>{p.title}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 4, lineHeight: 1.7 }}>{p.why}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--indigo)', marginTop: 6, lineHeight: 1.7 }}>
+              <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>{p.title}</div>
+              <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginTop: 4, lineHeight: 1.7 }}>{p.why}</div>
+              <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--indigo)', marginTop: 6, lineHeight: 1.7 }}>
                 → {p.action}
               </div>
             </div>

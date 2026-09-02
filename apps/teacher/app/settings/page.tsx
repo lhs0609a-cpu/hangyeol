@@ -60,7 +60,7 @@ export default function SettingsPage() {
       if (rate.trim() !== '') body.hourlyRateUsd = Number(rate);
       setSaved(await patch<RateResult>('/api/me', body));
     } catch (e) {
-      setError(e instanceof Error ? e.message : '저장하지 못했습니다');
+      setError(e instanceof Error ? e.message : '저장하지 못했습니다. 잠시 후 다시 시도하세요');
     } finally {
       setBusy(false);
     }
@@ -70,7 +70,7 @@ export default function SettingsPage() {
     return (
       <Shell wide={false}>
         <Panel>
-          <p style={{ margin: 0, fontSize: 13 }}>{error}</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body)' }}>{error}</p>
         </Panel>
       </Shell>
     );
@@ -79,7 +79,7 @@ export default function SettingsPage() {
   if (!me) {
     return (
       <Shell wide={false}>
-        <p style={{ color: 'var(--ink-3)', fontSize: 13 }}>불러오는 중</p>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-body)' }}>불러오는 중</p>
       </Shell>
     );
   }
@@ -87,18 +87,18 @@ export default function SettingsPage() {
   return (
     <Shell wide={false}>
       <Eyebrow>설정</Eyebrow>
-      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 20px' }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 20px' }}>
         프로필
       </h1>
 
       <Panel>
         <label style={{ display: 'block' }}>
-          <span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5 }}>이름</span>
+          <span style={{ display: 'block', fontSize: 'var(--fs-body-sm)', fontWeight: 600, marginBottom: 5 }}>이름</span>
           <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
         </label>
 
         <label style={{ display: 'block', marginTop: 16 }}>
-          <span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5 }}>
+          <span style={{ display: 'block', fontSize: 'var(--fs-body-sm)', fontWeight: 600, marginBottom: 5 }}>
             시급 (USD)
           </span>
           <input
@@ -108,7 +108,7 @@ export default function SettingsPage() {
             placeholder="18"
             style={inputStyle}
           />
-          <span style={{ display: 'block', fontSize: 11.5, color: 'var(--ink-4)', marginTop: 4 }}>
+          <span style={{ display: 'block', fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 4 }}>
             요금 티어의 산정 근거입니다. 미입력 시 B 티어로 봅니다
           </span>
         </label>
@@ -127,7 +127,7 @@ export default function SettingsPage() {
               borderRadius: 8,
               background: 'var(--indigo-w)',
               color: 'var(--indigo)',
-              fontSize: 12.5,
+              fontSize: 'var(--fs-body-sm)',
               lineHeight: 1.7,
             }}
           >
@@ -145,11 +145,11 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {error && <p style={{ fontSize: 12.5, color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>}
+        {error && <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>}
 
         <div style={{ marginTop: 18 }}>
           <Button kind="primary" full disabled={busy} onClick={save}>
-            {busy ? '저장하는 중' : '저장'}
+            {busy ? '저장하는 중' : '저장 — 다음 주기부터 적용'}
           </Button>
         </div>
       </Panel>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '9px 11px',
-  fontSize: 13,
+  fontSize: 'var(--fs-body)',
   fontFamily: 'inherit',
   border: '1px solid var(--rule)',
   borderRadius: 7,

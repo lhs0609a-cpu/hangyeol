@@ -48,7 +48,7 @@ export default async function TodayPage() {
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
             <div className="eyebrow">학생 {data.students.length}명</div>
             {/* 우회 심리를 사전에 차단하는 카피. 07번 문서에서 삭제 금지로 명시돼 있다. */}
-            <div style={{ fontSize: 11.5, color: 'var(--ink-4)' }}>수업 자료는 학생을 선택해야 열립니다</div>
+            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)' }}>수업 자료는 학생을 선택해야 열립니다</div>
           </div>
 
           <div style={{ border: '1px solid var(--rule)', borderRadius: 10, background: 'var(--surface)', overflow: 'hidden' }}>
@@ -60,7 +60,7 @@ export default async function TodayPage() {
 
         <NewStudentCard />
 
-        <p style={{ marginTop: 40, fontSize: 11.5, color: 'var(--ink-4)', lineHeight: 1.7 }}>
+        <p style={{ marginTop: 40, fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', lineHeight: 1.7 }}>
           {data.live
             ? '데이터베이스의 실제 학생 레코드입니다.'
             : '데이터베이스가 연결되지 않아 목업 데이터로 렌더됩니다.'}{' '}
@@ -104,22 +104,22 @@ function LaunchPanel(props: {
               다음 수업
             </span>
           </div>
-          <div style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em' }}>
             {props.flag} {props.nameKo}
           </div>
-          <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 3 }}>
             {props.meta}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div className="mono" style={{ fontSize: 34, fontWeight: 500, letterSpacing: '-0.03em' }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-display)', fontWeight: 500, letterSpacing: '-0.03em' }}>
             {props.at}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--jade)' }}>{props.minutesUntil}분 뒤 시작</div>
+          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--jade)' }}>{props.minutesUntil}분 뒤 시작</div>
         </div>
       </div>
 
-      <div style={{ borderTop: '1px solid #262a35', margin: '16px 0 14px' }} />
+      <div style={{ borderTop: '1px solid var(--ink-2)', margin: '16px 0 14px' }} />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -127,13 +127,13 @@ function LaunchPanel(props: {
             <span
               key={e}
               className="mono"
-              style={{ fontSize: 10, padding: '3px 7px', borderRadius: 3, background: '#262a35', color: '#c9cdd8' }}
+              style={{ fontSize: 'var(--fs-eyebrow)', padding: '3px 7px', borderRadius: 3, background: 'var(--ink-2)', color: 'var(--rule)' }}
             >
               {e}
             </span>
           ))}
         </div>
-        {props.fix && <div style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>고칠 것 · {props.fix}</div>}
+        {props.fix && <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)' }}>고칠 것 · {props.fix}</div>}
       </div>
 
       {/* 버튼 라벨은 결과를 말한다 (06번 §8) */}
@@ -148,7 +148,7 @@ function LaunchPanel(props: {
           borderRadius: 8,
           background: '#fff',
           color: 'var(--ink)',
-          fontSize: 13,
+          fontSize: 'var(--fs-body)',
           fontWeight: 600,
           textAlign: 'center',
           textDecoration: 'none',
@@ -166,11 +166,11 @@ function Metric({ eyebrow, value, note, big = false }: { eyebrow: string; value:
       <div className="eyebrow">{eyebrow}</div>
       <div
         className="mono"
-        style={{ fontSize: big ? 30 : 26, fontWeight: 500, letterSpacing: '-0.03em', marginTop: 8 }}
+        style={{ fontSize: big ? 'var(--fs-h1)' : 'var(--fs-h1)', fontWeight: 500, letterSpacing: '-0.03em', marginTop: 8 }}
       >
         {value}
       </div>
-      <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 4 }}>{note}</div>
+      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 4 }}>{note}</div>
     </div>
   );
 }
@@ -192,16 +192,16 @@ function StudentRow({ student, first }: { student: TodayStudent; first: boolean 
       }}
     >
       <div>
-        <div style={{ fontSize: 13.5, fontWeight: 600 }}>
+        <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
           {student.flag} {student.nameKo}
         </div>
-        <div className="mono" style={{ fontSize: 11, color: 'var(--ink-4)' }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)' }}>
           {student.name}
         </div>
       </div>
 
       <div>
-        <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-2)' }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-2)' }}>
           {student.lessonNo}차시 · {student.level}
         </div>
         <div style={{ height: 3, borderRadius: 99, background: 'var(--rule)', marginTop: 6 }}>
@@ -214,7 +214,7 @@ function StudentRow({ student, first }: { student: TodayStudent; first: boolean 
         <span
           className="mono"
           style={{
-            fontSize: 10,
+            fontSize: 'var(--fs-eyebrow)',
             padding: '3px 7px',
             borderRadius: 3,
             background: st.bg,
@@ -224,7 +224,7 @@ function StudentRow({ student, first }: { student: TodayStudent; first: boolean 
         >
           {st.label}
         </span>
-        <div className="mono" style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 5 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 5 }}>
           {student.lastActivity}
         </div>
       </div>
@@ -248,7 +248,7 @@ function SmallButton({ label, kind }: { label: string; kind: 'ghost' | 'primary'
       className="hg-tap"
       style={{
         padding: '7px 12px',
-        fontSize: 12,
+        fontSize: 'var(--fs-body-sm)',
         borderRadius: 7,
         fontFamily: 'inherit',
         cursor: 'pointer',
@@ -274,7 +274,7 @@ function NewStudentCard() {
         color: 'var(--ink-3)',
       }}
     >
-      <div style={{ fontSize: 13 }}>예약이 잡혔는데 목록에 없나요</div>
+      <div style={{ fontSize: 'var(--fs-body)' }}>예약이 잡혔는데 목록에 없나요</div>
       <Link
         href="/students/new"
         className="hg-tap"
@@ -282,7 +282,7 @@ function NewStudentCard() {
           display: 'inline-block',
           marginTop: 10,
           padding: '10px 16px',
-          fontSize: 13,
+          fontSize: 'var(--fs-body)',
           borderRadius: 8,
           border: '1px solid var(--rule)',
           background: 'var(--surface)',
@@ -293,7 +293,7 @@ function NewStudentCard() {
       >
         새 학생 등록 · 30초
       </Link>
-      <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 8 }}>
+      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 8 }}>
         등록과 1차시는 무료입니다. 2차시부터 요금이 발생합니다
       </div>
     </section>

@@ -71,7 +71,7 @@ export default function AdminPage() {
     return (
       <Shell>
         <Panel>
-          <p style={{ margin: 0, fontSize: 13 }}>{error}</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body)' }}>{error}</p>
         </Panel>
       </Shell>
     );
@@ -80,7 +80,7 @@ export default function AdminPage() {
   if (!data) {
     return (
       <Shell>
-        <p style={{ color: 'var(--ink-3)', fontSize: 13 }}>불러오는 중</p>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-body)' }}>불러오는 중</p>
       </Shell>
     );
   }
@@ -96,10 +96,10 @@ export default function AdminPage() {
   return (
     <Shell>
       <Eyebrow>관리자 · {data.billingMonth.slice(0, 7)}</Eyebrow>
-      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 4px' }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 4px' }}>
         운영 현황
       </h1>
-      <p className="mono" style={{ fontSize: 11, color: 'var(--ink-4)', margin: 0 }}>
+      <p className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', margin: 0 }}>
         {data.generatedAt.slice(0, 16).replace('T', ' ')} 기준
       </p>
 
@@ -108,7 +108,7 @@ export default function AdminPage() {
           <Eyebrow>경고선을 벗어난 지표 {warnings.length}개</Eyebrow>
           <div style={{ marginTop: 8 }}>
             {warnings.map((m) => (
-              <div key={m.key} style={{ fontSize: 12.5, color: 'var(--honghwa)', marginBottom: 4 }}>
+              <div key={m.key} style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginBottom: 4 }}>
                 · {m.label} <span className="mono">{format(m)}</span> — {m.threshold?.note}
               </div>
             ))}
@@ -126,7 +126,7 @@ export default function AdminPage() {
       <Panel style={{ marginTop: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <Eyebrow>콘텐츠 제작 현황</Eyebrow>
-          <Link href="/admin/images" style={{ fontSize: 12 }}>
+          <Link href="/admin/images" style={{ fontSize: 'var(--fs-body-sm)' }}>
             이미지 자산 →
           </Link>
         </div>
@@ -137,8 +137,8 @@ export default function AdminPage() {
             return (
               <div key={c.key} style={{ padding: '9px 0', borderTop: '1px solid var(--rule-soft)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: 13 }}>{c.label}</span>
-                  <span className="mono" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                  <span style={{ fontSize: 'var(--fs-body)' }}>{c.label}</span>
+                  <span className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)' }}>
                     {c.drafted} / {c.target}
                   </span>
                 </div>
@@ -158,8 +158,8 @@ export default function AdminPage() {
 
           <div style={{ padding: '9px 0', borderTop: '1px solid var(--rule-soft)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 13 }}>이미지 자산</span>
-              <span className="mono" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+              <span style={{ fontSize: 'var(--fs-body)' }}>이미지 자산</span>
+              <span className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)' }}>
                 {data.content.images.uploaded} / {data.content.images.total}
               </span>
             </div>
@@ -176,7 +176,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 12, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 12, lineHeight: 1.7 }}>
           전부 AI 초안입니다. 한국어교원 자격 2급 검수 전에는 실제 수업에 쓰지 않습니다.
         </p>
       </Panel>
@@ -199,14 +199,14 @@ function Section({ title, metrics }: { title: string; metrics: Metric[] }) {
         {metrics.map((m) => (
           <div key={m.key}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>{m.label}</span>
+              <span style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)' }}>{m.label}</span>
               {m.warning && <Tag tone="h">경고</Tag>}
             </div>
 
             <div
               className="mono"
               style={{
-                fontSize: 24,
+                fontSize: 'var(--fs-h1)',
                 fontWeight: 500,
                 letterSpacing: '-0.03em',
                 marginTop: 4,
@@ -216,12 +216,12 @@ function Section({ title, metrics }: { title: string; metrics: Metric[] }) {
               {format(m)}
             </div>
 
-            <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 3, lineHeight: 1.6 }}>
               {m.meaning}
             </div>
 
             {m.threshold && (
-              <div className="mono" style={{ fontSize: 10.5, color: 'var(--ink-4)', marginTop: 3 }}>
+              <div className="mono" style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--ink-4)', marginTop: 3 }}>
                 {m.threshold.note}
               </div>
             )}

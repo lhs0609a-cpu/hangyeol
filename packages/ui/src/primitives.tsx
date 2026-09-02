@@ -84,9 +84,9 @@ export function Button({
   style?: CSSProperties;
 }) {
   const sizes: Record<string, CSSProperties> = {
-    sm: { padding: '7px 12px', fontSize: 12, borderRadius: 7 },
-    md: { padding: '10px 16px', fontSize: 13, borderRadius: 8 },
-    lg: { padding: '14px 16px', fontSize: 14, borderRadius: 8 },
+    sm: { padding: '7px 12px', fontSize: 'var(--fs-body-sm)', borderRadius: 7 },
+    md: { padding: '10px 16px', fontSize: 'var(--fs-body)', borderRadius: 8 },
+    lg: { padding: '14px 16px', fontSize: 'var(--fs-body)', borderRadius: 8 },
   };
 
   // 비활성은 ghost 스타일 + ink-4. disabled 커서를 쓰지 않는다 —
@@ -124,7 +124,7 @@ export function Tag({ children, tone = 'n' }: { children: ReactNode; tone?: Tone
         display: 'inline-block',
         padding: '3px 7px',
         borderRadius: 3,
-        fontSize: 10,
+        fontSize: 'var(--fs-eyebrow)',
         background: TONE_BG[tone],
         color: TONE_FG[tone],
         whiteSpace: 'nowrap',
@@ -154,7 +154,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
           />
           <div
             className="mono"
-            style={{ fontSize: 10, marginTop: 6, color: i <= current ? 'var(--ink-2)' : 'var(--ink-4)' }}
+            style={{ fontSize: 'var(--fs-eyebrow)', marginTop: 6, color: i <= current ? 'var(--ink-2)' : 'var(--ink-4)' }}
           >
             {label}
           </div>
@@ -193,10 +193,10 @@ export function StrandBars({ strands }: { strands: Strands }) {
         const bad = warn(value);
         return (
           <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-            <span style={{ fontSize: 12.5, width: 88, color: 'var(--ink-2)' }}>{label}</span>
+            <span style={{ fontSize: 'var(--fs-body-sm)', width: 88, color: 'var(--ink-2)' }}>{label}</span>
             <span
               className="mono"
-              style={{ fontSize: 12, width: 34, color: bad ? 'var(--honghwa)' : 'var(--ink-3)', fontWeight: bad ? 600 : 400 }}
+              style={{ fontSize: 'var(--fs-body-sm)', width: 34, color: bad ? 'var(--honghwa)' : 'var(--ink-3)', fontWeight: bad ? 600 : 400 }}
             >
               {value}%
             </span>
@@ -221,7 +221,7 @@ export function StrandBars({ strands }: { strands: Strands }) {
           </div>
         );
       })}
-      <div className="mono" style={{ fontSize: 10.5, color: 'var(--ink-4)', marginTop: 4 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--ink-4)', marginTop: 4 }}>
         중앙 획 = 균형점 25%
       </div>
     </div>
@@ -260,7 +260,7 @@ export function Metric({
       <div className="mono" style={{ fontSize: size, fontWeight: 500, letterSpacing: '-0.03em', marginTop: 8 }}>
         {value}
       </div>
-      {note && <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 4 }}>{note}</div>}
+      {note && <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 4 }}>{note}</div>}
     </Panel>
   );
 }
@@ -268,7 +268,7 @@ export function Metric({
 /** 빈 화면은 초대다 (06번 §8). */
 export function EmptyState({ message, action }: { message: string; action?: ReactNode }) {
   return (
-    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-3)', fontSize: 13 }}>
+    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-3)', fontSize: 'var(--fs-body)' }}>
       <p style={{ margin: 0 }}>{message}</p>
       {action && <div style={{ marginTop: 12 }}>{action}</div>}
     </div>

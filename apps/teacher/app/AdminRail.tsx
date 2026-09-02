@@ -102,10 +102,7 @@ export function AdminRail() {
 
       {groups.map((group) => (
         <div key={group} style={{ marginBottom: 14 }}>
-          <div
-            className="mono"
-            style={{ fontSize: 10, color: 'var(--ink-4)', marginBottom: 5, letterSpacing: '.08em' }}
-          >
+          <div className="t-eyebrow" style={{ marginBottom: 5 }}>
             {group}
           </div>
 
@@ -120,7 +117,7 @@ export function AdminRail() {
                   padding: '6px 8px',
                   marginBottom: 1,
                   borderRadius: 6,
-                  fontSize: 12,
+                  fontSize: 'var(--fs-body-sm)',
                   textDecoration: 'none',
                   lineHeight: 1.4,
                   background: active ? 'var(--indigo-w)' : 'transparent',
@@ -132,7 +129,7 @@ export function AdminRail() {
                 {entry.spec && (
                   <span
                     className="mono"
-                    style={{ display: 'block', fontSize: 9.5, color: 'var(--ink-4)', marginTop: 1 }}
+                    style={{ display: 'block', fontSize: 'var(--fs-eyebrow)', color: 'var(--ink-4)', marginTop: 1 }}
                   >
                     {entry.spec}
                   </span>
@@ -148,7 +145,7 @@ export function AdminRail() {
           <RailStep entry={prev} dir="prev" />
           <RailStep entry={next} dir="next" />
         </div>
-        <div className="mono" style={{ fontSize: 9.5, color: 'var(--ink-4)', marginTop: 8, lineHeight: 1.6 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--ink-4)', marginTop: 8, lineHeight: 1.6 }}>
           Alt + ← → 로 이동
         </div>
       </div>
@@ -166,7 +163,7 @@ function RailStep({ entry, dir }: { entry: RailEntry | null | undefined; dir: 'p
           flex: 1,
           padding: '7px 0',
           textAlign: 'center',
-          fontSize: 12,
+          fontSize: 'var(--fs-body-sm)',
           color: 'var(--ink-4)',
           border: '1px solid var(--rule-soft)',
           borderRadius: 6,
@@ -185,7 +182,7 @@ function RailStep({ entry, dir }: { entry: RailEntry | null | undefined; dir: 'p
         flex: 1,
         padding: '7px 0',
         textAlign: 'center',
-        fontSize: 12,
+        fontSize: 'var(--fs-body-sm)',
         color: 'var(--ink-2)',
         border: '1px solid var(--rule)',
         borderRadius: 6,
@@ -226,7 +223,7 @@ export function ModeToggle() {
             aria-pressed={active}
             style={{
               padding: '4px 10px',
-              fontSize: 11.5,
+              fontSize: 'var(--fs-caption)',
               fontFamily: 'inherit',
               fontWeight: active ? 600 : 400,
               borderRadius: 5,

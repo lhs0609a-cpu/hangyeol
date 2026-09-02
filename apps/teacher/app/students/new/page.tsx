@@ -74,7 +74,7 @@ export default function NewStudentPage() {
         setDuplicate(true);
         setError(err.message);
       } else {
-        setError(err instanceof Error ? err.message : '등록하지 못했습니다');
+        setError(err instanceof Error ? err.message : '등록하지 못했습니다. 잠시 후 다시 시도하세요');
       }
     } finally {
       setBusy(false);
@@ -86,10 +86,10 @@ export default function NewStudentPage() {
       <Shell wide={false}>
         <Panel>
           <Eyebrow>등록 완료</Eyebrow>
-          <h1 style={{ fontSize: 20, fontWeight: 600, marginTop: 10 }}>
+          <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 10 }}>
             학습 노트를 보냈습니다
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.7 }}>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-2)', lineHeight: 1.7 }}>
             {form.nameKo || form.name} 씨가 링크를 열면 레벨 테스트를 진행합니다.
             첫 수업 전에 끝나 있으면 50분을 온전히 수업에 쓸 수 있어요.
           </p>
@@ -100,20 +100,20 @@ export default function NewStudentPage() {
               padding: 12,
               background: 'var(--rule-soft)',
               borderRadius: 7,
-              fontSize: 11.5,
+              fontSize: 'var(--fs-caption)',
               wordBreak: 'break-all',
             }}
           >
             {done.noteUrl}
           </div>
-          <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 12 }}>
+          <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 12 }}>
             지금 청구된 금액 {done.billing.chargedNow}원 · 첫 과금은 {done.billing.firstChargeAtLesson}차시부터입니다
           </p>
           <div style={{ marginTop: 18, display: 'flex', gap: 8 }}>
             <Button kind="primary" onClick={() => router.push('/')}>
               학생 목록으로
             </Button>
-            <Button onClick={() => router.push(`/students/${done.id}`)}>학생 상세 보기</Button>
+            <Button onClick={() => router.push(`/students/${done.id}`)}>학생 상세</Button>
           </div>
         </Panel>
       </Shell>
@@ -123,7 +123,7 @@ export default function NewStudentPage() {
   return (
     <Shell wide={false}>
       <Eyebrow>새 학생</Eyebrow>
-      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 20px' }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 20px' }}>
         학생 등록
       </h1>
 
@@ -173,7 +173,7 @@ export default function NewStudentPage() {
               borderRadius: 7,
               background: duplicate ? 'var(--chija-w)' : 'var(--honghwa-w)',
               color: duplicate ? 'var(--chija)' : 'var(--honghwa)',
-              fontSize: 12.5,
+              fontSize: 'var(--fs-body-sm)',
             }}
           >
             {error}
@@ -186,7 +186,7 @@ export default function NewStudentPage() {
           </Button>
         </div>
 
-        <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 12, textAlign: 'center' }}>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 12, textAlign: 'center' }}>
           등록과 1차시는 무료입니다. 2차시부터 요금이 발생합니다
         </p>
       </Panel>
@@ -207,12 +207,12 @@ function Field({
 }) {
   return (
     <label style={{ display: 'block', marginBottom: 14 }}>
-      <span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5 }}>
+      <span style={{ display: 'block', fontSize: 'var(--fs-body-sm)', fontWeight: 600, marginBottom: 5 }}>
         {label}
         {required && <span style={{ color: 'var(--honghwa)' }}> *</span>}
       </span>
       {children}
-      {hint && <span style={{ display: 'block', fontSize: 11.5, color: 'var(--ink-4)', marginTop: 4 }}>{hint}</span>}
+      {hint && <span style={{ display: 'block', fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 4 }}>{hint}</span>}
     </label>
   );
 }
@@ -220,7 +220,7 @@ function Field({
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '9px 11px',
-  fontSize: 13,
+  fontSize: 'var(--fs-body)',
   fontFamily: 'inherit',
   border: '1px solid var(--rule)',
   borderRadius: 7,
@@ -274,7 +274,7 @@ function Segmented({
             style={{
               flex: 1,
               padding: '8px 10px',
-              fontSize: 12.5,
+              fontSize: 'var(--fs-body-sm)',
               fontFamily: 'inherit',
               borderRadius: 7,
               cursor: 'pointer',

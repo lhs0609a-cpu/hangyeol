@@ -46,15 +46,15 @@ export default async function NoteHomePage() {
     <div className="hg-rise">
       <div style={{ textAlign: 'center' }}>
         <SyllableProgress done={home.syllableProgress.done} />
-        <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 8 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 8 }}>
           {home.syllableProgress.done} / {home.syllableProgress.total} · 이번 주 글자
         </div>
       </div>
 
-      <h1 style={{ fontSize: 22, fontWeight: 600, marginTop: 26, marginBottom: 2 }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 26, marginBottom: 2 }}>
         안녕하세요, {home.studentNameKo} 씨
       </h1>
-      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', margin: 0 }}>
+      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', margin: 0 }}>
         {home.teacherDisplayName} 선생님의 학습 노트
         {home.streakDays > 0 ? ` · ${home.streakDays}일 연속` : ''}
       </p>
@@ -85,7 +85,7 @@ export default async function NoteHomePage() {
                 borderRadius: 99,
                 display: 'grid',
                 placeItems: 'center',
-                fontSize: 11,
+                fontSize: 'var(--fs-caption)',
                 background: task.done ? 'var(--jade-w)' : 'var(--surface)',
                 color: task.done ? 'var(--jade)' : 'var(--ink-3)',
                 border: '1px solid var(--hanji-rule)',
@@ -95,10 +95,10 @@ export default async function NoteHomePage() {
               {task.done ? '✓' : i + 1}
             </span>
             <span style={{ flex: 1 }}>
-              <span style={{ display: 'block', fontSize: 14.5, fontWeight: 600 }}>{task.label}</span>
-              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--ink-3)' }}>{task.sub}</span>
+              <span style={{ display: 'block', fontSize: 'var(--fs-body-lg)', fontWeight: 600 }}>{task.label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)' }}>{task.sub}</span>
             </span>
-            <span className="mono" style={{ fontSize: 11.5, color: 'var(--ink-4)' }}>
+            <span className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)' }}>
               {task.minutes}분
             </span>
           </Link>
@@ -121,7 +121,7 @@ export default async function NoteHomePage() {
               <span
                 key={e}
                 style={{
-                  fontSize: 12.5,
+                  fontSize: 'var(--fs-body-sm)',
                   padding: '3px 8px',
                   borderRadius: 3,
                   background: 'var(--indigo-w)',
@@ -133,7 +133,7 @@ export default async function NoteHomePage() {
             ))}
           </div>
           {home.lastLesson.correction && (
-            <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 10 }}>
+            <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-2)', marginTop: 10 }}>
               고칠 것 · {home.lastLesson.correction}
             </div>
           )}
@@ -156,7 +156,7 @@ export default async function NoteHomePage() {
               border: '1px solid var(--hanji-rule)',
               background: 'var(--hanji-card)',
               color: 'var(--ink-2)',
-              fontSize: 13.5,
+              fontSize: 'var(--fs-body)',
               fontWeight: 600,
               textDecoration: 'none',
             }}

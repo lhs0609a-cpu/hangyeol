@@ -26,10 +26,10 @@ export default function ContentPage() {
   return (
     <Shell>
       <Eyebrow>관리자 · 콘텐츠</Eyebrow>
-      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px' }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px' }}>
         교재 현황
       </h1>
-      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', margin: 0, lineHeight: 1.7 }}>
+      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', margin: 0, lineHeight: 1.7 }}>
         전부 AI 초안입니다. 08번 문서 §9 대로 한국어교원 자격 2급 검수를 거쳐야 하고,
         검수 전에는 실제 수업에 쓰지 않습니다.
       </p>
@@ -60,7 +60,7 @@ export default function ContentPage() {
                   width: 34,
                   padding: '6px 0',
                   textAlign: 'center',
-                  fontSize: 11,
+                  fontSize: 'var(--fs-caption)',
                   borderRadius: 5,
                   textDecoration: 'none',
                   background: has ? 'var(--jade-w)' : 'var(--honghwa-w)',
@@ -72,7 +72,7 @@ export default function ContentPage() {
             );
           })}
         </div>
-        <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 10 }}>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 10 }}>
           초록은 지도안이 있는 차시입니다. 눌러서 그 차시의 이미지 자산으로 갑니다.
         </p>
       </Panel>
@@ -100,7 +100,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="eyebrow">{label}</div>
-      <div className="mono" style={{ fontSize: 20, fontWeight: 500, marginTop: 4 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-h1)', fontWeight: 500, marginTop: 4 }}>
         {value}
       </div>
     </div>
@@ -111,13 +111,13 @@ function Row({ label, value, done, note }: { label: string; value: string; done:
   return (
     <div style={{ padding: '10px 0', borderTop: '1px solid var(--rule-soft)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>{label}</span>
         <span style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
-          <span className="mono" style={{ fontSize: 12, color: 'var(--ink-3)' }}>{value}</span>
+          <span className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)' }}>{value}</span>
           {done && <Tag tone="j">완료</Tag>}
         </span>
       </div>
-      {note && <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3 }}>{note}</div>}
+      {note && <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 3 }}>{note}</div>}
     </div>
   );
 }

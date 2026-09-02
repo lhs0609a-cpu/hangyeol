@@ -1,0 +1,159 @@
+/*
+ * 타입 스케일 · 스페이싱 토큰 — 06번 문서 §2·§3.
+ *
+ * 이 파일이 생긴 이유: 화면을 20개 만드는 동안 폰트 크기가 20가지로 늘어났다.
+ * 13, 12, 14, 16, 20, 22, 44 — 전부 명세에 없는 값이다.
+ * 한두 픽셀 차이는 눈에 안 띄지만 쌓이면 제품이 짜깁기처럼 읽힌다.
+ *
+ * 크기를 직접 쓰지 않고 여기서만 가져다 쓴다.
+ * tools/design-check.mjs 가 숫자로 박힌 fontSize 를 찾아 빌드를 막는다.
+ *
+ * 06번 §0.1: "타입 시스템은 하나로 통일해서 같은 제품임을 유지한다."
+ * 그래서 역할 이름은 두 앱이 같고, 실제 크기만 다르다 —
+ * 강사는 콕핏(고밀도), 학생은 다이어리(한 화면에 한 가지).
+ */
+
+:root {
+  /* 강사 화면 — 06번 §2 스케일 그대로 */
+  --fs-display: 38px;
+  --fs-h1: 23px;
+  --fs-h2: 17px;
+  --fs-body-lg: 15px;
+  --fs-body: 13.5px;
+  --fs-body-sm: 12.5px;
+  --fs-caption: 11.5px;
+  --fs-eyebrow: 10px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* 한국어 본문에 letter-spacing 양수 금지 (06번 §2 절대 규칙) */
+  --ls-display: -0.03em;
+  --ls-h1: -0.02em;
+  --ls-h2: -0.01em;
+  --ls-eyebrow: 0.16em;
+
+  /* 4px 배수 기반, 시각 보정 포함 (06번 §3) */
+  --sp-1: 4px;
+  --sp-2: 6px;
+  --sp-3: 8px;
+  --sp-4: 12px;
+  --sp-5: 14px;
+  --sp-6: 18px;
+  --sp-7: 20px;
+  --sp-8: 26px;
+  --sp-9: 34px;
+  --sp-10: 40px;
+
+  --r-tag: 3px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-full: 99px;
+
+  /* 터치 타겟 최소 44×44 (06번 §7) */
+  --touch-min: 44px;
+}
+
+/*
+ * 학생 화면 — 같은 역할, 큰 크기.
+ * 06번 §7: "학생 화면 최소 본문 13.5px". 한 화면에 한 가지만 두므로 여유가 있다.
+ */
+.register-student {
+  --fs-display: 44px;
+  --fs-h1: 22px;
+  --fs-h2: 18px;
+  --fs-body-lg: 16.5px;
+  --fs-body: 15px;
+  --fs-body-sm: 13.5px;
+  --fs-caption: 12.5px;
+  --fs-eyebrow: 10px;
+}
+
+/* ── 역할 클래스 ─────────────────────────────────────────
+   숫자 대신 이걸 쓴다. 새 크기가 필요하면 스케일을 먼저 고친다. */
+
+.t-display {
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+  font-size: var(--fs-display);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.t-h1 {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-h1);
+  line-height: 1.4;
+}
+
+.t-h2 {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-h2);
+  line-height: 1.5;
+}
+
+.t-body-lg {
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-regular);
+  line-height: 1.7;
+}
+
+.t-body {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  line-height: 1.6;
+}
+
+.t-body-sm {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-regular);
+  line-height: 1.65;
+}
+
+.t-caption {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  line-height: 1.6;
+  color: var(--ink-4);
+}
+
+/* 숫자는 전부 mono. 차시·금액·비율·시간·통계 예외 없음 (06번 §2 절대 규칙) */
+.t-data {
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 섹션 라벨. mono · uppercase · .16em */
+.t-eyebrow {
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+/* ── 톤 ────────────────────────────────────────────────── */
+
+.tone-muted {
+  color: var(--ink-3);
+}
+.tone-faint {
+  color: var(--ink-4);
+}
+.tone-warn {
+  color: var(--chija);
+}
+.tone-danger {
+  color: var(--honghwa);
+}
+.tone-ok {
+  color: var(--jade);
+}
+.tone-accent {
+  color: var(--indigo);
+}

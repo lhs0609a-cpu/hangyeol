@@ -94,7 +94,7 @@ export default function LevelTestPage() {
   if (error && !step) {
     return (
       <div style={{ textAlign: 'center', paddingTop: 50 }}>
-        <p style={{ fontSize: 14, color: 'var(--ink-3)' }}>{error}</p>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-3)' }}>{error}</p>
       </div>
     );
   }
@@ -103,14 +103,14 @@ export default function LevelTestPage() {
     return (
       <div className="hg-rise" style={{ textAlign: 'center', paddingTop: 40 }}>
         <div className="eyebrow">레벨 배정 완료</div>
-        <div className="mono" style={{ fontSize: 44, fontWeight: 500, marginTop: 12, letterSpacing: '-0.03em' }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-display)', fontWeight: 500, marginTop: 12, letterSpacing: '-0.03em' }}>
           {result.level}급
         </div>
-        <p className="mono" style={{ fontSize: 12.5, color: 'var(--ink-4)', marginTop: 4 }}>
+        <p className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)', marginTop: 4 }}>
           {result.correct} / {result.asked} 정답
         </p>
 
-        <p style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 22, lineHeight: 1.8 }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-2)', marginTop: 22, lineHeight: 1.8 }}>
           여기서 시작해요.
           <br />
           선생님이 이 결과를 보고 첫 수업을 준비해요.
@@ -130,7 +130,7 @@ export default function LevelTestPage() {
             <div className="eyebrow">먼저 볼 것</div>
             <div style={{ marginTop: 8 }}>
               {result.weakPoints.map((w) => (
-                <div key={w} style={{ fontSize: 13.5, marginBottom: 3 }}>
+                <div key={w} style={{ fontSize: 'var(--fs-body)', marginBottom: 3 }}>
                   · {w}
                 </div>
               ))}
@@ -147,7 +147,7 @@ export default function LevelTestPage() {
             borderRadius: 8,
             background: 'var(--indigo)',
             color: '#fff',
-            fontSize: 14.5,
+            fontSize: 'var(--fs-body-lg)',
             fontWeight: 600,
             textDecoration: 'none',
           }}
@@ -172,7 +172,7 @@ export default function LevelTestPage() {
         <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: 'var(--indigo)', transition: 'width .3s' }} />
       </div>
 
-      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 18, lineHeight: 1.7 }}>
+      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginTop: 18, lineHeight: 1.7 }}>
         빈칸에 알맞은 것을 고르세요. 모르면 아무거나 골라도 괜찮아요.
       </p>
 
@@ -183,7 +183,7 @@ export default function LevelTestPage() {
           background: 'var(--hanji-card)',
           border: '1px solid var(--hanji-rule)',
           borderRadius: 10,
-          fontSize: 20,
+          fontSize: 'var(--fs-h1)',
           lineHeight: 1.7,
           textAlign: 'center',
         }}
@@ -200,7 +200,7 @@ export default function LevelTestPage() {
             onClick={() => answer(i)}
             style={{
               padding: '16px 18px',
-              fontSize: 16,
+              fontSize: 'var(--fs-h2)',
               textAlign: 'left',
               borderRadius: 8,
               border: '1px solid var(--hanji-rule)',
@@ -213,7 +213,7 @@ export default function LevelTestPage() {
         ))}
       </div>
 
-      {error && <p style={{ fontSize: 12.5, color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>}
+      {error && <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>}
     </div>
   );
 }

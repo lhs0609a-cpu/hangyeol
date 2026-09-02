@@ -37,7 +37,7 @@ export default function ProgressPage() {
     <div className="hg-rise">
       <TopBar />
 
-      <h1 style={{ fontSize: 20, fontWeight: 600, marginTop: 22 }}>지금까지</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 22 }}>지금까지</h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 20 }}>
         <Stat label="지금 급" value={`${level}급`} sub={data.levelAssignedAt ? '레벨 테스트로 배정' : '아직 테스트 전'} />
@@ -56,7 +56,7 @@ export default function ProgressPage() {
             borderRadius: 10,
           }}
         >
-          <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.7 }}>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body)', lineHeight: 1.7 }}>
             아직 레벨 테스트를 안 봤어요. 5분이면 끝나요.
           </p>
           <a
@@ -68,7 +68,7 @@ export default function ProgressPage() {
               borderRadius: 8,
               background: 'var(--indigo)',
               color: '#fff',
-              fontSize: 14,
+              fontSize: 'var(--fs-body)',
               fontWeight: 600,
               textDecoration: 'none',
             }}
@@ -92,10 +92,10 @@ function Stat({ label, value, sub }: { label: string; value: string; sub: string
       }}
     >
       <div className="eyebrow">{label}</div>
-      <div className="mono" style={{ fontSize: 26, fontWeight: 500, marginTop: 6, letterSpacing: '-0.03em' }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-h1)', fontWeight: 500, marginTop: 6, letterSpacing: '-0.03em' }}>
         {value}
       </div>
-      {sub && <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 3 }}>{sub}</div>}
     </div>
   );
 }

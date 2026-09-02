@@ -42,6 +42,10 @@ jobs:
       - name: 강사 앱 빌드
         run: npm run build --workspace @hangyeol/teacher
 
+      # 06번 문서 §2·§7·§8 — 타입 스케일 · 접근성 · 카피 규칙.
+      - name: 디자인 게이트
+        run: node tools/design-check.mjs
+
       # 08번 문서 §6 · 09번 L5 — 비상업 라이선스 자산이 코드에 섞이면 배포를 중단한다.
       - name: 라이선스 게이트
         run: node tools/license-check.mjs

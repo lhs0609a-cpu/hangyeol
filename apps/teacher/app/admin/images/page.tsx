@@ -64,7 +64,7 @@ export default function ImagesPage() {
     return (
       <Shell>
         <Panel>
-          <p style={{ margin: 0, fontSize: 13 }}>{error}</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body)' }}>{error}</p>
         </Panel>
       </Shell>
     );
@@ -73,7 +73,7 @@ export default function ImagesPage() {
   if (!data) {
     return (
       <Shell>
-        <p style={{ color: 'var(--ink-3)', fontSize: 13 }}>불러오는 중</p>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-body)' }}>불러오는 중</p>
       </Shell>
     );
   }
@@ -89,16 +89,16 @@ export default function ImagesPage() {
   return (
     <Shell>
       <Eyebrow>관리자 · 이미지 자산</Eyebrow>
-      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px' }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px' }}>
         만들어야 할 이미지 {data.total}장
       </h1>
-      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', margin: 0, lineHeight: 1.7 }}>
+      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', margin: 0, lineHeight: 1.7 }}>
         프롬프트를 복사해 이미지를 만들고 여기에 올리면 그 자리에 자동으로 들어갑니다.
         코드를 고칠 필요가 없습니다.
       </p>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-        <div className="mono" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)' }}>
           {data.uploadedCount} / {data.total} 업로드됨
         </div>
         <div style={{ flex: 1, height: 3, borderRadius: 99, background: 'var(--rule)', minWidth: 120 }}>
@@ -115,7 +115,7 @@ export default function ImagesPage() {
 
       {!data.storageConfigured && (
         <Panel style={{ marginTop: 14, background: 'var(--chija-w)', border: '1px solid transparent' }}>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--chija)', lineHeight: 1.7 }}>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body-sm)', color: 'var(--chija)', lineHeight: 1.7 }}>
             자산 스토리지(R2)가 연결되지 않아 업로드가 되지 않습니다.
             프롬프트 복사는 지금도 됩니다. <span className="mono">R2_*</span> 환경변수를 채우면 업로드가 열립니다.
           </p>
@@ -137,7 +137,7 @@ export default function ImagesPage() {
           onChange={(e) => setUnit(e.target.value)}
           style={{
             padding: '7px 10px',
-            fontSize: 12.5,
+            fontSize: 'var(--fs-body-sm)',
             fontFamily: 'inherit',
             border: '1px solid var(--rule)',
             borderRadius: 7,
@@ -156,7 +156,7 @@ export default function ImagesPage() {
       <div style={{ marginTop: 16 }}>
         {items.length === 0 ? (
           <Panel>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)' }}>해당하는 이미지가 없습니다</p>
+            <p style={{ margin: 0, fontSize: 'var(--fs-body)', color: 'var(--ink-3)' }}>해당하는 이미지가 없습니다</p>
           </Panel>
         ) : (
           items.map((item) => (
@@ -222,13 +222,13 @@ function ImageRow({
   return (
     <Panel style={{ marginBottom: 10, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 13.5, fontWeight: 600 }}>{item.usedAt}</span>
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>{item.usedAt}</span>
         <Tag tone={item.uploaded ? 'j' : 'n'}>{item.uploaded ? '올라감' : '필요'}</Tag>
         <Tag tone="n">{SLOT_LABEL[item.slot] ?? item.slot}</Tag>
         <Tag tone="n">{item.aspect}</Tag>
       </div>
 
-      <div className="mono" style={{ fontSize: 10.5, color: 'var(--ink-4)', marginTop: 4 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--ink-4)', marginTop: 4 }}>
         {item.storageKey}
       </div>
 
@@ -238,7 +238,7 @@ function ImageRow({
           padding: 12,
           background: 'var(--rule-soft)',
           borderRadius: 7,
-          fontSize: 11.5,
+          fontSize: 'var(--fs-caption)',
           lineHeight: 1.7,
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
@@ -250,7 +250,7 @@ function ImageRow({
         {item.prompt}
       </pre>
 
-      {failure && <p style={{ fontSize: 12, color: 'var(--honghwa)', marginTop: 8 }}>{failure}</p>}
+      {failure && <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 8 }}>{failure}</p>}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
         <Button size="sm" kind={copied ? 'jade' : 'ghost'} onClick={copy}>
@@ -274,7 +274,7 @@ function ImageRow({
           disabled={busy || !storageConfigured}
           onClick={() => fileRef.current?.click()}
         >
-          {busy ? '올리는 중' : !storageConfigured ? '스토리지 미연결' : item.uploaded ? '다시 올리기' : '이미지 올리기'}
+          {busy ? '올리는 중' : !storageConfigured ? '아직 올릴 수 없어요' : item.uploaded ? '다시 올리기' : '이미지 올리기'}
         </Button>
       </div>
     </Panel>
@@ -301,7 +301,7 @@ function Segmented({
             onClick={() => onChange(o.value)}
             style={{
               padding: '5px 11px',
-              fontSize: 12,
+              fontSize: 'var(--fs-body-sm)',
               fontFamily: 'inherit',
               fontWeight: active ? 600 : 400,
               borderRadius: 5,

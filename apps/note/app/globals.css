@@ -1,3 +1,5 @@
+@import '@hangyeol/ui/tokens.css';
+
 /*
  * 학생 화면 — 06번 문서의 "다이어리" 레지스터.
  *
@@ -43,8 +45,7 @@ body {
   background: var(--hanji);
   color: var(--ink);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-  /* 학생 화면 최소 본문 13.5px */
-  font-size: 14.5px;
+  font-size: var(--fs-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -56,9 +57,9 @@ body {
 
 .eyebrow {
   font-family: var(--font-mono), ui-monospace, Menlo, monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-eyebrow);
   text-transform: uppercase;
   color: var(--ink-4);
 }

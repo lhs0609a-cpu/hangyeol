@@ -30,10 +30,10 @@ export default function LicensesPage() {
   return (
     <Shell wide={false}>
       <Eyebrow>출처 표시</Eyebrow>
-      <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px' }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px' }}>
         외부 자산과 라이선스
       </h1>
-      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.7 }}>
+      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', lineHeight: 1.7 }}>
         이 제품이 쓰는 외부 자산과 그 라이선스입니다.
         마지막 확인 <span className="mono">{LICENSE_REVIEW.lastVerified}</span> ·
         {' '}<span className="mono">{LICENSE_REVIEW.reviewEveryDays}</span>일마다 재확인합니다.
@@ -51,13 +51,13 @@ export default function LicensesPage() {
       {shareAlike.length > 0 && (
         <Panel style={{ marginTop: 14, background: 'var(--chija-w)', border: '1px solid transparent' }}>
           <Eyebrow>Share-Alike 주의</Eyebrow>
-          <p style={{ fontSize: 12.5, color: 'var(--chija)', marginTop: 8, lineHeight: 1.7 }}>
+          <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--chija)', marginTop: 8, lineHeight: 1.7 }}>
             아래 자산은 2차 저작물에 같은 라이선스를 요구합니다.
             우리 콘텐츠에 섞으면 그 부분이 같은 라이선스로 묶입니다.
           </p>
           <div style={{ marginTop: 8 }}>
             {shareAlike.map((a) => (
-              <div key={a.id} style={{ fontSize: 12.5, color: 'var(--chija)' }}>
+              <div key={a.id} style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--chija)' }}>
                 · {a.name}
               </div>
             ))}
@@ -67,7 +67,7 @@ export default function LicensesPage() {
 
       <Panel style={{ marginTop: 14 }}>
         <Eyebrow>검토했지만 쓰지 않음 · {blocked.length}건</Eyebrow>
-        <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 8, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 8, lineHeight: 1.7 }}>
           지우지 않고 남깁니다. 다음에 조사하는 사람이 같은 함정을 밟지 않도록.
         </p>
         <div style={{ marginTop: 12 }}>
@@ -77,7 +77,7 @@ export default function LicensesPage() {
         </div>
       </Panel>
 
-      <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 20, lineHeight: 1.8 }}>
+      <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 20, lineHeight: 1.8 }}>
         {LICENSE_REVIEW.note}
       </p>
     </Shell>
@@ -102,7 +102,7 @@ function AssetRow({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 13.5, fontWeight: 600 }}>{asset.name}</span>
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>{asset.name}</span>
         <Tag tone={blocked ? 'h' : terms.shareAlike ? 'c' : 'j'}>{terms.label}</Tag>
       </div>
 
@@ -111,19 +111,19 @@ function AssetRow({
         target="_blank"
         rel="noreferrer"
         className="mono"
-        style={{ display: 'block', fontSize: 11, marginTop: 3, wordBreak: 'break-all' }}
+        style={{ display: 'block', fontSize: 'var(--fs-caption)', marginTop: 3, wordBreak: 'break-all' }}
       >
         {asset.url}
       </a>
 
-      <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.7 }}>
+      <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.7 }}>
         {asset.usage}
       </div>
 
       {asset.caveat && (
         <div
           style={{
-            fontSize: 11.5,
+            fontSize: 'var(--fs-caption)',
             color: blocked ? 'var(--honghwa)' : 'var(--chija)',
             marginTop: 6,
             lineHeight: 1.7,
@@ -137,7 +137,7 @@ function AssetRow({
         <div
           className="mono"
           style={{
-            fontSize: 11,
+            fontSize: 'var(--fs-caption)',
             color: 'var(--ink-3)',
             marginTop: 6,
             padding: '8px 10px',

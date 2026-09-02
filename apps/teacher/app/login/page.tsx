@@ -42,7 +42,7 @@ export default function LoginPage() {
     <main style={{ maxWidth: 380, margin: '0 auto', padding: '80px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center' }}>
         <Logo size={20} />
-        <span style={{ fontSize: 16, fontWeight: 600 }}>한결</span>
+        <span style={{ fontSize: 'var(--fs-h2)', fontWeight: 600 }}>한결</span>
       </div>
 
       <Panel style={{ marginTop: 26 }}>
@@ -74,7 +74,7 @@ export default function LoginPage() {
         />
 
         {error && (
-          <p style={{ fontSize: 12.5, color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>
+          <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>
         )}
 
         <div style={{ marginTop: 18 }}>
@@ -103,7 +103,7 @@ export default function LoginPage() {
         </div>
       </Panel>
 
-      <p style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 18, textAlign: 'center', lineHeight: 1.7 }}>
+      <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 18, textAlign: 'center', lineHeight: 1.7 }}>
         온보딩 · 트레이닝 · 교재 · 도구는 전부 무료입니다.
         활성 학생이 생긴 뒤에만 요금이 발생합니다.
       </p>
@@ -128,7 +128,7 @@ function LabeledInput({
 }) {
   return (
     <label style={{ display: 'block', marginTop: 14 }}>
-      <span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5 }}>{label}</span>
+      <span style={{ display: 'block', fontSize: 'var(--fs-body-sm)', fontWeight: 600, marginBottom: 5 }}>{label}</span>
       <input
         type={type}
         value={value}
@@ -137,7 +137,7 @@ function LabeledInput({
         style={{
           width: '100%',
           padding: '9px 11px',
-          fontSize: 13,
+          fontSize: 'var(--fs-body)',
           fontFamily: 'inherit',
           border: '1px solid var(--rule)',
           borderRadius: 7,
@@ -145,7 +145,7 @@ function LabeledInput({
           color: 'var(--ink)',
         }}
       />
-      {hint && <span style={{ display: 'block', fontSize: 11.5, color: 'var(--ink-4)', marginTop: 4 }}>{hint}</span>}
+      {hint && <span style={{ display: 'block', fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 4 }}>{hint}</span>}
     </label>
   );
 }

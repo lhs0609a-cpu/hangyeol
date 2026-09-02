@@ -10,11 +10,11 @@ import Link from 'next/link';
 export function TopBar({ right }: { right?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Link href="/" style={{ fontSize: 13, color: 'var(--ink-3)', textDecoration: 'none' }}>
+      <Link href="/" style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-3)', textDecoration: 'none' }}>
         ← 오늘의 학습
       </Link>
       {right && (
-        <span className="mono" style={{ fontSize: 12, color: 'var(--ink-4)' }}>
+        <span className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)' }}>
           {right}
         </span>
       )}
@@ -24,7 +24,7 @@ export function TopBar({ right }: { right?: string }) {
 
 export function Loading() {
   return (
-    <p style={{ color: 'var(--ink-3)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
+    <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-body)', textAlign: 'center', paddingTop: 40 }}>
       불러오는 중
     </p>
   );
@@ -33,7 +33,7 @@ export function Loading() {
 export function Done({ message }: { message: string }) {
   return (
     <div style={{ textAlign: 'center', paddingTop: 50 }}>
-      <p style={{ fontSize: 15, color: 'var(--ink-2)' }}>{message}</p>
+      <p style={{ fontSize: 'var(--fs-body-lg)', color: 'var(--ink-2)' }}>{message}</p>
       <Link
         href="/"
         style={{
@@ -43,7 +43,7 @@ export function Done({ message }: { message: string }) {
           borderRadius: 8,
           background: 'var(--indigo)',
           color: '#fff',
-          fontSize: 14,
+          fontSize: 'var(--fs-body)',
           fontWeight: 600,
           textDecoration: 'none',
         }}

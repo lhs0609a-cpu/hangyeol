@@ -60,7 +60,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
     return (
       <Shell>
         <Panel>
-          <p style={{ margin: 0, fontSize: 13 }}>{error}</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body)' }}>{error}</p>
         </Panel>
       </Shell>
     );
@@ -69,7 +69,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
   if (!data) {
     return (
       <Shell>
-        <p style={{ color: 'var(--ink-3)', fontSize: 13 }}>불러오는 중</p>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-body)' }}>불러오는 중</p>
       </Shell>
     );
   }
@@ -85,7 +85,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
       const next = await get<StudentDetail>(`/api/students/${params.id}`);
       setData(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '처리하지 못했습니다');
+      setError(e instanceof Error ? e.message : '처리하지 못했습니다. 잠시 후 다시 시도하세요');
     } finally {
       setBusy(false);
     }
@@ -95,10 +95,10 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
     <Shell>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>
+          <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>
             {data.nameKo ?? data.name}
           </h1>
-          <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 3 }}>
             {data.name} · {data.levelCode.replace('topik', 'TOPIK ')}급 · {data.currentLessonNo}차시
           </div>
           <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -121,7 +121,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
             {strands ? (
               <StrandBars strands={strands} />
             ) : (
-              <p style={{ fontSize: 12.5, color: 'var(--ink-4)', margin: 0, lineHeight: 1.7 }}>
+              <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)', margin: 0, lineHeight: 1.7 }}>
                 아직 집계된 주간 기록이 없습니다.
                 학생이 학습 도구를 쓰기 시작하면 여기에 시간 배분이 나타납니다.
               </p>
@@ -132,12 +132,12 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
         <Panel>
           <Eyebrow>학생 발화 비율</Eyebrow>
           {data.speakRatio === undefined ? (
-            <p style={{ fontSize: 12.5, color: 'var(--ink-4)', marginTop: 14, lineHeight: 1.7 }}>
+            <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)', marginTop: 14, lineHeight: 1.7 }}>
               아직 측정된 수업이 없습니다.
             </p>
           ) : (
             <>
-              <div className="mono" style={{ fontSize: 34, fontWeight: 500, marginTop: 10 }}>
+              <div className="mono" style={{ fontSize: 'var(--fs-display)', fontWeight: 500, marginTop: 10 }}>
                 {data.speakRatio}%
               </div>
               <div style={{ height: 26, background: 'var(--rule-soft)', borderRadius: 6, marginTop: 10, overflow: 'hidden' }}>
@@ -146,7 +146,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
             </>
           )}
           {/* 07번 문서에서 고정 캡션으로 지정된 문구 */}
-          <p className="mono" style={{ fontSize: 10.5, color: 'var(--ink-4)', marginTop: 12 }}>
+          <p className="mono" style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--ink-4)', marginTop: 12 }}>
             음성 인식 없이 마이크 볼륨만으로 측정 · 추가 비용 0원
           </p>
         </Panel>
@@ -161,7 +161,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
             ))}
           </div>
           {data.lastReport.errors.length > 0 && (
-            <div style={{ marginTop: 12, fontSize: 13 }}>
+            <div style={{ marginTop: 12, fontSize: 'var(--fs-body)' }}>
               고칠 것 · {data.lastReport.errors.join(' / ')}
             </div>
           )}
@@ -177,7 +177,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
         </Link>
         {data.status !== 'completed' && (
           <Button disabled={busy} onClick={complete}>
-            {busy ? '처리하는 중' : '과정 종료 처리'}
+            {busy ? '종료하는 중' : '과정 종료 — 읽기전용으로'}
           </Button>
         )}
         <Link href="/" style={{ textDecoration: 'none' }}>
@@ -192,7 +192,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="eyebrow">{label}</div>
-      <div className="mono" style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-h1)', fontWeight: 500, marginTop: 4 }}>
         {value}
       </div>
     </div>

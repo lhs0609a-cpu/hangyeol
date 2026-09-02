@@ -46,13 +46,13 @@ export default function VocabPage() {
     <div className="hg-rise">
       <TopBar right={`${total}개`} />
 
-      <h1 style={{ fontSize: 20, fontWeight: 600, marginTop: 22 }}>내 단어장</h1>
-      <p style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.7 }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 22 }}>내 단어장</h1>
+      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.7 }}>
         수업에서 나온 표현이 여기에 쌓여요. 직접 넣지 않아도 돼요.
       </p>
 
       {items.length === 0 ? (
-        <p style={{ fontSize: 14, color: 'var(--ink-4)', marginTop: 30, textAlign: 'center' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-4)', marginTop: 30, textAlign: 'center' }}>
           아직 표현이 없어요. 첫 수업이 끝나면 여기에 나타나요
         </p>
       ) : (
@@ -60,11 +60,11 @@ export default function VocabPage() {
           {items.map((c) => (
             <div key={c.id} style={{ padding: '14px 0', borderTop: '1px solid var(--hanji-rule)' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
-                <span style={{ fontSize: 16.5, fontWeight: 600 }}>{c.term}</span>
+                <span style={{ fontSize: 'var(--fs-h2)', fontWeight: 600 }}>{c.term}</span>
                 <span
                   className="mono"
                   style={{
-                    fontSize: 10,
+                    fontSize: 'var(--fs-eyebrow)',
                     padding: '2px 7px',
                     borderRadius: 3,
                     background: c.state === 'graduated' ? 'var(--jade-w)' : 'var(--hanji-card)',
@@ -76,12 +76,12 @@ export default function VocabPage() {
                 </span>
               </div>
               {c.glossL1 && (
-                <div className="mono" style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 3 }}>
+                <div className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginTop: 3 }}>
                   {c.glossL1}
                 </div>
               )}
               {c.example && (
-                <div style={{ fontSize: 13.5, color: 'var(--ink-2)', marginTop: 5 }}>{c.example}</div>
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-2)', marginTop: 5 }}>{c.example}</div>
               )}
             </div>
           ))}

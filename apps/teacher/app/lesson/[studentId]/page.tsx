@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button, Eyebrow, Panel, Stepper, Tag } from '@hangyeol/ui';
+import { Button, Eyebrow, Panel, SlidePlaceholder, Stepper, Tag } from '@hangyeol/ui';
 import { get, post, ApiClientError } from '../../api-client';
 import { Shell } from '../../Shell';
 
@@ -44,7 +44,7 @@ export default function LessonPage({ params }: { params: { studentId: string } }
       setLesson(result);
       setStep(1);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : '수업을 시작하지 못했습니다');
+      setError(err instanceof ApiClientError ? err.message : '수업을 시작하지 못했습니다. 잠시 후 다시 시도하세요');
     } finally {
       setBusy(false);
     }
@@ -71,7 +71,7 @@ export default function LessonPage({ params }: { params: { studentId: string } }
 
       {lesson?.billing.cycleOpened && step === 1 && (
         <Panel style={{ marginTop: 18, background: 'var(--chija-w)', border: '1px solid transparent' }}>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--chija)' }}>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body-sm)', color: 'var(--chija)' }}>
             {lesson.billing.cycleNo}번째 28일 주기가 시작됐습니다 ·{' '}
             <span className="mono">{lesson.billing.amount?.toLocaleString('ko-KR')}원</span>
           </p>
@@ -80,7 +80,7 @@ export default function LessonPage({ params }: { params: { studentId: string } }
 
       {error && (
         <Panel style={{ marginTop: 18, background: 'var(--honghwa-w)', border: '1px solid transparent' }}>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--honghwa)' }}>{error}</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)' }}>{error}</p>
         </Panel>
       )}
 
@@ -125,7 +125,7 @@ function StepPrev({
       {prev ? (
         <>
           <div style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginBottom: 6 }}>지난 수업 새 표현</div>
+            <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginBottom: 6 }}>지난 수업 새 표현</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
               {prev.expressions.map((e) => (
                 <Tag key={e} tone="i">
@@ -137,13 +137,13 @@ function StepPrev({
 
           {prev.errors.length > 0 && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginBottom: 6 }}>고칠 것</div>
-              <div style={{ fontSize: 14 }}>{prev.errors[0]}</div>
+              <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginBottom: 6 }}>고칠 것</div>
+              <div style={{ fontSize: 'var(--fs-body)' }}>{prev.errors[0]}</div>
             </div>
           )}
         </>
       ) : (
-        <p style={{ fontSize: 13, color: 'var(--ink-4)', marginTop: 12 }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-4)', marginTop: 12 }}>
           {loaded ? '지난 기록이 없습니다. 첫 수업이에요' : '불러오는 중'}
         </p>
       )}
@@ -166,7 +166,7 @@ function StepReview({ prev, onNext, lessonNo }: { prev: PrevReport | null; onNex
   return (
     <Panel>
       <Eyebrow>복습 5분</Eyebrow>
-      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 10 }}>
+      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginTop: 10 }}>
         눈으로 훑지 말고 학생이 말하게 하세요. 대답이 나와야 넘어갑니다.
       </p>
 
@@ -182,15 +182,15 @@ function StepReview({ prev, onNext, lessonNo }: { prev: PrevReport | null; onNex
               borderTop: '1px solid var(--rule-soft)',
             }}
           >
-            <span className="mono" style={{ fontSize: 11, color: 'var(--ink-4)', width: 20 }}>
+            <span className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', width: 20 }}>
               {String(i + 1).padStart(2, '0')}
             </span>
-            <span style={{ flex: 1, fontSize: 17, fontWeight: 500 }}>{e}</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-h2)', fontWeight: 500 }}>{e}</span>
           </div>
         ))}
 
         {(!prev || prev.expressions.length === 0) && (
-          <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-4)' }}>
             복습할 표현이 없습니다. 바로 본 차시로 갑니다
           </p>
         )}
@@ -230,7 +230,7 @@ function StepUnit({
   return (
     <Panel>
       <Eyebrow>차시 목표</Eyebrow>
-      <p style={{ fontSize: 15, marginTop: 8, marginBottom: 16 }}>
+      <p style={{ fontSize: 'var(--fs-body-lg)', marginTop: 8, marginBottom: 16 }}>
         {slides?.goalStatement ?? (error ? '—' : '불러오는 중')}
       </p>
 
@@ -285,19 +285,21 @@ function SlideViewer({
         WebkitUserSelect: 'none',
       }}
     >
-      <div style={{ textAlign: 'center', color: 'var(--ink-4)', fontSize: 12.5, padding: 20 }}>
-        {error ? (
-          <span style={{ color: 'var(--honghwa)' }}>{error}</span>
-        ) : slides ? (
-          slides.pages.length > 0 ? (
-            `슬라이드 ${slides.pages.length}장 · 서명 URL 발급됨`
-          ) : (
-            '이 차시의 슬라이드 자산이 아직 제작되지 않았습니다'
-          )
-        ) : (
-          '불러오는 중'
-        )}
-      </div>
+      {error ? (
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', padding: 20 }}>
+          <span className="t-body-sm tone-danger" style={{ textAlign: 'center' }}>
+            {error}
+          </span>
+        </div>
+      ) : slides && slides.pages.length > 0 ? (
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+          <span className="t-body-sm tone-faint">슬라이드 {slides.pages.length}장</span>
+        </div>
+      ) : (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <SlidePlaceholder label={slides ? '이 차시 슬라이드는 준비 중입니다' : '불러오는 중'} />
+        </div>
+      )}
 
       {slides && (
         <div
@@ -306,7 +308,7 @@ function SlideViewer({
             position: 'absolute',
             right: 10,
             bottom: 8,
-            fontSize: 9.5,
+            fontSize: 'var(--fs-eyebrow)',
             color: 'var(--ink-4)',
             opacity: 0.8,
           }}
@@ -344,7 +346,7 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
       );
       setResult(r);
     } catch (err) {
-      setFailure(err instanceof Error ? err.message : '저장하지 못했습니다');
+      setFailure(err instanceof Error ? err.message : '저장하지 못했습니다. 입력을 확인하고 다시 시도하세요');
     } finally {
       setBusy(false);
     }
@@ -354,8 +356,8 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
     return (
       <Panel>
         <Eyebrow>전달 완료</Eyebrow>
-        <h2 style={{ fontSize: 17, fontWeight: 600, marginTop: 10 }}>학생에게 전달됐습니다</h2>
-        <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.7 }}>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 600, marginTop: 10 }}>학생에게 전달됐습니다</h2>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-2)', lineHeight: 1.7 }}>
           표현 {result.vocabCreated}개가 학습 노트에 적립됐고, 복습 알림이{' '}
           {result.srsScheduled.slice(0, 3).join(' · ')}에 자동 발송됩니다.
           이 표현들이 다음 수업 복습 슬라이드가 됩니다.
@@ -378,7 +380,7 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
   return (
     <Panel>
       <Eyebrow>기록 3분</Eyebrow>
-      <p style={{ fontSize: 13, fontWeight: 600, marginTop: 8 }}>여기 넣은 것만 학생 노트로 갑니다</p>
+      <p style={{ fontSize: 'var(--fs-body)', fontWeight: 600, marginTop: 8 }}>여기 넣은 것만 학생 노트로 갑니다</p>
 
       <ChipField
         title={`오늘 나온 새 표현 · ${expressions.length}/${MAX_EXP}`}
@@ -417,7 +419,7 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
       />
 
       {failure && (
-        <p style={{ fontSize: 12.5, color: 'var(--honghwa)', marginTop: 12 }}>{failure}</p>
+        <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{failure}</p>
       )}
 
       <div style={{ marginTop: 18 }}>
@@ -462,8 +464,8 @@ function ChipField({
 }) {
   return (
     <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--rule-soft)' }}>
-      <div style={{ fontSize: 13, fontWeight: 600 }}>{title}</div>
-      <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 3 }}>{hint}</div>
+      <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>{title}</div>
+      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 3 }}>{hint}</div>
 
       {items.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
@@ -496,7 +498,7 @@ function ChipField({
           style={{
             flex: 1,
             padding: '9px 11px',
-            fontSize: 13,
+            fontSize: 'var(--fs-body)',
             fontFamily: 'inherit',
             border: '1px solid var(--rule)',
             borderRadius: 7,
