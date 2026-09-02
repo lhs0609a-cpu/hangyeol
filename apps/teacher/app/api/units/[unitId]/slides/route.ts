@@ -1,4 +1,11 @@
-import { handle, recordAssetView, requireStudentContext, slidesForUnit, clientIp } from '@hangyeol/core';
+import {
+  clientIp,
+  enforce,
+  handle,
+  recordAssetView,
+  requireStudentContext,
+  slidesForUnit,
+} from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 // 요청 헤더·쿠키를 읽으므로 정적 렌더링 대상이 아니다.
@@ -23,6 +30,10 @@ export function GET(req: Request, { params }: { params: { unitId: string } }) {
     const studentId = url.searchParams.get('student_id');
 
     const ctx = await requireStudentContext(req, studentId);
+
+    // 04번 §K — 120회 / 분 / 강사. 자료를 긁어가는 속도를 제한한다.
+    enforce('assetSign', String(ctx.teacherId));
+
     const unitId = BigInt(params.unitId);
 
     const slides = await slidesForUnit(ctx, unitId);

@@ -140,6 +140,32 @@ export default async function NoteHomePage() {
         </section>
       )}
 
+      <nav style={{ display: 'flex', gap: 8, marginTop: 26 }}>
+        {[
+          { href: '/vocab', label: '내 단어장' },
+          { href: '/progress', label: '지금까지' },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            style={{
+              flex: 1,
+              padding: '13px 0',
+              textAlign: 'center',
+              borderRadius: 10,
+              border: '1px solid var(--hanji-rule)',
+              background: 'var(--hanji-card)',
+              color: 'var(--ink-2)',
+              fontSize: 13.5,
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
       {/*
         강사가 미납으로 잠겨도 학생 화면은 계속 돈다 (TC-10).
         학생에게는 잠금 사실을 알리지 않는다 — 07번 문서 "결제 잠금(학생): 아무 안내 없음".

@@ -1,7 +1,9 @@
 import {
   apiError,
   db,
+  enforce,
   handle,
+  identityFrom,
   normalizeEmail,
   readJson,
   requireFields,
@@ -22,6 +24,9 @@ interface Body {
 /** POST /api/auth/login */
 export function POST(req: Request) {
   return handle(async () => {
+    // 04번 §K — 10회 / 10분 / IP. 무차별 대입을 막는다.
+    enforce('login', identityFrom(req));
+
     const body = await readJson<Body>(req);
     requireFields(body, ['email', 'password']);
 

@@ -21,8 +21,21 @@ export interface TodayStudent {
   lastActivity: string;
 }
 
+export interface ImminentLesson {
+  studentId: string;
+  nameKo: string;
+  flag: string;
+  meta: string;
+  at: string;
+  minutesUntil: number;
+  expressions: string[];
+  fix: string | null;
+}
+
 export interface TodayData {
   live: boolean;
+  /** 15분 이내 수업. 없으면 출발 패널을 렌더하지 않는다 (07번 T-01). */
+  imminent: ImminentLesson | null;
   teacherName: string;
   tier: RateTier;
   students: TodayStudent[];
@@ -51,7 +64,10 @@ function relative(at: Date | null, now: Date): string {
   return `${days}일 전`;
 }
 
-function summarize(students: TodayStudent[], tier: RateTier): Omit<TodayData, 'live' | 'teacherName' | 'students' | 'tier'> {
+function summarize(
+  students: TodayStudent[],
+  tier: RateTier,
+): Pick<TodayData, 'monthTotal' | 'cyclePrice' | 'discountPct'> {
   const active = students.filter((s) => s.status === 'active');
   // 할인 판정에 쓰는 active 수는 목록에서 유도한다.
   // 별도로 들고 있으면 목록과 어긋나도 아무도 모른 채 잘못된 요금이 찍힌다.
@@ -65,7 +81,14 @@ function summarize(students: TodayStudent[], tier: RateTier): Omit<TodayData, 'l
 
 export async function loadToday(now = new Date()): Promise<TodayData> {
   if (!isDatabaseConfigured()) {
-    return { live: false, teacherName: '이지은', tier: 'B', students: MOCK, ...summarize(MOCK, 'B') };
+    return {
+      live: false,
+      imminent: null,
+      teacherName: '이지은',
+      tier: 'B',
+      students: MOCK,
+      ...summarize(MOCK, 'B'),
+    };
   }
 
   // DB 가 붙어 있을 때만 클라이언트를 만든다. 빌드 시점에 커넥션을 열지 않기 위해서다.
@@ -78,7 +101,14 @@ export async function loadToday(now = new Date()): Promise<TodayData> {
   });
 
   if (!teacher) {
-    return { live: false, teacherName: '이지은', tier: 'B', students: MOCK, ...summarize(MOCK, 'B') };
+    return {
+      live: false,
+      imminent: null,
+      teacherName: '이지은',
+      tier: 'B',
+      students: MOCK,
+      ...summarize(MOCK, 'B'),
+    };
   }
 
   const rows = await prisma.student.findMany({
@@ -112,8 +142,25 @@ export async function loadToday(now = new Date()): Promise<TodayData> {
 
   const fallback = summarize(students, tier);
 
+  // 출발 패널 — 15분 이내 예약이 있을 때만. 없으면 빈 자리를 남기지 않는다.
+  const { todayLessons } = await import('@hangyeol/core');
+  const today = await todayLessons(teacher.id, now).catch(() => ({ items: [] as never[] }));
+  const soon = today.items.find((i) => i.imminent) ?? null;
+
   return {
     live: true,
+    imminent: soon
+      ? {
+          studentId: soon.studentId,
+          nameKo: soon.nameKo,
+          flag: FLAGS[soon.flag ?? ''] ?? '🏳️',
+          meta: `${soon.nextLessonNo}차시 · ${soon.levelCode.replace('topik', 'TOPIK ')}급`,
+          at: new Date(soon.scheduledAt!).toISOString().slice(11, 16),
+          minutesUntil: soon.minutesUntil ?? 0,
+          expressions: soon.prev?.expressions ?? [],
+          fix: soon.prev?.errors[0] ?? null,
+        }
+      : null,
     teacherName: teacher.name,
     tier,
     students,

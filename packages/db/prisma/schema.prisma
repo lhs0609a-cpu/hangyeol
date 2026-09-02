@@ -58,6 +58,7 @@ model Teacher {
 
   students      Student[]
   lessons       Lesson[]
+  schedules     LessonSchedule[]
   billingCycles BillingCycle[]
   invoices      Invoice[]
   creditTopups  CreditTopup[]
@@ -106,6 +107,8 @@ model Student {
 
   teacher         Teacher          @relation(fields: [teacherId], references: [id], onDelete: Restrict)
   lessons         Lesson[]
+  schedules       LessonSchedule[]
+  levelTests      LevelTest[]
   vocabCards      VocabCard[]
   activities      StudentActivity[]
   hvptSessions    HvptSession[]
@@ -140,6 +143,8 @@ model Lesson {
   speakRatio Int?    @map("speak_ratio") @db.SmallInt // 0~100, 볼륨 기반 (STT 아님)
 
   reportSubmittedAt DateTime? @map("report_submitted_at") @db.Timestamptz(6)
+  /// 지도안의 시간 배분. Four Strands 집계의 근거가 된다.
+  planAllocation    Json?     @map("plan_allocation")
   billingCycleId    BigInt?   @map("billing_cycle_id")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -324,6 +329,49 @@ model StrandWeekly {
 
   @@id([studentId, weekStart])
   @@map("strand_weekly")
+}
+
+/// 수업 예약 — 02번 문서 C-01·C-02.
+///
+/// 예약은 수업이 아니다. lessons 는 실제로 시작해야 생기고,
+/// 그 INSERT 가 2차시에서 과금 주기를 연다.
+/// 예약을 lessons 에 섞으면 시작하지 않은 수업이 과금을 일으킨다.
+model LessonSchedule {
+  id          BigInt    @id @default(autoincrement())
+  studentId   BigInt    @map("student_id")
+  teacherId   BigInt    @map("teacher_id")
+  scheduledAt DateTime  @map("scheduled_at") @db.Timestamptz(6)
+  durationMin Int       @default(50) @map("duration_min") @db.SmallInt
+  /// 이 예약으로 실제 시작된 수업. 시작하면 채워진다.
+  lessonId    BigInt?   @map("lesson_id")
+  canceledAt  DateTime? @map("canceled_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+
+  @@index([teacherId, scheduledAt], map: "idx_schedule_teacher_time")
+  @@index([studentId, scheduledAt], map: "idx_schedule_student_time")
+  @@map("lesson_schedules")
+}
+
+/// 레벨 테스트 — 02번 문서 B-06. 첫 수업 전에 끝나야 50분을 온전히 쓴다.
+model LevelTest {
+  id           BigInt   @id @default(autoincrement())
+  studentId    BigInt   @map("student_id")
+  /// 배정된 급. topik1..topik6
+  levelCode    String   @map("level_code")
+  /// 정답 수 / 문항 수. 재배정 판단 근거로 남긴다.
+  correct      Int      @db.SmallInt
+  asked        Int      @db.SmallInt
+  /// 문항별 응답. 어느 문법에서 막혔는지 강사가 본다.
+  answers      Json
+  completedAt  DateTime @default(now()) @map("completed_at") @db.Timestamptz(6)
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, completedAt(sort: Desc)], map: "idx_level_test_student")
+  @@map("level_tests")
 }
 
 // ────────────────────────────────────────────────────────────

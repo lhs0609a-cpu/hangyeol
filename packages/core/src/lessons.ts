@@ -7,6 +7,8 @@ import {
 import { addDays, type RateTier, type StudentStatus } from '@hangyeol/shared';
 import { apiError } from './errors.js';
 import { db } from './guard.js';
+import { linkScheduleToLesson } from './schedule.js';
+import { allocationFor } from './strands.js';
 
 /**
  * 수업 진행 — 02번 문서 C-03·C-07·C-08.
@@ -119,6 +121,9 @@ export async function startLesson(params: {
         unitId: params.unitId ?? null,
         startedAt: now,
         billingCycleId: cycleRowId,
+        // 지도안 배분을 지금 박아 둔다. 나중에 지도안이 바뀌어도
+        // 이 수업의 Four Strands 집계는 그때의 배분으로 계산돼야 한다.
+        planAllocation: allocationFor(lessonNo),
       },
       select: { id: true, lessonNo: true, unitId: true },
     });
@@ -132,6 +137,14 @@ export async function startLesson(params: {
         // 휴면 학생이 수업을 재개하면 그 자리에서 활성으로 돌린다.
         ...(student.status === 'dormant' ? { status: 'active' } : {}),
       },
+    });
+
+    // 예약이 있으면 연결한다. 그래야 오늘 목록에서 사라진다.
+    await linkScheduleToLesson({
+      teacherId: params.teacherId,
+      studentId: student.id,
+      lessonId: lesson.id,
+      now,
     });
 
     return {

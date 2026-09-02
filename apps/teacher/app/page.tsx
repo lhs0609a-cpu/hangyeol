@@ -32,21 +32,11 @@ export default async function TodayPage() {
   const data = await loadToday();
   const billable = data.students.filter((s) => s.status === 'active');
 
-  const imminent = {
-    flag: '🇪🇸',
-    nameKo: '마리아',
-    platform: 'Preply',
-    meta: '15차시 · TOPIK 1급 · 스페인어',
-    at: '14:00',
-    minutesUntil: 8,
-    expressions: ['-고 싶어요', '그런데', '-아/어 주세요'],
-    fix: '학교를 갔어요 → 학교에 갔어요',
-  };
-
   return (
     <Shell>
       <>
-        <LaunchPanel {...imminent} />
+        {/* 15분 이내 수업이 없으면 패널 자체를 렌더하지 않는다. 빈 자리를 남기지 않는다 (07번 T-01) */}
+        {data.imminent && <LaunchPanel {...data.imminent} />}
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 26 }}>
           <Metric eyebrow="이번 달 청구" value={won(data.monthTotal)} note={`활성 ${billable.length}명 · 티어 ${data.tier}`} big />
@@ -83,14 +73,14 @@ export default async function TodayPage() {
 }
 
 function LaunchPanel(props: {
+  studentId: string;
   flag: string;
   nameKo: string;
-  platform: string;
   meta: string;
   at: string;
   minutesUntil: number;
   expressions: string[];
-  fix: string;
+  fix: string | null;
 }) {
   return (
     <section
@@ -111,7 +101,7 @@ function LaunchPanel(props: {
               aria-hidden="true"
             />
             <span className="eyebrow" style={{ color: 'var(--ink-4)' }}>
-              다음 수업 · {props.platform}
+              다음 수업
             </span>
           </div>
           <div style={{ fontSize: 23, fontWeight: 600, letterSpacing: '-0.02em' }}>
@@ -143,28 +133,29 @@ function LaunchPanel(props: {
             </span>
           ))}
         </div>
-        <div style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>고칠 것 · {props.fix}</div>
+        {props.fix && <div style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>고칠 것 · {props.fix}</div>}
       </div>
 
       {/* 버튼 라벨은 결과를 말한다 (06번 §8) */}
-      <button
+      <Link
+        href={`/plan/${props.studentId}`}
         className="hg-tap"
         style={{
+          display: 'block',
           marginTop: 16,
           width: '100%',
           padding: '14px 16px',
-          border: 'none',
           borderRadius: 8,
           background: '#fff',
           color: 'var(--ink)',
           fontSize: 13,
           fontWeight: 600,
-          fontFamily: 'inherit',
-          cursor: 'pointer',
+          textAlign: 'center',
+          textDecoration: 'none',
         }}
       >
-        수업 시작 — 복습 5분부터
-      </button>
+        오늘 뭘 할지 보기 — 복습 5분부터
+      </Link>
     </section>
   );
 }
