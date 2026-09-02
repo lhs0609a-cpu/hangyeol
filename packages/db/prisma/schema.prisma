@@ -52,6 +52,18 @@ model Teacher {
   preplyProfileUrl String? @map("preply_profile_url")
   preplyStatus     String  @default("none") @map("preply_status")
 
+  // 가입 승인. 관리자가 승인하기 전에는 로그인해도 아무것도 못 본다.
+  //
+  // 왜 자동 승인이 아닌가: 우리 교재가 그대로 강사에게 넘어간다.
+  // 09번 문서가 자료 유출을 최대 위험으로 잡고 있고, 한번 빠져나간 지도안은
+  // 회수할 방법이 없다. 사람이 한 번 보는 비용이 그보다 싸다.
+  approvalStatus String    @default("pending") @map("approval_status") // pending|approved|rejected
+  approvedAt     DateTime? @map("approved_at") @db.Timestamptz(6)
+  // 거절 사유는 강사에게 그대로 보여 준다. 왜 막혔는지 모르면 문의가 온다.
+  rejectedReason String?   @map("rejected_reason")
+  // 가입 시 받은 자기소개. 승인 판단의 유일한 근거다.
+  applyNote      String?   @map("apply_note")
+
   onboardingStage String    @default("signup") @map("onboarding_stage")
   certifiedAt     DateTime? @map("certified_at") @db.Timestamptz(6)
 
@@ -552,7 +564,7 @@ model Notification {
   id          BigInt    @id @default(autoincrement())
   targetType  String    @map("target_type") // teacher|student
   targetId    BigInt    @map("target_id")
-  kind        String // srs_due|cycle_billed|payment_failed|langgate_open|package_hint
+  kind        String // srs_due|signup_approved|signup_rejected|cycle_billed|payment_failed|langgate_open|package_hint
   payload     Json?
   scheduledAt DateTime  @map("scheduled_at") @db.Timestamptz(6)
   sentAt      DateTime? @map("sent_at") @db.Timestamptz(6)

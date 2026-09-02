@@ -1,301 +1,364 @@
 import Link from 'next/link';
-import { TIER_PRICE } from '@hangyeol/billing';
-import type { StudentStatus } from '@hangyeol/shared';
-import { loadToday, type TodayStudent } from './data';
-import { Shell } from './Shell';
-
-export const dynamic = 'force-dynamic';
+import {
+  BUILD_STATUS,
+  DEMAND_SOURCE,
+  DEMAND_SPIKES,
+  MARKET_HEADLINE,
+  MARKET_SIZE,
+  TEACHER_PAIN,
+  VALUE_PROPS,
+  buildDeck,
+  type MarketFact,
+} from '@hangyeol/content';
+import { Button, SlideRenderer } from '@hangyeol/ui';
 
 /*
- * T-01 · 오늘 (강사 홈) — 07번 문서 구현.
+ * 랜딩 — 로그인하지 않은 방문자가 처음 보는 화면.
  *
- * DB 가 붙어 있으면 실제 학생 레코드를, 없으면 목업을 읽는다(app/data.ts).
- * 어느 쪽이든 금액은 packages/billing 의 계산식을 그대로 쓴다.
- * 화면 숫자와 과금 엔진이 어긋나는 상태를 만들지 않기 위해서다.
+ * 순서에 이유가 있다.
+ *   1. 무엇인지 한 문장   — 3초 안에 못 알아보면 나간다
+ *   2. 실물 슬라이드       — 말로 설명하는 대신 제품을 보인다
+ *   3. 강사의 문제         — 시장이 크다는 말보다 "내 얘기" 가 먼저다
+ *   4. 우리가 주는 것      — 기능이 아니라 결과로 적는다
+ *   5. 시장 근거           — 그다음에 숫자를 꺼낸다
+ *   6. 가입                — 승인제라는 걸 여기서 미리 말한다
+ *
+ * 숫자는 전부 packages/content/market.ts 에서 온다. 화면에 박지 않는다.
+ * 마케팅 숫자는 반드시 낡고, 흩어져 있으면 어느 게 최신인지 아무도 모른다.
  */
 
-/** 07번 문서 T-01 의 상태 배지 표. 색만으로 의미를 전달하지 않도록 라벨을 함께 둔다. */
-const STATUS_STYLE: Record<
-  StudentStatus,
-  { label: string; fg: string; bg: string; opacity: number; bar: string }
-> = {
-  active: { label: '활성', fg: 'var(--jade)', bg: 'var(--jade-w)', opacity: 1, bar: 'var(--indigo)' },
-  dormant: { label: '휴면 · 청구 없음', fg: 'var(--chija)', bg: 'var(--chija-w)', opacity: 0.62, bar: 'var(--chija)' },
-  pending: { label: '인증 대기', fg: 'var(--honghwa)', bg: 'var(--honghwa-w)', opacity: 0.62, bar: 'var(--chija)' },
-  locked: { label: '잠금', fg: 'var(--honghwa)', bg: 'var(--honghwa-w)', opacity: 0.5, bar: 'var(--honghwa)' },
-  completed: { label: '종료', fg: 'var(--ink-3)', bg: 'var(--rule-soft)', opacity: 0.62, bar: 'var(--ink-4)' },
+export const metadata = {
+  title: '한결 — 한국어 강사를 위한 교재와 수업 도구',
+  description:
+    '읽으면 되는 수업 대본과 슬라이드를 드립니다. italki · Preply 강사가 준비 없이 바로 가르칠 수 있습니다.',
 };
 
-const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
-
-export default async function TodayPage() {
-  const data = await loadToday();
-  const billable = data.students.filter((s) => s.status === 'active');
+export default function LandingPage() {
+  // 실물을 보인다. 12차시(을/를)는 문형이 눈에 잡혀서 처음 보는 사람도 안다.
+  const demo = buildDeck(12);
+  const slide = demo?.slides.find((s) => s.kind === 'dialogue') ?? demo?.slides[3];
 
   return (
-    <Shell>
-      <>
-        {/* 15분 이내 수업이 없으면 패널 자체를 렌더하지 않는다. 빈 자리를 남기지 않는다 (07번 T-01) */}
-        {data.imminent && <LaunchPanel {...data.imminent} />}
+    <main style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <TopBar />
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 26 }}>
-          <Metric eyebrow="이번 달 청구" value={won(data.monthTotal)} note={`활성 ${billable.length}명 · 티어 ${data.tier}`} big />
-          <Metric eyebrow="이번 주 수업" value="11" note="지난주 9회" />
-          <Metric eyebrow="평균 학생 발화" value="47%" note="목표 50% 이상" />
-        </section>
+      {/* ── 1. 한 문장 ─────────────────────────────── */}
+      <Section>
+        <p className="t-eyebrow" style={{ color: 'var(--indigo)' }}>
+          한국어 강사를 위한 교재
+        </p>
+        <h1
+          style={{
+            fontSize: 'var(--fs-display)',
+            fontWeight: 650,
+            letterSpacing: '-0.03em',
+            lineHeight: 1.25,
+            margin: '14px 0 0',
+            maxWidth: 620,
+          }}
+        >
+          준비 없이 바로 가르칩니다
+        </h1>
+        <p
+          className="t-body-lg"
+          style={{ margin: '16px 0 0', maxWidth: 520, color: 'var(--ink-2)', lineHeight: 1.7 }}
+        >
+          첫 멘트부터 마무리까지 그대로 적힌 수업 대본과, 이미 만들어진 슬라이드를 드립니다.
+          강사는 말만 하면 됩니다.
+        </p>
 
-        <section style={{ marginTop: 34 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div className="eyebrow">학생 {data.students.length}명</div>
-            {/* 우회 심리를 사전에 차단하는 카피. 07번 문서에서 삭제 금지로 명시돼 있다. */}
-            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)' }}>수업 자료는 학생을 선택해야 열립니다</div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 26, flexWrap: 'wrap' }}>
+          <Link href="/signup" style={{ textDecoration: 'none' }}>
+            <Button kind="jade" size="lg">
+              강사 신청하기
+            </Button>
+          </Link>
+          <Link href="/login" style={{ textDecoration: 'none' }}>
+            <Button size="lg">이미 계정이 있어요</Button>
+          </Link>
+        </div>
+
+        <p className="t-caption tone-muted" style={{ marginTop: 12 }}>
+          신청 후 확인을 거쳐 승인해 드립니다. 교재가 그대로 전달되기 때문입니다.
+        </p>
+      </Section>
+
+      {/* ── 2. 실물 ────────────────────────────────── */}
+      {slide && demo && (
+        <Section tint>
+          <p className="t-eyebrow" style={{ color: 'var(--indigo)' }}>
+            {demo.unitNo}차시 · {demo.title}
+          </p>
+          <h2 className="t-h1" style={{ margin: '10px 0 18px' }}>
+            차시를 열면 이 화면이 나옵니다
+          </h2>
+
+          <div style={{ maxWidth: 660 }}>
+            <SlideRenderer slide={slide} />
           </div>
 
-          <div style={{ border: '1px solid var(--rule)', borderRadius: 10, background: 'var(--surface)', overflow: 'hidden' }}>
-            {data.students.map((s, i) => (
-              <StudentRow key={s.id} student={s} first={i === 0} />
+          <p className="t-body" style={{ margin: '16px 0 0', maxWidth: 520, color: 'var(--ink-2)' }}>
+            {demo.goalStatement}. 이 차시에 {demo.slides.length}장이 있고, 각 장에 강사가 무슨 말을
+            할지 적혀 있습니다.
+          </p>
+        </Section>
+      )}
+
+      {/* ── 3. 강사의 문제 ─────────────────────────── */}
+      <Section>
+        <h2 className="t-h1" style={{ margin: 0 }}>
+          가르쳐 보면 아는 것들
+        </h2>
+        <div style={{ display: 'grid', gap: 1, marginTop: 20, background: 'var(--rule)' }}>
+          {TEACHER_PAIN.map((p) => (
+            <div key={p.title} style={{ background: 'var(--bg)', padding: '18px 0' }}>
+              <h3 className="t-h2" style={{ margin: 0 }}>
+                {p.title}
+              </h3>
+              <p
+                className="t-body"
+                style={{ margin: '6px 0 0', color: 'var(--ink-2)', maxWidth: 560, lineHeight: 1.7 }}
+              >
+                {p.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── 4. 우리가 주는 것 ──────────────────────── */}
+      <Section tint>
+        <h2 className="t-h1" style={{ margin: 0 }}>
+          한결이 하는 일
+        </h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gap: 14,
+            marginTop: 20,
+          }}
+        >
+          {VALUE_PROPS.map((v) => (
+            <div
+              key={v.title}
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--rule)',
+                borderRadius: 'var(--r-lg)',
+                padding: 20,
+              }}
+            >
+              <p className="t-eyebrow" style={{ color: 'var(--jade)' }}>
+                {v.metric}
+              </p>
+              <h3 className="t-h2" style={{ margin: '10px 0 0' }}>
+                {v.title}
+              </h3>
+              <p className="t-body-sm" style={{ margin: '8px 0 0', color: 'var(--ink-2)', lineHeight: 1.7 }}>
+                {v.body}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <p className="t-caption tone-muted" style={{ marginTop: 16 }}>
+          현재 {BUILD_STATUS.levels} {BUILD_STATUS.unitsWritten}차시가 준비되어 있습니다.
+          {' '}
+          {BUILD_STATUS.note}.
+        </p>
+      </Section>
+
+      {/* ── 5. 시장 근거 ──────────────────────────── */}
+      <Section>
+        <p className="t-eyebrow" style={{ color: 'var(--indigo)' }}>
+          지금 시장
+        </p>
+        <h2 className="t-h1" style={{ margin: '10px 0 0' }}>
+          한국어를 배우는 사람이 계속 늘고 있습니다
+        </h2>
+
+        <FactGrid facts={MARKET_HEADLINE} />
+
+        <div style={{ marginTop: 34 }}>
+          <h3 className="t-h2" style={{ margin: 0 }}>
+            한류 콘텐츠가 나올 때마다 학습자가 튑니다
+          </h3>
+          <div style={{ marginTop: 12 }}>
+            {DEMAND_SPIKES.map((d) => (
+              <div
+                key={d.when}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '110px 1fr auto',
+                  gap: 12,
+                  alignItems: 'baseline',
+                  padding: '11px 0',
+                  borderTop: '1px solid var(--rule-soft)',
+                }}
+              >
+                <span className="t-body-sm mono tone-muted">{d.when}</span>
+                <span className="t-body">{d.what}</span>
+                <span className="t-body-sm" style={{ color: 'var(--jade)' }}>
+                  {d.effect}
+                </span>
+              </div>
             ))}
           </div>
-        </section>
+          <Cite source={DEMAND_SOURCE.source} url={DEMAND_SOURCE.sourceUrl} />
+        </div>
 
-        <NewStudentCard />
+        <div style={{ marginTop: 34 }}>
+          <h3 className="t-h2" style={{ margin: 0 }}>
+            그런데 가르치는 사람에게는 교재가 없습니다
+          </h3>
+          <FactGrid facts={MARKET_SIZE} />
+        </div>
+      </Section>
 
-        <p style={{ marginTop: 40, fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', lineHeight: 1.7 }}>
-          {data.live
-            ? '데이터베이스의 실제 학생 레코드입니다.'
-            : '데이터베이스가 연결되지 않아 목업 데이터로 렌더됩니다.'}{' '}
-          금액은 packages/billing 의 계산식(티어 {data.tier} {won(TIER_PRICE[data.tier])}
-          {data.discountPct > 0 ? ` · 볼륨 할인 ${data.discountPct}%` : ''})으로 산출합니다.
+      {/* ── 6. 가입 ───────────────────────────────── */}
+      <Section tint>
+        <h2 className="t-h1" style={{ margin: 0 }}>
+          함께 가르칠 강사를 찾습니다
+        </h2>
+        <p
+          className="t-body-lg"
+          style={{ margin: '12px 0 0', maxWidth: 520, color: 'var(--ink-2)', lineHeight: 1.7 }}
+        >
+          신청해 주시면 확인 후 승인해 드립니다. 교재가 그대로 전달되기 때문에 한 분씩 확인합니다.
         </p>
-      </>
-    </Shell>
+        <div style={{ marginTop: 22 }}>
+          <Link href="/signup" style={{ textDecoration: 'none' }}>
+            <Button kind="jade" size="lg">
+              강사 신청하기
+            </Button>
+          </Link>
+        </div>
+      </Section>
+
+      <footer
+        style={{
+          borderTop: '1px solid var(--rule)',
+          padding: '24px 0',
+          marginTop: 20,
+        }}
+      >
+        <div style={{ maxWidth: 940, margin: '0 auto', padding: '0 24px' }}>
+          <p className="t-caption tone-muted" style={{ margin: 0 }}>
+            한결 · 한국어 강사를 위한 교재와 수업 도구
+          </p>
+          <p className="t-caption tone-muted" style={{ margin: '6px 0 0' }}>
+            <Link href="/licenses" style={{ color: 'inherit' }}>
+              사용한 자료의 출처
+            </Link>
+          </p>
+        </div>
+      </footer>
+    </main>
   );
 }
 
-function LaunchPanel(props: {
-  studentId: string;
-  flag: string;
-  nameKo: string;
-  meta: string;
-  at: string;
-  minutesUntil: number;
-  expressions: string[];
-  fix: string | null;
-}) {
+function TopBar() {
   return (
-    <section
-      className="hg-rise"
-      style={{ background: 'var(--ink)', borderRadius: 10, padding: 20, color: '#fff' }}
+    <header
+      style={{
+        borderBottom: '1px solid var(--rule)',
+        background: 'var(--surface)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 99,
-                background: 'var(--jade)',
-                animation: 'hg-pulse 2s infinite',
-              }}
-              aria-hidden="true"
-            />
-            <span className="eyebrow" style={{ color: 'var(--ink-4)' }}>
-              다음 수업
-            </span>
-          </div>
-          <div style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em' }}>
-            {props.flag} {props.nameKo}
-          </div>
-          <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 3 }}>
-            {props.meta}
-          </div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div className="mono" style={{ fontSize: 'var(--fs-display)', fontWeight: 500, letterSpacing: '-0.03em' }}>
-            {props.at}
-          </div>
-          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--jade)' }}>{props.minutesUntil}분 뒤 시작</div>
-        </div>
-      </div>
-
-      <div style={{ borderTop: '1px solid var(--ink-2)', margin: '16px 0 14px' }} />
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-          {props.expressions.map((e) => (
-            <span
-              key={e}
-              className="mono"
-              style={{ fontSize: 'var(--fs-eyebrow)', padding: '3px 7px', borderRadius: 3, background: 'var(--ink-2)', color: 'var(--rule)' }}
-            >
-              {e}
-            </span>
-          ))}
-        </div>
-        {props.fix && <div style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)' }}>고칠 것 · {props.fix}</div>}
-      </div>
-
-      {/* 버튼 라벨은 결과를 말한다 (06번 §8) */}
-      <Link
-        href={`/plan/${props.studentId}`}
-        className="hg-tap"
+      <div
         style={{
-          display: 'block',
-          marginTop: 16,
-          width: '100%',
-          padding: '14px 16px',
-          borderRadius: 8,
-          background: '#fff',
-          color: 'var(--ink)',
-          fontSize: 'var(--fs-body)',
-          fontWeight: 600,
-          textAlign: 'center',
-          textDecoration: 'none',
+          maxWidth: 940,
+          margin: '0 auto',
+          padding: '0 24px',
+          height: 56,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
-        오늘 뭘 할지 보기 — 복습 5분부터
-      </Link>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
+            aria-hidden="true"
+            className="mono"
+            style={{
+              width: 22,
+              height: 22,
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: 5,
+              background: 'var(--ink)',
+              color: 'var(--surface)',
+              fontSize: 'var(--fs-caption)',
+            }}
+          >
+            H
+          </span>
+          <strong className="t-body-lg">한결</strong>
+        </span>
+
+        <Link href="/login" style={{ textDecoration: 'none' }}>
+          <Button size="sm">로그인</Button>
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+function Section({ children, tint }: { children: React.ReactNode; tint?: boolean }) {
+  return (
+    <section style={{ background: tint ? 'var(--surface)' : 'transparent', padding: '52px 0' }}>
+      <div style={{ maxWidth: 940, margin: '0 auto', padding: '0 24px' }}>{children}</div>
     </section>
   );
 }
 
-function Metric({ eyebrow, value, note, big = false }: { eyebrow: string; value: string; note: string; big?: boolean }) {
-  return (
-    <div style={{ border: '1px solid var(--rule)', borderRadius: 10, background: 'var(--surface)', padding: 18 }}>
-      <div className="eyebrow">{eyebrow}</div>
-      <div
-        className="mono"
-        style={{ fontSize: big ? 'var(--fs-h1)' : 'var(--fs-h1)', fontWeight: 500, letterSpacing: '-0.03em', marginTop: 8 }}
-      >
-        {value}
-      </div>
-      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 4 }}>{note}</div>
-    </div>
-  );
-}
-
-function StudentRow({ student, first }: { student: TodayStudent; first: boolean }) {
-  const st = STATUS_STYLE[student.status];
-  const progress = Math.min(100, (student.lessonNo / 30) * 100);
-
+function FactGrid({ facts }: { facts: MarketFact[] }) {
   return (
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(150px, 1.5fr) 1fr 1fr auto',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
         gap: 14,
-        alignItems: 'center',
-        padding: '14px 18px',
-        borderTop: first ? 'none' : '1px solid var(--rule-soft)',
-        opacity: st.opacity,
+        marginTop: 18,
       }}
     >
-      <div>
-        <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-          {student.flag} {student.nameKo}
+      {facts.map((f) => (
+        <div key={f.label} style={{ paddingTop: 14, borderTop: '2px solid var(--ink)' }}>
+          <div
+            style={{
+              fontSize: 'var(--fs-h1)',
+              fontWeight: 650,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {f.value}
+          </div>
+          <div className="t-body-sm" style={{ marginTop: 4 }}>
+            {f.label}
+          </div>
+          {f.note && (
+            <p className="t-caption tone-muted" style={{ margin: '8px 0 0', lineHeight: 1.6 }}>
+              {f.note}
+            </p>
+          )}
+          <Cite source={f.source} url={f.sourceUrl} />
         </div>
-        <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)' }}>
-          {student.name}
-        </div>
-      </div>
-
-      <div>
-        <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-2)' }}>
-          {student.lessonNo}차시 · {student.level}
-        </div>
-        <div style={{ height: 3, borderRadius: 99, background: 'var(--rule)', marginTop: 6 }}>
-          <div style={{ width: `${progress}%`, height: '100%', borderRadius: 99, background: st.bar }} />
-        </div>
-      </div>
-
-      <div>
-        {/* 색만으로 의미를 전달하지 않는다 — 텍스트 라벨을 반드시 병기 (06번 §1) */}
-        <span
-          className="mono"
-          style={{
-            fontSize: 'var(--fs-eyebrow)',
-            padding: '3px 7px',
-            borderRadius: 3,
-            background: st.bg,
-            color: st.fg,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {st.label}
-        </span>
-        <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 5 }}>
-          {student.lastActivity}
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 6 }}>
-        <Link href={`/plan/${student.id}`} style={{ textDecoration: 'none' }}>
-          <SmallButton label="플랜" kind="ghost" />
-        </Link>
-        <Link href={`/lesson/${student.id}`} style={{ textDecoration: 'none' }}>
-          <SmallButton label="수업" kind="primary" />
-        </Link>
-      </div>
+      ))}
     </div>
   );
 }
 
-function SmallButton({ label, kind }: { label: string; kind: 'ghost' | 'primary' }) {
-  const primary = kind === 'primary';
+/** 출처는 숫자마다 붙인다. 근거 없는 숫자를 화면에 올리지 않기 위한 강제 장치다. */
+function Cite({ source, url }: { source: string; url: string }) {
   return (
-    <button
-      className="hg-tap"
-      style={{
-        padding: '7px 12px',
-        fontSize: 'var(--fs-body-sm)',
-        borderRadius: 7,
-        fontFamily: 'inherit',
-        cursor: 'pointer',
-        background: primary ? 'var(--ink)' : 'var(--surface)',
-        color: primary ? '#fff' : 'var(--ink-2)',
-        border: primary ? '1px solid var(--ink)' : '1px solid var(--rule)',
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-function NewStudentCard() {
-  return (
-    <section
-      style={{
-        marginTop: 14,
-        border: '1px dashed var(--rule)',
-        borderRadius: 10,
-        padding: 20,
-        textAlign: 'center',
-        color: 'var(--ink-3)',
-      }}
-    >
-      <div style={{ fontSize: 'var(--fs-body)' }}>예약이 잡혔는데 목록에 없나요</div>
-      <Link
-        href="/students/new"
-        className="hg-tap"
-        style={{
-          display: 'inline-block',
-          marginTop: 10,
-          padding: '10px 16px',
-          fontSize: 'var(--fs-body)',
-          borderRadius: 8,
-          border: '1px solid var(--rule)',
-          background: 'var(--surface)',
-          color: 'var(--ink-2)',
-          textDecoration: 'none',
-          fontWeight: 600,
-        }}
-      >
-        새 학생 등록 · 30초
-      </Link>
-      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 8 }}>
-        등록과 1차시는 무료입니다. 2차시부터 요금이 발생합니다
-      </div>
-    </section>
+    <p className="t-caption tone-muted" style={{ margin: '8px 0 0' }}>
+      <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
+        {source}
+      </a>
+    </p>
   );
 }

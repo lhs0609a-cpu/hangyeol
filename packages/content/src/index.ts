@@ -4,6 +4,7 @@ export * from './curriculum.js';
 export * from './curriculum-2.js';
 export * from './curriculum-all.js';
 export * from './slides.js';
+export * from './market.js';
 export * from './lesson-plan.js';
 export * from './lesson-plans-2-8.js';
 export * from './lesson-plans-9-14.js';

@@ -15,7 +15,7 @@ import { useMode } from './mode';
  */
 
 const NAV = [
-  { href: '/', label: '오늘' },
+  { href: '/today', label: '오늘' },
   { href: '/billing', label: '청구' },
   { href: '/settings', label: '설정' },
   { href: '/licenses', label: '출처' },
@@ -58,7 +58,7 @@ export function Shell({ children, wide = true }: { children: ReactNode; wide?: b
           }}
         >
           <Link
-            href="/"
+            href="/today"
             style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'inherit' }}
           >
             <Logo />
@@ -67,7 +67,7 @@ export function Shell({ children, wide = true }: { children: ReactNode; wide?: b
 
           <nav style={{ display: 'flex', gap: 4, marginLeft: 14 }}>
             {nav.map((item) => {
-              const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+              const active = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <Link
                   key={item.href}

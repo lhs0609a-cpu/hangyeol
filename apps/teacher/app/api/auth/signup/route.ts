@@ -8,8 +8,6 @@ import {
   normalizeEmail,
   readJson,
   requireFields,
-  signAccessToken,
-  signRefreshToken,
 } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
@@ -20,6 +18,8 @@ interface Body {
   email: string;
   password: string;
   name: string;
+  /** 어디서 가르치는지·왜 신청하는지. 승인 판단의 유일한 근거다. */
+  applyNote?: string;
 }
 
 /** POST /api/auth/signup — 04번 문서 A. */
@@ -45,17 +45,24 @@ export function POST(req: Request) {
         name: body.name,
         // 시급 미입력 상태의 기본 티어. 03번 문서.
         rateTier: 'B',
+        applyNote: body.applyNote?.slice(0, 1000) ?? null,
+        // 기본값이 pending 이다. 스키마에도 박혀 있지만 여기서도 명시한다 —
+        // 이 한 줄이 빠지면 승인제 전체가 무력해진다.
+        approvalStatus: 'pending',
       },
       select: { id: true, email: true, name: true },
     });
 
-    const claims = { teacherId: String(teacher.id), email: teacher.email };
-
+    /*
+     * 토큰을 주지 않는다.
+     *
+     * 가입 즉시 로그인시키면 승인제가 이름만 남는다. 관리자가 승인해야
+     * 처음으로 토큰이 나간다. 그때까지 강사는 신청 완료 화면만 본다.
+     */
     return json(
       {
         teacher: { id: String(teacher.id), email: teacher.email, name: teacher.name },
-        access: await signAccessToken(claims),
-        refresh: await signRefreshToken(claims),
+        approvalStatus: 'pending',
       },
       { status: 201 },
     );

@@ -25,9 +25,11 @@ export interface RailEntry {
 }
 
 export const RAIL: RailEntry[] = [
-  { href: '/login', label: '로그인 · 가입', group: '진입', spec: '02번 A-01' },
+  { href: '/', label: '랜딩', group: '진입', spec: '02번 A-01' },
+  { href: '/signup', label: '강사 신청', group: '진입', spec: '02번 A-01' },
+  { href: '/login', label: '로그인', group: '진입', spec: '02번 A-01' },
 
-  { href: '/', label: 'T-01 오늘', group: '강사', spec: '07번 T-01' },
+  { href: '/today', label: 'T-01 오늘', group: '강사', spec: '07번 T-01' },
   { href: '/students/new', label: 'T-06 새 학생 등록', group: '강사', spec: '07번 T-06' },
   { href: '/students/1', label: 'T-04 학생 상세', group: '강사', spec: '07번 T-04', sample: true },
   { href: '/plan/1', label: '교수 플랜', group: '강사', spec: '결정기록 D-002', sample: true },
@@ -37,6 +39,7 @@ export const RAIL: RailEntry[] = [
   { href: '/licenses', label: '출처 표시', group: '강사', spec: '08번 §6' },
 
   { href: '/admin', label: 'A-01 지표', group: '관리자', spec: '05번 §10 · 11번 핵심지표' },
+  { href: '/admin/teachers', label: '강사 승인', group: '관리자', spec: '02번 A-01' },
   { href: '/admin/images', label: '이미지 자산', group: '관리자', spec: '08번 §2' },
   { href: '/admin/content', label: '콘텐츠 현황', group: '관리자', spec: '08번 §9' },
 ];

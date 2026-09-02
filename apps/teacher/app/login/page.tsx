@@ -1,36 +1,35 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button, Eyebrow, Logo, Panel } from '@hangyeol/ui';
 import { post, setToken } from '../api-client';
 
-/** 강사 로그인·가입 — 02번 문서 A-01. 소셜 로그인은 P2 다. */
+/*
+ * 강사 로그인 — 02번 문서 A-01. 소셜 로그인은 P2 다.
+ *
+ * 가입은 여기서 하지 않는다. 승인제라 절차가 다르고, 같은 화면에서
+ * 토글로 처리하면 "가입했는데 왜 로그인이 안 되지" 가 된다. /signup 으로 보낸다.
+ */
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [form, setForm] = useState({ email: '', password: '', name: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ready =
-    form.email.trim() !== '' &&
-    form.password.length >= 10 &&
-    (mode === 'login' || form.name.trim() !== '');
+  const ready = form.email.trim() !== '' && form.password.length >= 10;
 
   async function submit() {
     setBusy(true);
     setError(null);
     try {
-      const path = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-      const body =
-        mode === 'login'
-          ? { email: form.email, password: form.password }
-          : { email: form.email, password: form.password, name: form.name };
-
-      const result = await post<{ access: string }>(path, body);
+      const result = await post<{ access: string }>('/api/auth/login', {
+        email: form.email,
+        password: form.password,
+      });
       setToken(result.access);
-      router.push('/');
+      router.push('/today');
     } catch (err) {
       setError(err instanceof Error ? err.message : '처리하지 못했습니다');
     } finally {
@@ -46,16 +45,7 @@ export default function LoginPage() {
       </div>
 
       <Panel style={{ marginTop: 26 }}>
-        <Eyebrow>{mode === 'login' ? '로그인' : '강사 가입'}</Eyebrow>
-
-        {mode === 'signup' && (
-          <LabeledInput
-            label="이름"
-            value={form.name}
-            onChange={(v) => setForm((f) => ({ ...f, name: v }))}
-            placeholder="이지은"
-          />
-        )}
+        <Eyebrow>로그인</Eyebrow>
 
         <LabeledInput
           label="이메일"
@@ -79,28 +69,23 @@ export default function LoginPage() {
 
         <div style={{ marginTop: 18 }}>
           <Button kind="primary" size="lg" full disabled={!ready || busy} onClick={submit}>
-            {busy
-              ? '처리하는 중'
-              : !ready
-                ? '이메일과 10자 이상 비밀번호를 입력하세요'
-                : mode === 'login'
-                  ? '로그인'
-                  : '가입하고 시작하기'}
+            {busy ? '처리하는 중' : !ready ? '이메일과 10자 이상 비밀번호를 입력하세요' : '로그인'}
           </Button>
         </div>
 
-        <div style={{ marginTop: 14, textAlign: 'center' }}>
-          <Button
-            kind="quiet"
-            size="sm"
-            onClick={() => {
-              setMode(mode === 'login' ? 'signup' : 'login');
-              setError(null);
-            }}
-          >
-            {mode === 'login' ? '아직 계정이 없어요' : '이미 계정이 있어요'}
-          </Button>
-        </div>
+        <p
+          style={{
+            fontSize: 'var(--fs-caption)',
+            color: 'var(--ink-4)',
+            marginTop: 16,
+            textAlign: 'center',
+          }}
+        >
+          아직 계정이 없으신가요?{' '}
+          <Link href="/signup" style={{ color: 'var(--indigo)' }}>
+            강사 신청하기
+          </Link>
+        </p>
       </Panel>
 
       <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 18, textAlign: 'center', lineHeight: 1.7 }}>

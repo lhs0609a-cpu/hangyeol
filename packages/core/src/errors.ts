@@ -8,6 +8,9 @@ export type ApiErrorCode =
   | 'UNAUTHENTICATED'
   | 'STUDENT_NOT_VERIFIED'
   | 'TEACHER_LOCKED'
+  // 가입은 됐지만 관리자가 아직 승인하지 않았다. 잠금(TEACHER_LOCKED)과 다르다 —
+  // 잠금은 미납이고 이건 아직 시작도 안 한 상태다. 화면 문구가 달라야 한다.
+  | 'TEACHER_NOT_APPROVED'
   | 'STUDENT_REQUIRED'
   | 'NOT_FOUND'
   | 'DUPLICATE_STUDENT'
@@ -21,6 +24,7 @@ const STATUS: Record<ApiErrorCode, number> = {
   UNAUTHENTICATED: 401,
   STUDENT_NOT_VERIFIED: 403,
   TEACHER_LOCKED: 403,
+  TEACHER_NOT_APPROVED: 403,
   STUDENT_REQUIRED: 403,
   NOT_FOUND: 404,
   DUPLICATE_STUDENT: 409,

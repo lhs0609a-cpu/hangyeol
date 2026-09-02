@@ -1,3 +1,6 @@
+'use client';
+
+// 우클릭·드래그를 막는 핸들러가 붙어 있다. 서버 컴포넌트에서는 렌더할 수 없다.
 import type { CSSProperties } from 'react';
 
 /*
