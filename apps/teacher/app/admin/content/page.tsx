@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { Eyebrow, Panel, Tag } from '@hangyeol/ui';
 import {
+  ALL_UNITS,
   CLASSROOM_ENGLISH,
   IMAGE_ASSET_STATUS,
-  LESSON_PLANS,
   LESSON_PLAN_STATUS,
+  LESSON_PLANS,
   LEVEL1_UNITS,
+  LEVEL2_UNITS,
   PRONUNCIATION_ITEMS,
+  SLIDE_STATUS,
   TRIAL_PACKS,
 } from '@hangyeol/content';
 import { Shell } from '../../Shell';
@@ -48,7 +51,7 @@ export default function ContentPage() {
       <Panel style={{ marginTop: 14 }}>
         <Eyebrow>차시별</Eyebrow>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 12 }}>
-          {LEVEL1_UNITS.map((u) => {
+          {ALL_UNITS.map((u) => {
             const has = LESSON_PLANS.some((p) => p.unitNo === u.unitNo);
             return (
               <Link
@@ -73,7 +76,8 @@ export default function ContentPage() {
           })}
         </div>
         <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 10 }}>
-          초록은 지도안이 있는 차시입니다. 눌러서 그 차시의 이미지 자산으로 갑니다.
+          1~30차시가 1급, 31~70차시가 2급입니다. 초록은 지도안이 있는 차시이고,
+          눌러서 그 차시의 이미지 자산으로 갑니다.
         </p>
       </Panel>
 
@@ -82,6 +86,13 @@ export default function ContentPage() {
         <div style={{ marginTop: 12 }}>
           <Row label="교실영어" value={`${CLASSROOM_ENGLISH.length} / 250`} done={CLASSROOM_ENGLISH.length >= 250} />
           <Row label="커리큘럼 1급" value={`${LEVEL1_UNITS.length} / 30`} done={LEVEL1_UNITS.length >= 30} />
+          <Row label="커리큘럼 2급" value={`${LEVEL2_UNITS.length} / 40`} done={LEVEL2_UNITS.length >= 40} />
+          <Row
+            label="슬라이드"
+            value={`${SLIDE_STATUS.totalSlides}장`}
+            done
+            note="지도안에서 생성됩니다 — 이미지 없이도 수업이 됩니다"
+          />
           <Row label="발음 시트" value={`${PRONUNCIATION_ITEMS.length}항목`} done />
           <Row label="체험수업 팩" value={`${TRIAL_PACKS.length} / 4`} done={TRIAL_PACKS.length >= 4} />
           <Row

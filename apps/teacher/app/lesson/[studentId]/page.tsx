@@ -2,7 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button, Eyebrow, Panel, SlidePlaceholder, Stepper, Tag } from '@hangyeol/ui';
+import {
+  Button,
+  Eyebrow,
+  Panel,
+  SlidePlaceholder,
+  SlideRenderer,
+  Stepper,
+  Tag,
+  TeacherNote,
+  type SlideView,
+} from '@hangyeol/ui';
 import { get, post, ApiClientError } from '../../api-client';
 import { Shell } from '../../Shell';
 
@@ -60,7 +70,7 @@ export default function LessonPage({ params }: { params: { studentId: string } }
         {step === 2 && (
           <StepUnit
             studentId={params.studentId}
-            unitId={lesson?.unitId}
+            unitNo={lesson?.lessonNo ?? null}
             onNext={() => setStep(3)}
           />
         )}
@@ -205,36 +215,91 @@ function StepReview({ prev, onNext, lessonNo }: { prev: PrevReport | null; onNex
   );
 }
 
-/** 단계 2 — 본 차시. 뷰어는 다운로드·인쇄·우클릭을 차단한다. */
+/**
+ * 단계 2 — 본 차시.
+ *
+ * 슬라이드는 지도안에서 생성된다. 이미지 파일을 기다리지 않는다.
+ * 강사는 앞뒤로 넘기며 진행하고, 각 장에 붙은 지시는 강사에게만 보인다.
+ */
 function StepUnit({
   studentId,
-  unitId,
+  unitNo,
   onNext,
 }: {
   studentId: string;
-  unitId: string | null | undefined;
+  unitNo: number | null;
   onNext: () => void;
 }) {
-  const [slides, setSlides] = useState<{ goalStatement: string; pages: { no: number; url: string }[]; watermark: { line: string; note: string } } | null>(null);
+  const [deck, setDeck] = useState<{
+    title: string;
+    goalStatement: string;
+    watermark: string;
+    slides: SlideView[];
+  } | null>(null);
+  const [page, setPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (!unitId) {
+    if (!unitNo) {
       setError('이 수업에 배정된 차시가 없습니다');
       return;
     }
-    get<typeof slides>(`/api/units/${unitId}/slides?student_id=${studentId}`)
-      .then(setSlides)
+    get<typeof deck>(`/api/units/${unitNo}/deck?student_id=${studentId}`)
+      .then(setDeck)
       .catch((e: Error) => setError(e.message));
-  }, [unitId, studentId]);
+  }, [unitNo, studentId]);
+
+  // 좌우 화살표로 넘긴다. 수업 중에 마우스를 찾지 않게.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!deck) return;
+      if (e.key === 'ArrowRight') setPage((p) => Math.min(deck.slides.length - 1, p + 1));
+      if (e.key === 'ArrowLeft') setPage((p) => Math.max(0, p - 1));
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [deck]);
+
+  const slide = deck?.slides[page];
 
   return (
     <Panel>
       <Eyebrow>차시 목표</Eyebrow>
-      <p style={{ fontSize: 'var(--fs-body-lg)', marginTop: 8, marginBottom: 16 }}>
-        {slides?.goalStatement ?? (error ? '—' : '불러오는 중')}
+      <p className="t-body-lg" style={{ margin: '8px 0 16px' }}>
+        {deck?.goalStatement ?? (error ? '—' : '불러오는 중')}
       </p>
 
-      <SlideViewer slides={slides} error={error} />
+      {error ? (
+        <SlidePlaceholder label={error} />
+      ) : slide && deck ? (
+        <>
+          <SlideRenderer slide={slide} watermark={deck.watermark} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+            <Button size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+              이전
+            </Button>
+            <span className="t-body-sm mono tone-muted" style={{ flex: 1, textAlign: 'center' }}>
+              {page + 1} / {deck.slides.length}
+            </span>
+            <Button
+              size="sm"
+              disabled={page >= deck.slides.length - 1}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              다음
+            </Button>
+          </div>
+
+          <p className="t-caption" style={{ textAlign: 'center', marginTop: 6 }}>
+            ← → 로 넘길 수 있어요
+          </p>
+
+          {slide.teacherNote && <TeacherNote note={slide.teacherNote} />}
+        </>
+      ) : (
+        <SlidePlaceholder label="불러오는 중" />
+      )}
 
       <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
         <Button kind="jade" size="lg" style={{ flex: 1 }} onClick={onNext}>
@@ -245,78 +310,6 @@ function StepUnit({
         </Button>
       </div>
     </Panel>
-  );
-}
-
-/**
- * SlideViewer — 06번 §4.9 · 09번 U3.
- *
- * 워터마크는 서버에서 이미지에 합성해야 한다. 여기 DOM 으로 얹은 문구는
- * 개발자도구로 지워진다. 합성 파이프라인(tools/watermark)이 붙기 전까지의
- * 자리 표시이며, 그 사실을 화면에 그대로 적는다.
- */
-function SlideViewer({
-  slides,
-  error,
-}: {
-  slides: { pages: { no: number; url: string }[]; watermark: { line: string; note: string } } | null;
-  error: string | null;
-}) {
-  return (
-    <div
-      onContextMenu={(e) => e.preventDefault()}
-      onDragStart={(e) => e.preventDefault()}
-      onKeyDown={(e) => {
-        // Ctrl/Cmd + S · P 차단
-        if ((e.ctrlKey || e.metaKey) && ['s', 'p'].includes(e.key.toLowerCase())) {
-          e.preventDefault();
-        }
-      }}
-      tabIndex={0}
-      style={{
-        position: 'relative',
-        aspectRatio: '16 / 9',
-        background: 'var(--canvas)',
-        border: '1px solid var(--rule)',
-        borderRadius: 8,
-        display: 'grid',
-        placeItems: 'center',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-      }}
-    >
-      {error ? (
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', padding: 20 }}>
-          <span className="t-body-sm tone-danger" style={{ textAlign: 'center' }}>
-            {error}
-          </span>
-        </div>
-      ) : slides && slides.pages.length > 0 ? (
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-          <span className="t-body-sm tone-faint">슬라이드 {slides.pages.length}장</span>
-        </div>
-      ) : (
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <SlidePlaceholder label={slides ? '이 차시 슬라이드는 준비 중입니다' : '불러오는 중'} />
-        </div>
-      )}
-
-      {slides && (
-        <div
-          className="mono"
-          style={{
-            position: 'absolute',
-            right: 10,
-            bottom: 8,
-            fontSize: 'var(--fs-eyebrow)',
-            color: 'var(--ink-4)',
-            opacity: 0.8,
-          }}
-        >
-          {slides.watermark.line} · {slides.watermark.note}
-        </div>
-      )}
-    </div>
   );
 }
 

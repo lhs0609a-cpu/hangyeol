@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ALL_UNITS,
   CLASSROOM_ENGLISH,
   LESSON_FRAME,
   LESSON_PLANS,
@@ -153,7 +154,8 @@ describe('지도안 — 요약이 아니라 대본이어야 한다', () => {
   });
 
   it('지도안이 커리큘럼에 실재하는 차시를 가리킨다', () => {
-    const unitNos = new Set(LEVEL1_UNITS.map((u) => u.unitNo));
+    // 1급뿐 아니라 전 급을 본다. 지도안이 늘어나도 이 규칙은 그대로다.
+    const unitNos = new Set(ALL_UNITS.map((u) => u.unitNo));
     for (const plan of LESSON_PLANS) {
       expect(unitNos.has(plan.unitNo), `${plan.unitNo}차시가 커리큘럼에 없다`).toBe(true);
     }
@@ -161,7 +163,7 @@ describe('지도안 — 요약이 아니라 대본이어야 한다', () => {
 
   it('목표문이 커리큘럼과 일치한다', () => {
     for (const plan of LESSON_PLANS) {
-      const unit = LEVEL1_UNITS.find((u) => u.unitNo === plan.unitNo)!;
+      const unit = ALL_UNITS.find((u) => u.unitNo === plan.unitNo)!;
       expect(plan.goalStatement, `${plan.unitNo}차시`).toBe(unit.goalStatement);
     }
   });

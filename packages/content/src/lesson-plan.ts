@@ -2,6 +2,8 @@ import { LESSON_PLANS_2_8 } from './lesson-plans-2-8.js';
 import { LESSON_PLANS_9_14 } from './lesson-plans-9-14.js';
 import { LESSON_PLANS_16_22 } from './lesson-plans-16-22.js';
 import { LESSON_PLANS_23_30 } from './lesson-plans-23-30.js';
+import { LESSON_PLANS_31_50 } from './lesson-plans-31-50.js';
+import { LESSON_PLANS_51_70 } from './lesson-plans-51-70.js';
 
 /*
  * 강사 지도안 — 08번 문서 §2. 이 제품의 본체다.
@@ -262,6 +264,8 @@ export const LESSON_PLANS: readonly LessonPlan[] = Object.freeze(
     UNIT_15,
     ...LESSON_PLANS_16_22,
     ...LESSON_PLANS_23_30,
+    ...LESSON_PLANS_31_50,
+    ...LESSON_PLANS_51_70,
   ].sort((a, b) => a.unitNo - b.unitNo),
 );
 
@@ -271,8 +275,8 @@ export function planFor(unitNo: number): LessonPlan | null {
 
 export const LESSON_PLAN_STATUS = {
   written: LESSON_PLANS.length,
-  target: 30,
+  target: 250,
   note:
-    '1급 30차시 전부 작성. 전부 AI 초안이며 한국어교원 자격 2급 검수를 거쳐야 한다. ' +
-    '검수 전에는 실제 수업에 쓰지 않는다. 2급(31~70차시)은 같은 밀도로 이어 쓴다.',
+    '1급 30차시 + 2급 40차시 작성. 전부 AI 초안이며 한국어교원 자격 2급 검수를 거쳐야 한다. ' +
+    '검수 전에는 실제 수업에 쓰지 않는다. 3급(71~120차시)은 같은 밀도로 이어 쓴다.',
 } as const;
