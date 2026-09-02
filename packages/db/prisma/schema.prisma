@@ -14,8 +14,16 @@ generator client {
 }
 
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
+  provider = "postgresql"
+
+  // 앱 런타임용. Supabase 풀러의 transaction 모드(6543)를 쓴다.
+  // 서버리스는 요청마다 커넥션을 열므로 직결하면 금방 한도를 넘긴다.
+  url = env("DATABASE_URL")
+
+  // 마이그레이션 전용. transaction 모드는 prepared statement 와 세션 상태를
+  // 유지하지 않아서 스키마 변경이 실패한다. session 모드(5432)로 따로 간다.
+  directUrl = env("DIRECT_URL")
+
   extensions = [citext]
 }
 
