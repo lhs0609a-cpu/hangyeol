@@ -60,7 +60,8 @@ export const MESSAGES: Partial<Record<ApiErrorCode, string>> = {
   STUDENT_REQUIRED: '수업 자료는 학생을 선택해야 열립니다',
   DUPLICATE_STUDENT: '이미 등록된 학생입니다. 이어서 진행합니다. 추가 요금은 없습니다',
   REPORT_LIMIT: '표현은 5개, 오답은 3개까지 넣을 수 있습니다',
-  DB_UNAVAILABLE: '데이터베이스가 연결되지 않았습니다',
+  // 방문자가 읽는 문장이다. 무엇이 없는지가 아니라 무엇을 하면 되는지를 말한다.
+  DB_UNAVAILABLE: '지금은 처리할 수 없어요. 잠시 후 다시 시도해 주세요',
 };
 
 export function apiError(code: ApiErrorCode, message?: string, detail?: Record<string, unknown>) {

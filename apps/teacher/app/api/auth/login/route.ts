@@ -1,5 +1,6 @@
 import {
   apiError,
+  assertApproved,
   db,
   enforce,
   handle,
@@ -59,15 +60,11 @@ export function POST(req: Request) {
      *
      * 토큰을 아예 발급하지 않는다. 발급하고 화면에서 가리는 방식은
      * API 를 직접 부르면 뚫린다.
+     *
+     * 판단은 assertApproved 하나에 둔다. 토큰 갱신도 같은 것을 본다 —
+     * 로그인에서만 막으면 승인 게이트가 로그인 순간에만 존재한다.
      */
-    if (teacher.approvalStatus !== 'approved') {
-      throw apiError(
-        'TEACHER_NOT_APPROVED',
-        teacher.approvalStatus === 'rejected'
-          ? teacher.rejectedReason || '신청이 승인되지 않았습니다. 문의해 주세요'
-          : '아직 승인 전이에요. 확인이 끝나면 이메일로 알려 드릴게요',
-      );
-    }
+    assertApproved(teacher);
 
     const claims = { teacherId: String(teacher.id), email: teacher.email };
     const access = await signAccessToken(claims);

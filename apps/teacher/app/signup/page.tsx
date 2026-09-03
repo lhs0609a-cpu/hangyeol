@@ -12,6 +12,13 @@ import { Button, Eyebrow, Panel } from '@hangyeol/ui';
  *
  * 자기소개를 받는 이유: 승인 판단의 유일한 근거다.
  * 이게 없으면 관리자는 이메일 주소만 보고 승인 여부를 정해야 한다.
+ *
+ * 메일을 보낸다고 말하지 않는다.
+ *
+ * 예전 문구는 "승인 결과를 이 주소로 보냅니다" 였다. 그런데 발송기가 없다 —
+ * 승인하면 notification 행이 쌓일 뿐 아무도 그걸 보내지 않는다(docs/12 D-004).
+ * 지키지 못할 약속을 화면에 적어 두면 기다리는 사람은 승인이 안 난 줄 안다.
+ * 그래서 "관리자가 확인한 뒤 승인한다, 승인되면 로그인된다" 까지만 말한다.
  */
 
 const MIN_PASSWORD = 10;
@@ -54,12 +61,20 @@ export default function SignupPage() {
             신청을 받았어요
           </h1>
           <p className="t-body" style={{ margin: '12px 0 0', color: 'var(--ink-2)', lineHeight: 1.75 }}>
-            확인이 끝나면 <strong>{email}</strong> 으로 알려 드릴게요. 보통 하루 안에 끝납니다.
+            관리자가 신청 내용을 확인한 뒤 승인합니다. 승인되면 <strong>{email}</strong> 로
+            로그인할 수 있어요.
           </p>
           <p className="t-body-sm tone-muted" style={{ margin: '14px 0 0', lineHeight: 1.7 }}>
+            따로 안내 메일을 보내지 않습니다. 하루쯤 뒤에 로그인해 보세요 —
+            아직 승인 전이면 로그인 화면이 그렇게 알려 줍니다.
+          </p>
+          <p className="t-body-sm tone-muted" style={{ margin: '10px 0 0', lineHeight: 1.7 }}>
             교재가 그대로 전달되기 때문에 한 분씩 확인하고 있어요. 기다려 주셔서 고맙습니다.
           </p>
-          <div style={{ marginTop: 22 }}>
+          <div style={{ marginTop: 22, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Link href="/login" style={{ textDecoration: 'none' }}>
+              <Button kind="jade">로그인 화면으로</Button>
+            </Link>
             <Link href="/" style={{ textDecoration: 'none' }}>
               <Button>처음으로</Button>
             </Link>
@@ -93,7 +108,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="이메일" hint="승인 결과를 이 주소로 보냅니다">
+          <Field label="이메일" hint="승인된 뒤 로그인할 때 쓰는 주소입니다">
             <input
               type="email"
               value={email}

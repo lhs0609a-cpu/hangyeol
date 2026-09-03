@@ -34,23 +34,90 @@ describe('로그인은 승인 전 계정을 막는다', () => {
   });
 
   it('approved 가 아니면 던진다', () => {
-    expect(src).toMatch(/approvalStatus !== 'approved'/);
+    expect(src).toMatch(/assertApproved\(teacher\)/);
   });
 
   it('승인 검사가 비밀번호 검증보다 뒤에 온다', () => {
     // 순서가 반대면 아무 이메일이나 넣어 가입 여부를 알아낼 수 있다.
     const pw = src.indexOf('verifyPassword');
-    const gate = src.indexOf("approvalStatus !== 'approved'");
+    const gate = src.indexOf('assertApproved(teacher)');
     expect(pw).toBeGreaterThan(-1);
     expect(gate).toBeGreaterThan(pw);
   });
 
   it('승인 실패 시 토큰을 만들지 않는다', () => {
-    const gate = src.indexOf("approvalStatus !== 'approved'");
+    const gate = src.indexOf('assertApproved(teacher)');
     // import 줄이 아니라 호출부를 본다.
     const sign = src.indexOf('await signAccessToken(');
     expect(sign).toBeGreaterThan(-1);
     expect(sign).toBeGreaterThan(gate);
+  });
+});
+
+/*
+ * 승인 게이트가 로그인에만 있으면 로그인하는 순간에만 존재한다.
+ *
+ * 한 번 통과한 계정은 자격이 사라진 뒤에도 refresh 로 30일 동안
+ * 새 access 를 계속 찍어 낼 수 있었다. 서명은 여전히 맞기 때문이다.
+ */
+describe('토큰 갱신도 승인을 다시 본다', () => {
+  const src = read('apps/teacher/app/api/auth/refresh/route.ts');
+
+  it('원장에서 approvalStatus 를 다시 읽는다', () => {
+    expect(src).toMatch(/approvalStatus:\s*true/);
+  });
+
+  it('승인 검사를 거친다', () => {
+    expect(src).toMatch(/assertApproved\(teacher\)/);
+  });
+
+  it('승인 검사보다 뒤에서 토큰을 만든다', () => {
+    const gate = src.indexOf('assertApproved(teacher)');
+    const sign = src.indexOf('await signAccessToken(');
+    expect(gate).toBeGreaterThan(-1);
+    expect(sign).toBeGreaterThan(gate);
+  });
+
+  it('로그인과 같은 판단을 쓴다 — 문구가 갈리면 한쪽만 고치게 된다', () => {
+    const login = read('apps/teacher/app/api/auth/login/route.ts');
+    for (const s of [login, src]) {
+      expect(s).toMatch(/assertApproved/);
+      // 각자 approved 문자열을 비교하고 있으면 판단이 두 벌이라는 뜻이다.
+      expect(s).not.toMatch(/approvalStatus !== 'approved'/);
+    }
+  });
+});
+
+/*
+ * 발송기가 없다(docs/12 D-004). 승인해도 notification 행만 쌓인다.
+ * 화면이 "메일로 알려 드릴게요" 라고 말하면 기다리는 사람은
+ * 오지 않는 메일을 기다리다 승인이 안 난 줄 안다.
+ */
+describe('보내지 않는 메일을 약속하지 않는다', () => {
+  const screens = [
+    'apps/teacher/app/signup/page.tsx',
+    'apps/teacher/app/login/page.tsx',
+    'apps/teacher/app/api/auth/login/route.ts',
+    'packages/core/src/guard.ts',
+  ];
+
+  /*
+   * 주석은 뺀다. 왜 그 문구를 지웠는지 적어 두려면 옛 문구를 그대로 인용해야 하는데,
+   * 인용까지 잡으면 기록을 남기지 못하게 된다. 화면에 나가는 것만 본다.
+   */
+  const withoutComments = (src: string) =>
+    src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+  it('승인 결과를 메일로 보낸다고 적지 않는다', () => {
+    for (const f of screens) {
+      expect(withoutComments(read(f)), f).not.toMatch(/이메일로 알려|메일로 알려|주소로 보냅니다/);
+    }
+  });
+
+  it('신청 완료 화면은 관리자 승인과 로그인을 말한다', () => {
+    const signup = read('apps/teacher/app/signup/page.tsx');
+    expect(signup).toMatch(/관리자가 신청 내용을 확인한 뒤 승인/);
+    expect(signup).toMatch(/로그인할 수 있어요/);
   });
 });
 

@@ -20,9 +20,38 @@ import { apiError } from './errors.js';
 
 export function db() {
   if (!isDatabaseConfigured()) {
-    throw apiError('DB_UNAVAILABLE', 'DATABASE_URL 이 설정되지 않았습니다');
+    /*
+     * 방문자에게 환경 변수 이름을 말하지 않는다 (06번 §8 시스템 용어 금지).
+     *
+     * 실제로 랜딩에서 "신청하기" 를 누른 사람에게
+     * "DATABASE_URL 이 설정되지 않았습니다" 가 그대로 떴다.
+     * 신청하러 온 강사가 읽을 문장이 아니고, 읽어도 할 수 있는 일이 없다.
+     * 원인은 서버 로그에 남기고 화면에는 다음 행동만 말한다.
+     */
+    console.error('[db] DATABASE_URL 이 없다 — 배포 환경 변수를 확인할 것');
+    throw apiError('DB_UNAVAILABLE');
   }
   return getPrisma();
+}
+
+/**
+ * 승인 게이트 — 로그인과 토큰 갱신이 같은 판단을 쓰게 한다.
+ *
+ * 두 곳에 각각 적으면 한쪽만 고치는 날이 온다.
+ * 승인 여부는 계정이 살아 있는 내내 다시 물어야 하는 질문이라 특히 그렇다.
+ */
+export function assertApproved(teacher: {
+  approvalStatus: string;
+  rejectedReason?: string | null;
+}): void {
+  if (teacher.approvalStatus === 'approved') return;
+
+  throw apiError(
+    'TEACHER_NOT_APPROVED',
+    teacher.approvalStatus === 'rejected'
+      ? teacher.rejectedReason || '신청이 승인되지 않았습니다'
+      : '아직 승인 전이에요. 관리자가 신청을 확인하면 이 계정으로 로그인할 수 있습니다',
+  );
 }
 
 export interface TeacherContext {
