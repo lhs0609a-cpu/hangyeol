@@ -29,6 +29,59 @@ TTS 발음을 파는 것은 파파고와 같은 것을 파는 셈이고,
 Deployment Protection 은 꺼져 있다. 로그인 없이 랜딩과 `/licenses` 가 열리고,
 그 밖의 화면은 `middleware.ts` 가 `/login` 으로 돌려보낸다.
 
+### 환경 변수 — DB 를 붙이는 순서
+
+지금 Vercel 에는 환경 변수가 하나도 없다. 그래서 신청·로그인이 503 을 준다.
+붙이는 데 필요한 것은 **Supabase DB 비밀번호 하나**뿐이고, 나머지는 스크립트가 만든다.
+
+```bash
+# Supabase 대시보드 → Settings → Database 에서 비밀번호 확인 또는 재설정
+node tools/db-connect.mjs '<DB 비밀번호>' --vercel --admin=me@example.com
+```
+
+이 한 줄이 하는 일:
+
+| | |
+|---|---|
+| `.env` 작성 | `DATABASE_URL`(6543 풀러) · `DIRECT_URL`(5432) · JWT 시크릿 3개 · 이메일 암호화 키 2개 |
+| 마이그레이션 | `prisma migrate deploy` — `DIRECT_URL` 로 붙는다 |
+| 클라이언트 생성 | `prisma generate` |
+| Vercel 등록 | production · preview · development 세 곳 모두 |
+
+시크릿은 **이미 있으면 덮지 않는다.** 다시 만들면 발급된 토큰이 전부 죽는다.
+
+`--admin` 을 빠뜨리면 `ADMIN_EMAILS` 가 빈 채로 올라간다.
+비면 `requireAdmin` 이 **전부 거부**한다 — 열어 두는 쪽으로 실패하지 않는다.
+그 상태를 스크립트가 끝에서 경고한다.
+
+`.env` 는 커밋되지 않는다. 등록된 뒤에는 **재배포해야 적용된다** (`git commit --allow-empty` 로 충분).
+
+#### 첫 관리자는 화면 밖에서 승인한다
+
+닭과 달걀이 있다. 승인 화면은 `requireAdmin` 을 지나고,
+`requireAdmin` 은 **로그인한 강사** + `ADMIN_EMAILS` 다.
+그런데 로그인은 승인된 계정만 된다 — 첫 한 명을 승인할 방법이 화면에 없다.
+
+```bash
+# 1. /signup 에서 평소처럼 신청한다 (비밀번호는 본인이 정한다)
+# 2. DB 접속 정보를 가진 사람이 그 계정을 승인한다
+node tools/admin-approve.mjs me@example.com
+node tools/admin-approve.mjs --list     # 대기 중인 신청 보기
+```
+
+두 번째부터는 이걸 쓰지 않는다. `/admin/teachers` 에서 한다 —
+거기에는 신청 사유가 같이 보이고 거절 사유가 기록으로 남는다.
+
+이 스크립트는 계정을 만들지 않는다. 비밀번호를 인자로 받으면 평문이 셸 기록에 남는다.
+
+#### 지금 넣지 않아도 되는 것
+
+R2(자료 서명 URL) · PG(결제) · `RESEND_API_KEY`(메일) 는 없어도
+신청 → 승인 → 로그인 → 수업까지 돈다. 해당 기능을 켤 때 넣는다.
+
+메일 발송기는 아직 없다(12번 문서 D-004). 승인해도 `notification` 행만 쌓인다.
+그래서 화면은 메일을 보낸다고 말하지 않는다 — 승인되면 로그인된다고만 말한다.
+
 ---
 
 ## 현재 진행 상황

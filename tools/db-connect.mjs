@@ -4,6 +4,7 @@
  *
  *   node tools/db-connect.mjs '<DB 비밀번호>'          로컬만
  *   node tools/db-connect.mjs '<DB 비밀번호>' --vercel  Vercel 까지
+ *   ... --admin=me@example.com                        관리자 주소까지 함께
  *
  * 왜 스크립트인가: 여기서 틀리기 쉬운 것이 네 가지 있고, 전부 조용히 실패한다.
  *
@@ -25,9 +26,10 @@ const HOST = 'aws-1-ap-northeast-2.pooler.supabase.com';
 
 const pw = process.argv[2];
 const toVercel = process.argv.includes('--vercel');
+const adminArg = process.argv.find((a) => a.startsWith('--admin='))?.slice('--admin='.length).trim();
 
 if (!pw || pw.startsWith('--')) {
-  console.error("사용법: node tools/db-connect.mjs '<DB 비밀번호>' [--vercel]");
+  console.error("사용법: node tools/db-connect.mjs '<DB 비밀번호>' [--vercel] [--admin=주소]");
   console.error('비밀번호는 Supabase 대시보드 → Settings → Database 에서 확인하거나 재설정합니다.');
   process.exit(1);
 }
@@ -54,7 +56,7 @@ const lines = [
   'NODE_ENV=development',
   // 관리자 이메일은 사람이 직접 넣는다. 자동 생성할 수 없고,
   // 비어 있으면 관리자 화면 전체가 닫힌다 — 열어 두는 쪽으로 실패하지 않는다.
-  `ADMIN_EMAILS="${keepOrMake(prev, 'ADMIN_EMAILS', () => '')}"`,
+  `ADMIN_EMAILS="${adminArg || keepOrMake(prev, 'ADMIN_EMAILS', () => '')}"`,
   `DATABASE_URL="${APP}"`,
   `DIRECT_URL="${DIRECT}"`,
   '',
@@ -120,3 +122,15 @@ if (toVercel) {
 
 console.log('\n연결 완료.');
 if (!toVercel) console.log('Vercel 에도 넣으려면 뒤에 --vercel 을 붙여 다시 실행하세요.');
+
+/*
+ * 빈 ADMIN_EMAILS 를 조용히 넘기지 않는다.
+ *
+ * 비어 있으면 requireAdmin 이 전부 거부한다(guard.ts). 열어 두는 쪽으로
+ * 실패하지 않는 건 맞지만, 그러면 강사 승인 화면에 아무도 못 들어간다.
+ * 여기서 말해 주지 않으면 나중에 "관리자 화면이 열리지 않는다" 로만 나타난다.
+ */
+if (!/^ADMIN_EMAILS="[^"]+"$/m.test(readFileSync('.env', 'utf8'))) {
+  console.log('\n[주의] ADMIN_EMAILS 가 비어 있습니다. 강사 승인 화면이 열리지 않습니다.');
+  console.log('  --admin=주소 를 붙여 다시 실행하거나 .env 에 직접 적으세요.');
+}
