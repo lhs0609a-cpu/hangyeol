@@ -15,4 +15,5 @@ export * from './trial-packs.js';
 export * from './level-test.js';
 export * from './image-assets.js';
 export * from './licenses.js';
+export * from './photos.js';
 export * from './status.js';

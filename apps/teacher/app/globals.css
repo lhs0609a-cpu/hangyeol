@@ -158,3 +158,60 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── 랜딩 히어로 합성 ─────────────────────────────────
+   사진 한 장 위에 슬라이드 한 장을 걸친다.
+
+   왜 겹치는가. 나란히 두면 "사진도 있고 제품도 있다" 가 되지만,
+   겹쳐 두면 "이 사람이 이걸로 가르친다" 가 된다. 문장 하나를 아낀다.
+
+   퍼센트로만 위치를 잡는다. 폭이 줄면 겹침도 같이 줄어든다.
+   640px 아래에서는 겹치기를 그만두고 아래로 내린다 —
+   폰에서는 사진도 슬라이드도 각각이 이미 작아서 겹치면 둘 다 안 보인다. */
+
+.hero-figure {
+  position: relative;
+  /* 걸친 카드가 사진 아래로 삐져나올 만큼만 자리를 비워 둔다 */
+  padding-bottom: 9%;
+}
+
+.hero-figure__card {
+  position: absolute;
+  left: -5%;
+  right: 13%;
+  bottom: 0;
+  /* 사진 위에 놓이므로 종이 테를 둘러 경계를 만든다. 그림자는 쓰지 않는다 */
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+}
+
+@media (max-width: 640px) {
+  .hero-figure {
+    padding-bottom: 0;
+  }
+
+  .hero-figure__card {
+    position: static;
+    margin-top: 14px;
+  }
+}
+
+/* ── 전폭 사진 띠 ─────────────────────────────────────
+   구간과 구간 사이를 사진 한 줄로 끊는다.
+
+   Wrap(1040px) 안에 넣지 않고 화면 끝까지 늘린다.
+   가입 구간 바로 앞이라 여기서 폭이 한 번 열려야
+   다음의 먹 배경이 마무리로 읽힌다.
+
+   높이를 vw 로 잡는 이유: 비율을 고정하면 넓은 화면에서 띠가 아니라
+   또 하나의 구간이 된다. 띠는 얇아야 띠다. */
+
+.bleed-strip {
+  display: block;
+  width: 100%;
+  height: clamp(150px, 20vw, 260px);
+  object-fit: cover;
+  object-position: center;
+}

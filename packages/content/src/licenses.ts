@@ -22,6 +22,7 @@ export type LicenseId =
   | 'OFL-1.1'
   | 'KOGL-1'
   | 'KOGL-2'
+  | 'Pexels'
   | 'proprietary';
 
 export interface LicenseTerms {
@@ -46,10 +47,12 @@ export const LICENSES: Readonly<Record<LicenseId, LicenseTerms>> = Object.freeze
   'OFL-1.1': { id: 'OFL-1.1', label: 'SIL Open Font License 1.1', commercialUse: true, attributionRequired: true, shareAlike: false },
   'KOGL-1': { id: 'KOGL-1', label: '공공누리 제1유형', commercialUse: true, attributionRequired: true, shareAlike: false },
   'KOGL-2': { id: 'KOGL-2', label: '공공누리 제2유형 (상업적 이용 금지)', commercialUse: false, attributionRequired: true, shareAlike: false },
+  // 표시 의무는 없지만 photos.ts 에 촬영자를 남긴다. 조건이 아니라 예의다.
+  Pexels: { id: 'Pexels', label: 'Pexels 라이선스', commercialUse: true, attributionRequired: false, shareAlike: false },
   proprietary: { id: 'proprietary', label: '독점 · 별도 계약 필요', commercialUse: false, attributionRequired: true, shareAlike: false },
 });
 
-export type AssetKind = 'speech-corpus' | 'tts-model' | 'sentence-corpus' | 'font' | 'software';
+export type AssetKind = 'speech-corpus' | 'tts-model' | 'sentence-corpus' | 'font' | 'software' | 'photo';
 
 export interface ExternalAsset {
   id: string;
@@ -130,6 +133,21 @@ export const EXTERNAL_ASSETS: readonly ExternalAsset[] = Object.freeze([
     attribution: 'IBM Plex Mono — SIL Open Font License 1.1',
     usage: '모든 숫자 · eyebrow 라벨 (06번 문서 §2)',
     verifiedAt: '2026-09-01',
+  },
+  {
+    id: 'pexels-landing-photos',
+    name: 'Pexels 랜딩 사진 5장',
+    kind: 'photo',
+    license: 'Pexels',
+    url: 'https://www.pexels.com/license/',
+    attribution:
+      '사진 Thirdman · Tima Miroshnichenko · Vanessa Garcia · Youn Seung Jin · Ethan Brooke (Pexels)',
+    usage: '랜딩 화면의 사진. 목록과 촬영자는 packages/content/src/photos.ts 에 있다.',
+    caveat:
+      '표시 의무는 없지만 제약은 있다. "이미지 속 인물이 제품을 보증하는 것처럼 보이게 하지 말 것" — ' +
+      '그래서 이 사진들을 강사 소개나 수강 후기로 쓰지 않는다. 이름을 붙이고 따옴표를 치는 순간 위반이다. ' +
+      'italki · Preply 의 강사 사진을 그대로 가져오는 선택지는 08번 §6 이 막는다. 남의 저작물이면서 개인의 초상이다.',
+    verifiedAt: '2026-09-03',
   },
   {
     id: 'piper-tts',

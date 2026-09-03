@@ -47,6 +47,14 @@ export const config = {
    * API 는 제외한다. 각 라우트가 requireTeacher / requireAdmin 으로
    * 직접 검증하고, 리다이렉트가 아니라 401 을 줘야 하기 때문이다.
    * 정적 자산과 파비콘도 제외한다.
+   *
+   * photos 를 뺀 이유는 실제로 깨져 봤기 때문이다.
+   * 랜딩에 사진을 붙였더니 로그인하지 않은 방문자에게만 전부 안 떴다 —
+   * /photos/*.jpg 가 이 matcher 에 걸려 /login 으로 리다이렉트되고 있었다.
+   * 하필 개발 중에는 쿠키가 있어서 멀쩡히 보인다. 이런 건 눈으로 못 잡는다.
+   *
+   * public/ 아래는 서명 URL 로 보호하는 교재가 아니라 랜딩용 사진뿐이다.
+   * 보호가 필요한 파일은 R2 에 두고 서명 URL 로 나간다(S3 참조).
    */
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|photos).*)'],
 };

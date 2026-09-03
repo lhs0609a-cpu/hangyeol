@@ -3,6 +3,7 @@ import {
   EXTERNAL_ASSETS,
   LICENSE_REVIEW,
   LICENSES,
+  PHOTO_LIST,
   shareAlikeAssets,
   usableAssets,
 } from '@hangyeol/content';
@@ -44,6 +45,39 @@ export default function LicensesPage() {
         <div style={{ marginTop: 12 }}>
           {usable.map((a) => (
             <AssetRow key={a.id} asset={a} />
+          ))}
+        </div>
+      </Panel>
+
+      {/*
+       * 사진은 자산 목록에 한 줄로만 잡힌다. 촬영자는 사진마다 다르므로 여기서 편다.
+       *
+       * Pexels 는 출처 표시를 요구하지 않는다. 그래도 적는 이유는
+       * 표시 의무가 없다는 것과 누가 찍었는지 모른다는 것이 다르기 때문이다.
+       */}
+      <Panel style={{ marginTop: 14 }}>
+        <Eyebrow>사진 · {PHOTO_LIST.length}장</Eyebrow>
+        <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 8, lineHeight: 1.7 }}>
+          랜딩 화면의 사진입니다. 표시 의무는 없지만 촬영자를 적습니다.
+          사진 속 인물을 우리 강사나 후기로 쓰지 않습니다 — 라이선스가 금지하고, 사실도 아닙니다.
+        </p>
+        <div style={{ marginTop: 12 }}>
+          {PHOTO_LIST.map((p) => (
+            <div key={p.id} style={{ padding: '10px 0', borderTop: '1px solid var(--rule-soft)' }}>
+              <div style={{ fontSize: 'var(--fs-body-sm)', fontWeight: 600 }}>{p.photographer}</div>
+              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-3)', marginTop: 3, lineHeight: 1.7 }}>
+                {p.usedAt}
+              </div>
+              <a
+                href={p.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mono"
+                style={{ display: 'block', fontSize: 'var(--fs-caption)', marginTop: 3, wordBreak: 'break-all' }}
+              >
+                {p.sourceUrl}
+              </a>
+            </div>
           ))}
         </div>
       </Panel>

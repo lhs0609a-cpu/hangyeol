@@ -30,9 +30,17 @@ describe('라이선스 레지스트리', () => {
     }
   });
 
-  it('CC0 만 출처 표시가 면제된다', () => {
+  /*
+   * 면제 목록은 늘어나면 안 되는 종류의 목록이다.
+   * 새 자산을 넣을 때 "이것도 표시 안 해도 된다" 가 쌓이면
+   * 나중에 어느 것이 진짜 면제였는지 아무도 모른다. 그래서 통째로 못 박는다.
+   *
+   * Pexels 는 라이선스 본문이 "Attribution is not required" 라고 적어 두었다.
+   * 그래도 photos.ts 에 촬영자를 남긴다 — 의무가 없는 것과 모르는 것은 다르다.
+   */
+  it('출처 표시가 면제되는 것은 CC0 와 Pexels 둘뿐이다', () => {
     const exempt = Object.values(LICENSES).filter((l) => !l.attributionRequired);
-    expect(exempt.map((l) => l.id)).toEqual(['CC0-1.0']);
+    expect(exempt.map((l) => l.id)).toEqual(['CC0-1.0', 'Pexels']);
   });
 
   it('Share-Alike 는 SA 가 붙은 것만이다', () => {
