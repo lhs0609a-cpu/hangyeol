@@ -32,10 +32,26 @@ Deployment Protection 은 꺼져 있다. 로그인 없이 랜딩과 `/licenses` 
 ### 환경 변수 — DB 를 붙이는 순서
 
 지금 Vercel 에는 환경 변수가 하나도 없다. 그래서 신청·로그인이 503 을 준다.
-붙이는 데 필요한 것은 **Supabase DB 비밀번호 하나**뿐이고, 나머지는 스크립트가 만든다.
+
+**CLI 로 하는 쪽이 낫다.** DB 비밀번호를 찾을 필요가 없다.
 
 ```bash
-# Supabase 대시보드 → Settings → Database 에서 비밀번호 확인 또는 재설정
+npx supabase login                                              # 한 번만. 브라우저가 열린다
+node tools/supabase-bootstrap.mjs --admin=me@example.com --vercel
+```
+
+Supabase 의 DB 비밀번호는 만들 때 한 번 보여 주고 어디에도 저장하지 않는다.
+CLI 로도 못 꺼낸다. 그런데 `supabase db query --linked` 는 Postgres 에 직접 붙지 않고
+**Management API 를 지난다** — 액세스 토큰만 있으면 SQL 이 돈다.
+그래서 `ALTER USER` 로 비밀번호를 우리가 정해 버린다.
+대시보드의 "Reset database password" 가 하는 일과 같다.
+
+비밀번호는 스크립트가 만들어 `.env` 와 Vercel 에만 넣는다. 화면에 찍지 않는다 —
+사람이 옮겨 적을 일이 없으면 셸 기록에도 채팅에도 남지 않는다.
+
+비밀번호를 이미 알고 있다면 아래를 직접 써도 된다.
+
+```bash
 node tools/db-connect.mjs '<DB 비밀번호>' --vercel --admin=me@example.com
 ```
 
