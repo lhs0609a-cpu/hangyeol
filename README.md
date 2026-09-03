@@ -16,14 +16,18 @@ TTS 발음을 파는 것은 파파고와 같은 것을 파는 셈이고,
 | | |
 |---|---|
 | 저장소 | https://github.com/lhs0609a-cpu/hangyeol |
-| Vercel 프로젝트 | `fewfs-projects-83cc0821/hangyeol` |
-| 프로덕션 | https://hangyeol-8za1g1i1a-fewfs-projects-83cc0821.vercel.app |
+| Vercel 프로젝트 | `fewfs-projects-83cc0821/samat` |
+| 프로덕션 | https://hangyeol-phi.vercel.app |
 
 `main` 에 push 하면 자동 배포된다. 빌드 설정은 루트 [`vercel.json`](./vercel.json) 에 있고,
 워크스페이스 루트에서 `apps/teacher` 를 빌드한다.
 
-> 현재 배포본은 Vercel Deployment Protection 이 켜져 있어 팀 계정으로 로그인해야 열린다.
-> 공개하려면 프로젝트 Settings → Deployment Protection 에서 끈다.
+프로덕션 별칭은 배포마다 바뀌지 않는 `hangyeol-phi.vercel.app` 을 쓴다.
+`samat-<해시>-...` 는 배포 하나를 가리키는 주소라 다음 배포에서 낡는다 —
+문서에 적어 두면 반드시 어긋난다.
+
+Deployment Protection 은 꺼져 있다. 로그인 없이 랜딩과 `/licenses` 가 열리고,
+그 밖의 화면은 `middleware.ts` 가 `/login` 으로 돌려보낸다.
 
 ---
 
