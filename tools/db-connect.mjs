@@ -26,18 +26,43 @@ const HOST = 'aws-1-ap-northeast-2.pooler.supabase.com';
 
 const pw = process.argv[2];
 const toVercel = process.argv.includes('--vercel');
-const adminArg = process.argv.find((a) => a.startsWith('--admin='))?.slice('--admin='.length).trim();
+const arg = (name) =>
+  process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3).trim();
+const adminArg = arg('admin');
+
+/*
+ * 이 Supabase 프로젝트는 우리 것만이 아니다.
+ *
+ * 같은 인스턴스에 다른 제품 둘이 살아 있다 — public 에 블로그 앱,
+ * sisibibi 스키마에 또 하나. 그래서 두 가지를 기본으로 두지 않는다.
+ *
+ *   역할   postgres 를 쓰면 비밀번호를 바꾸는 순간 남의 앱이 죽는다
+ *   스키마 public 에 26개를 부으면 남의 테이블과 섞인다
+ *
+ * 전용 역할과 전용 스키마를 만들어 두고 여기로 붙는다.
+ * 만드는 쪽은 tools/supabase-bootstrap.mjs 다.
+ */
+const user = arg('user') ?? 'postgres';
+const schema = arg('schema');
 
 if (!pw || pw.startsWith('--')) {
   console.error("사용법: node tools/db-connect.mjs '<DB 비밀번호>' [--vercel] [--admin=주소]");
+  console.error('              [--user=역할] [--schema=스키마]');
   console.error('비밀번호는 Supabase 대시보드 → Settings → Database 에서 확인하거나 재설정합니다.');
+  console.error('전용 역할로 붙으려면 tools/supabase-bootstrap.mjs 를 대신 쓰세요.');
   process.exit(1);
 }
 
 const enc = encodeURIComponent(pw);
-const user = `postgres.${REF}`;
-const APP = `postgresql://${user}:${enc}@${HOST}:6543/postgres?pgbouncer=true&connection_limit=1`;
-const DIRECT = `postgresql://${user}:${enc}@${HOST}:5432/postgres`;
+const login = `${user}.${REF}`;
+
+/*
+ * Prisma 는 연결 문자열의 schema 파라미터로 search_path 를 정한다.
+ * 이게 없으면 마이그레이션이 public 으로 간다 — 남의 자리다.
+ */
+const qs = schema ? `&schema=${schema}` : '';
+const APP = `postgresql://${login}:${enc}@${HOST}:6543/postgres?pgbouncer=true&connection_limit=1${qs}`;
+const DIRECT = `postgresql://${login}:${enc}@${HOST}:5432/postgres${schema ? `?schema=${schema}` : ''}`;
 
 /** 기존 값을 덮지 않는다. 시크릿을 다시 만들면 이미 발급된 토큰이 전부 죽는다. */
 function keepOrMake(existing, key, make) {
