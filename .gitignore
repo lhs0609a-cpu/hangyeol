@@ -17,3 +17,6 @@ files (1)/
 
 # vercel curl 이 -w 플래그를 파일명으로 해석해 만드는 산출물
 -w
+
+# Supabase CLI 가 만드는 로컬 상태 — 링크된 프로젝트 ref 뿐이다
+supabase/.temp/
