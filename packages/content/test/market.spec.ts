@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   BUILD_STATUS,
-  DEMAND_SOURCE,
-  DEMAND_SPIKES,
   MARKET_HEADLINE,
   MARKET_SIZE,
   TEACHER_PAIN,
@@ -38,11 +36,6 @@ describe('시장 근거 — 출처 없는 숫자를 화면에 올리지 않는�
   it('라벨이 중복되지 않는다 — 같은 숫자를 두 번 보이지 않는다', () => {
     const labels = all.map((f) => f.label);
     expect(new Set(labels).size).toBe(labels.length);
-  });
-
-  it('수요 급증 근거에도 출처가 있다', () => {
-    expect(DEMAND_SPIKES.length).toBeGreaterThan(0);
-    expect(DEMAND_SOURCE.sourceUrl).toMatch(/^https:\/\//);
   });
 });
 

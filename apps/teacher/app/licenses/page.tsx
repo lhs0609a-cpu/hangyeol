@@ -10,7 +10,7 @@ import {
 import { Eyebrow, Panel, Tag } from '@hangyeol/ui';
 import { Shell } from '../Shell';
 
-export const metadata = { title: '한결 — 출처 표시' };
+export const metadata = { title: '사맛 — 출처 표시' };
 
 /*
  * 출처 표시 화면.

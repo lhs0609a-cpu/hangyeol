@@ -82,18 +82,14 @@ export const MARKET_SIZE: MarketFact[] = [
 ];
 
 /*
- * 수요가 계속 밀려온다는 근거.
- * 한류 콘텐츠가 나올 때마다 학습자가 튄다 — 이게 이 시장의 성격이다.
+ * 수요가 밀려온다는 근거는 hangeul.ts 의 HALLYU_SPIKES 로 옮겼다.
+ *
+ * 여기 있던 DEMAND_SPIKES 는 두 줄이 출처 하나를 같이 썼다.
+ * 줄을 늘리면서 넷플릭스 시청 수와 듀오링고 등록 수가 섞였는데,
+ * 출처가 다른 숫자를 각주 하나로 묶으면 둘 다 못 믿을 숫자가 된다.
+ * 그래서 출처를 줄마다 붙이는 형태로 바꿔 옮겼고, 여기에는 남기지 않는다 —
+ * 같은 주장을 두 곳에 두면 한쪽만 고쳐지는 날이 반드시 온다.
  */
-export const DEMAND_SPIKES = [
-  { when: '2021년 9월', what: '오징어 게임 시즌 1', effect: '한국어 학습 등록 40% 증가' },
-  { when: '2024년 12월', what: '오징어 게임 시즌 2', effect: '한국어 학습 등록 25% 증가' },
-] as const;
-
-export const DEMAND_SOURCE = {
-  source: 'Duolingo Language Report',
-  sourceUrl: 'https://duolingoguides.com/duolingo-language-report/',
-} as const;
 
 /*
  * 강사가 겪는 문제. 랜딩의 본론이다.

@@ -36,7 +36,9 @@ export type PhotoId =
   | 'handmade-flashcard'
   | 'one-to-one-lesson'
   | 'korean-handwriting'
-  | 'seoul-night';
+  | 'seoul-night'
+  | 'hunmin-preface'
+  | 'hallyu-lightsticks';
 
 export interface Photo {
   id: PhotoId;
@@ -56,6 +58,8 @@ export interface Photo {
 }
 
 const PEXELS = 'Pexels' as const satisfies LicenseId;
+/* 저작권이 소멸한 옛 문서. 표시 의무는 없지만 어느 소장본인지 적는다 — licenses.ts 참고 */
+const PD_OLD = 'PD-old' as const satisfies LicenseId;
 
 /**
  * 고른 기준.
@@ -122,6 +126,54 @@ export const PHOTOS: Readonly<Record<PhotoId, Photo>> = Object.freeze({
     sourceUrl: 'https://www.pexels.com/photo/16395527/',
     license: PEXELS,
     usedAt: '랜딩 수요 구간 — 한류 콘텐츠가 나올 때마다 학습자가 튄다는 문장 옆',
+  },
+
+  /*
+   * 훈민정음 해례본 어제 서문 — 이 랜딩에서 유일하게 "진짜" 인 이미지다.
+   *
+   * 원래 이 자리에는 Pexels 의 일반 한문 문서 사진이 있었고, 이 파일에
+   * "해례본 사진은 소장 기관 촬영물이라 우리가 쓸 수 있는 것이 아니다" 라고
+   * 적혀 있었다. 확인해 보니 그게 틀렸다 — 규장각 소장본 스캔이
+   * PD-1923 · PD-South Korea 로 위키미디어 공용에 있다.
+   * 확인하지 않은 통념 하나 때문에 진짜 문서 대신 대역을 쓰고 있었다.
+   *
+   * 파일은 원본 그대로가 아니라 누끼 딴 것이다. 종이와 장서인을 지우고
+   * 먹만 남겼다 — 그래야 한지 바닥에 얹었을 때 사진이 아니라 글이 된다.
+   * 장서인을 지울 때 붉다는 이유만으로 지우면 그 아래 글자까지 파이므로
+   * (우하단 '字' 가 그랬다), 붉으면서 먹만큼 진하지 않은 화소만 지웠다.
+   *
+   * 이 사진의 alt 를 "한문 문서" 로 쓰지 않는다. 무엇이 적혀 있는지가 요점이다.
+   */
+  'hunmin-preface': {
+    id: 'hunmin-preface',
+    src: '/photos/hunmin-preface.png',
+    width: 900,
+    height: 1200,
+    alt: '훈민정음 해례본 첫 장. 세로쓰기 한문으로 「訓民正音 國之語音異乎中國與文字不相流通」 으로 시작하는 세종의 서문이 적혀 있다',
+    photographer: '서울대학교 규장각한국학연구원 소장본',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Hunminjeongeum_Haerye_02.jpg',
+    license: PD_OLD,
+    usedAt: '랜딩 훈민정음 구간 — 제품 이름이 나온 바로 그 문장이 적힌 페이지',
+  },
+
+  /*
+   * 특정 가수의 공연이 아니다. 그 점이 중요하다.
+   *
+   * 이 구간의 문장에는 BTS 와 케이팝 데몬 헌터스가 이름으로 나오지만
+   * 그들의 공연 사진 · 스틸컷 · 로고는 남의 저작물이고 개인의 초상이다.
+   * 그래서 어느 공연인지 알 수 없는 객석 사진을 골랐고,
+   * 설명도 특정 가수를 가리키지 않는다. 캡션에 이름을 붙이는 순간 위반이 된다.
+   */
+  'hallyu-lightsticks': {
+    id: 'hallyu-lightsticks',
+    src: '/photos/hallyu-lightsticks.jpg',
+    width: 1400,
+    height: 762,
+    alt: '어두운 공연장 객석을 응원봉 불빛이 가득 채우고 있다',
+    photographer: 'Teddy',
+    sourceUrl: 'https://www.pexels.com/photo/2167381/',
+    license: PEXELS,
+    usedAt: '랜딩 한류 구간 — 가사를 따라 부르다 문법을 찾게 되는 자리',
   },
 });
 

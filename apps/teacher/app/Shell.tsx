@@ -62,7 +62,7 @@ export function Shell({ children, wide = true }: { children: ReactNode; wide?: b
             style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'inherit' }}
           >
             <Logo />
-            <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '-0.01em' }}>한결</span>
+            <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '-0.01em' }}>사맛</span>
           </Link>
 
           <nav style={{ display: 'flex', gap: 4, marginLeft: 14 }}>

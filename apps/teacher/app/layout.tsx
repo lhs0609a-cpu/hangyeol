@@ -20,7 +20,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '한결 — 오늘',
+  title: '사맛 — 오늘',
   description: '한국어 강사를 위한 수업 운영 도구',
 };
 

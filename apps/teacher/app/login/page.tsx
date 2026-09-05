@@ -58,7 +58,7 @@ function LoginForm() {
     <main style={{ maxWidth: 380, margin: '0 auto', padding: '80px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center' }}>
         <Logo size={20} />
-        <span style={{ fontSize: 'var(--fs-h2)', fontWeight: 600 }}>한결</span>
+        <span style={{ fontSize: 'var(--fs-h2)', fontWeight: 600 }}>사맛</span>
       </div>
 
       <Panel style={{ marginTop: 26 }}>

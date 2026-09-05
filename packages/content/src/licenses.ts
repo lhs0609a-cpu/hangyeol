@@ -23,6 +23,7 @@ export type LicenseId =
   | 'KOGL-1'
   | 'KOGL-2'
   | 'Pexels'
+  | 'PD-old'
   | 'proprietary';
 
 export interface LicenseTerms {
@@ -49,6 +50,12 @@ export const LICENSES: Readonly<Record<LicenseId, LicenseTerms>> = Object.freeze
   'KOGL-2': { id: 'KOGL-2', label: '공공누리 제2유형 (상업적 이용 금지)', commercialUse: false, attributionRequired: true, shareAlike: false },
   // 표시 의무는 없지만 photos.ts 에 촬영자를 남긴다. 조건이 아니라 예의다.
   Pexels: { id: 'Pexels', label: 'Pexels 라이선스', commercialUse: true, attributionRequired: false, shareAlike: false },
+  /*
+   * 저작권이 소멸한 옛 저작물. 표시 의무가 법적으로는 없지만 우리는 적는다 —
+   * 어느 소장본을 떴는지가 자료의 값이고, 적어 두지 않으면 다음 사람이
+   * 같은 조사를 처음부터 다시 한다.
+   */
+  'PD-old': { id: 'PD-old', label: '퍼블릭 도메인 (저작권 소멸)', commercialUse: true, attributionRequired: false, shareAlike: false },
   proprietary: { id: 'proprietary', label: '독점 · 별도 계약 필요', commercialUse: false, attributionRequired: true, shareAlike: false },
 });
 
@@ -136,18 +143,76 @@ export const EXTERNAL_ASSETS: readonly ExternalAsset[] = Object.freeze([
   },
   {
     id: 'pexels-landing-photos',
-    name: 'Pexels 랜딩 사진 5장',
+    name: 'Pexels 랜딩 사진 7장',
     kind: 'photo',
     license: 'Pexels',
     url: 'https://www.pexels.com/license/',
     attribution:
-      '사진 Thirdman · Tima Miroshnichenko · Vanessa Garcia · Youn Seung Jin · Ethan Brooke (Pexels)',
+      '사진 Thirdman · Tima Miroshnichenko · Vanessa Garcia · Youn Seung Jin · Ethan Brooke · leonbastian · Teddy (Pexels)',
     usage: '랜딩 화면의 사진. 목록과 촬영자는 packages/content/src/photos.ts 에 있다.',
     caveat:
       '표시 의무는 없지만 제약은 있다. "이미지 속 인물이 제품을 보증하는 것처럼 보이게 하지 말 것" — ' +
       '그래서 이 사진들을 강사 소개나 수강 후기로 쓰지 않는다. 이름을 붙이고 따옴표를 치는 순간 위반이다. ' +
       'italki · Preply 의 강사 사진을 그대로 가져오는 선택지는 08번 §6 이 막는다. 남의 저작물이면서 개인의 초상이다.',
-    verifiedAt: '2026-09-03',
+    verifiedAt: '2026-09-05',
+  },
+
+  /*
+   * 항목이 아니라 판단 기록이다. 자산이 없으므로 usage 가 blocked 다.
+   *
+   * 랜딩의 한류 구간에 오징어 게임 · BTS · 케이팝 데몬 헌터스를 넣기로 하면서
+   * 실제 스틸컷과 공연 사진을 쓸 수 있는지 확인했다. 쓸 수 없다.
+   * 다음 사람이 같은 질문을 다시 하지 않도록 여기 남긴다.
+   */
+  /*
+   * 이 항목은 앞선 판단을 뒤집은 기록이다.
+   *
+   * photos.ts 에 "훈민정음 해례본 사진은 소장 기관의 촬영물이라 우리가 쓸 수 있는 것이
+   * 아니다" 라고 적어 두고 Pexels 의 일반 한문 문서 사진을 대신 썼었다. 그게 틀렸다.
+   *
+   * 원 저작물(1446년)은 저작권이 소멸했고, 평면 저작물을 있는 그대로 찍은 복제물에는
+   * 새 저작권이 생기지 않는다는 것이 위키미디어 공용의 PD-Art 원칙이다.
+   * 실제로 규장각 소장본 스캔이 PD-1923 · PD-South Korea 로 공용에 올라와 있다.
+   *
+   * "소장 기관이 찍었으니 못 쓴다" 는 것은 확인하지 않은 통념이었다.
+   * 확인해 보니 쓸 수 있었고, 그래서 대역 사진을 진짜 문서로 바꿨다.
+   *
+   * 다만 같은 문서의 다른 사진은 사정이 다르다 — 국립한글박물관 전시 사진
+   * (훈민정음 해례본 (1).jpg, 5312x2988)은 CC BY-SA 4.0 이다. 해상도는 훨씬 좋지만
+   * 로고에 쓰면 동일조건변경허락이 파생물까지 따라온다. 그래서 안 쓴다.
+   */
+  {
+    id: 'hunminjeongeum-haerye-scan',
+    name: '훈민정음 해례본 어제 서문 (규장각 소장본 스캔)',
+    kind: 'photo',
+    license: 'PD-old',
+    url: 'https://commons.wikimedia.org/wiki/File:Hunminjeongeum_Haerye_02.jpg',
+    attribution: '훈민정음 해례본 (1446) · 서울대학교 규장각한국학연구원 소장본 · 위키미디어 공용',
+    usage:
+      '랜딩 훈민정음 구간의 서문 이미지(누끼)와 SAMAT 표식(通). ' +
+      '원본에서 먹만 남기고 종이와 장서인을 지운 뒤 씁니다.',
+    caveat:
+      '같은 문서라도 촬영물마다 라이선스가 다르다. 국립한글박물관 전시 사진은 CC BY-SA 4.0 이라 ' +
+      '로고에 쓰면 동일조건변경허락이 파생물에 전염된다. 반드시 PD 태그가 붙은 판본만 쓴다. ' +
+      '표식으로 쓰는 通 자는 원문 「不相流通」 에서 딴 것이다 — 다른 글자로 바꾸면 출처가 끊긴다.',
+    verifiedAt: '2026-09-05',
+  },
+  {
+    id: 'hallyu-ip-imagery',
+    name: '한류 콘텐츠 이미지 (오징어 게임 · BTS · 케이팝 데몬 헌터스)',
+    kind: 'photo',
+    license: 'proprietary',
+    url: 'https://www.netflix.com/legal/termsofuse',
+    attribution: '—',
+    usage: 'blocked — 저작권과 초상권이 겹친다',
+    caveat:
+      '스틸컷 · 포스터 · 공연 사진 · 로고는 넷플릭스와 소속사의 저작물이고, ' +
+      '거기에 출연자 개인의 초상권이 겹친다. 홍보용으로 배포된 이미지라도 ' +
+      '제3자의 유료 서비스 랜딩에 쓰라고 준 것이 아니다. ' +
+      '대신 이름과 사실은 출처와 함께 화면에 적는다 — 사실을 진술하는 것은 복제가 아니다. ' +
+      '그림이 필요한 자리는 어느 공연인지 특정되지 않는 Pexels 사진으로 채운다(hallyu-lightsticks). ' +
+      '그 사진의 캡션에 가수 이름을 붙이면 위반이 된다.',
+    verifiedAt: '2026-09-05',
   },
   {
     id: 'piper-tts',

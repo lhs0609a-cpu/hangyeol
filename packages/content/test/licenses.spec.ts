@@ -37,10 +37,15 @@ describe('라이선스 레지스트리', () => {
    *
    * Pexels 는 라이선스 본문이 "Attribution is not required" 라고 적어 두었다.
    * 그래도 photos.ts 에 촬영자를 남긴다 — 의무가 없는 것과 모르는 것은 다르다.
+   *
+   * PD-old 도 같은 이유로 면제다. 저작권이 소멸했으므로 표시할 권리자가 없다.
+   * 그런데도 어느 소장본을 떴는지 적는다 — 같은 문서라도 촬영물마다 라이선스가
+   * 달라서(해례본은 규장각본이 PD, 한글박물관 전시 사진이 CC BY-SA 다),
+   * 출처를 안 적으면 다음 사람이 그 구분을 처음부터 다시 조사해야 한다.
    */
-  it('출처 표시가 면제되는 것은 CC0 와 Pexels 둘뿐이다', () => {
+  it('출처 표시가 면제되는 것은 CC0 · Pexels · 저작권 소멸본 셋뿐이다', () => {
     const exempt = Object.values(LICENSES).filter((l) => !l.attributionRequired);
-    expect(exempt.map((l) => l.id)).toEqual(['CC0-1.0', 'Pexels']);
+    expect(exempt.map((l) => l.id)).toEqual(['CC0-1.0', 'Pexels', 'PD-old']);
   });
 
   it('Share-Alike 는 SA 가 붙은 것만이다', () => {

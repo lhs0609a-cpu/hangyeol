@@ -15,8 +15,14 @@ const ROOT = 'apps/note';
 
 /** 06번 문서 §8 "학생 화면 금지어" + 서비스명. */
 const FORBIDDEN = [
-  { pattern: /한결/g, why: '서비스명' },
-  { pattern: /hangyeol/gi, why: '서비스명(로마자)' },
+  { pattern: /사맛/g, why: '서비스명' },
+  { pattern: /samat/gi, why: '서비스명(로마자)' },
+  /*
+   * 옛 이름도 계속 막는다. 이름이 바뀌었다고 지우면, 낡은 화면을 복사해 온
+   * 다음 사람의 붙여넣기가 그대로 통과한다. 막는 데 드는 비용이 0 이다.
+   */
+  { pattern: /한결/g, why: '옛 서비스명' },
+  { pattern: /hangyeol/gi, why: '옛 서비스명(로마자)' },
   { pattern: /\b예약\b/g, why: '예약 기능은 학생 화면에 없다' },
   { pattern: /\b결제\b/g, why: '결제 UI 는 학생 화면에 없다' },
   { pattern: /\b충전\b/g, why: '크레딧 충전은 학생 화면에 없다' },
