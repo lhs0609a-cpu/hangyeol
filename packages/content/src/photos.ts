@@ -38,7 +38,8 @@ export type PhotoId =
   | 'korean-handwriting'
   | 'seoul-night'
   | 'hunmin-preface'
-  | 'hallyu-lightsticks';
+  | 'hallyu-lightsticks'
+  | 'dalgona-shapes';
 
 export interface Photo {
   id: PhotoId;
@@ -60,6 +61,12 @@ export interface Photo {
 const PEXELS = 'Pexels' as const satisfies LicenseId;
 /* 저작권이 소멸한 옛 문서. 표시 의무는 없지만 어느 소장본인지 적는다 — licenses.ts 참고 */
 const PD_OLD = 'PD-old' as const satisfies LicenseId;
+/*
+ * 동일조건변경허락(Share-Alike). 사진을 그대로 싣는 것은 2차 저작물이 아니라
+ * 편집물이라 우리 페이지 전체에 라이선스가 옮지 않는다. 다만 우리가 자른 사진
+ * 자체는 같은 라이선스로 나가므로 /licenses 가 그 사실을 밝힌다.
+ */
+const CC_BY_SA_4 = 'CC-BY-SA-4.0' as const satisfies LicenseId;
 
 /**
  * 고른 기준.
@@ -154,6 +161,38 @@ export const PHOTOS: Readonly<Record<PhotoId, Photo>> = Object.freeze({
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:Hunminjeongeum_Haerye_02.jpg',
     license: PD_OLD,
     usedAt: '랜딩 훈민정음 구간 — 제품 이름이 나온 바로 그 문장이 적힌 페이지',
+  },
+
+  /*
+   * 오징어 게임을 보여 주는데 넷플릭스 저작물이 하나도 없는 사진이다.
+   *
+   * 찍힌 것은 달고나(뽑기)와 이쑤시개다. 달고나는 1960년대부터 있던
+   * 길거리 과자이고, 찍힌 무늬는 동그라미 · 세모 · 별 · 우산 —
+   * 도형 넷이다. 도형은 저작물이 아니고 놀이의 규칙도 저작물이 아니다.
+   * 그런데 2021년 이후로는 이 넉 장을 보면 전 세계가 같은 것을 떠올린다.
+   *
+   * 스틸컷을 쓸 수 없어서 대신 고른 것이 아니다. 이쪽이 더 맞다 —
+   * 이 구간은 "한국 것이 세계로 갔다" 를 말하는데, 실제로 간 것은
+   * 넷플릭스의 화면이 아니라 달고나라는 말과 그 놀이였다.
+   * 그리고 이건 우리가 파는 것과 같은 종류다. 학습자가 배우고 싶어 하는
+   * 한국어 낱말.
+   *
+   * ── 사진을 자른 이유 ────────────────────────────────
+   *
+   * 원본 아래쪽에 이 과자를 만든 제과점의 상호가 찍혀 있었다.
+   * 남의 상호를 우리 랜딩에 노출할 이유가 없어서 잘라 냈다.
+   * 자르는 것은 변경이므로 우리가 내보내는 이 사진도 CC BY-SA 로 나간다.
+   */
+  'dalgona-shapes': {
+    id: 'dalgona-shapes',
+    src: '/photos/dalgona-shapes.jpg',
+    width: 900,
+    height: 800,
+    alt: '달고나 네 개에 각각 동그라미 · 세모 · 별 · 우산 모양이 찍혀 있고 옆에 이쑤시개가 놓여 있다',
+    photographer: 'Triplecaña',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Squid_Game_dalgona_cookies.jpg',
+    license: CC_BY_SA_4,
+    usedAt: '랜딩 한류 구간 — 화면 밖으로 나온 것이 무엇인지 보이는 자리',
   },
 
   /*

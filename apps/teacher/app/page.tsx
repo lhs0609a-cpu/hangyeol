@@ -1072,16 +1072,46 @@ function HallyuSection() {
         </p>
         <Cite source={HALLYU_FANS.source} url={HALLYU_FANS.sourceUrl} tone="ink" />
 
-        <PhotoFrame
-          src={photo('hallyu-lightsticks').src}
-          alt={photo('hallyu-lightsticks').alt}
-          width={photo('hallyu-lightsticks').width}
-          height={photo('hallyu-lightsticks').height}
-          aspect="21 / 9"
-          tone="ink"
-          caption="가사를 따라 부르려고 발음을 찾고, 발음을 찾다 문법에 닿습니다. 그 다음에 강사를 찾습니다."
-          style={{ marginTop: 'var(--sp-block)' }}
-        />
+        {/* ── 사진 두 장 ────────────────────────────────
+            이 구간에만 사진이 둘이다. 다른 구간은 한 장씩이고
+            "두 장 이상 놓으면 사진첩이 된다" 가 이 파일의 규칙인데,
+            여기서는 두 장이 한 덩어리로 한 가지를 말한다 —
+            한류가 나간 통로가 둘이라는 것. 왼쪽이 귀로 간 것,
+            오른쪽이 눈으로 간 것이다. 나란히 놓아야 그 짝이 보인다.
+
+            둘 다 남의 저작물이 아니다. 왼쪽은 어느 공연인지 특정되지 않는
+            객석이고, 오른쪽은 과자와 도형 넷이다. 스틸컷도 공연 사진도
+            멤버 사진도 쓸 수 없다 — 13번 §5 가 경로를 전부 확인했고
+            하나도 없었다. 캡션에 가수 이름이나 배우 이름을 붙이는 순간
+            여기 있는 두 장 다 위반이 된다. */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: 'var(--sp-block)',
+            marginTop: 'var(--sp-block)',
+          }}
+        >
+          <PhotoFrame
+            src={photo('hallyu-lightsticks').src}
+            alt={photo('hallyu-lightsticks').alt}
+            width={photo('hallyu-lightsticks').width}
+            height={photo('hallyu-lightsticks').height}
+            aspect="4 / 3"
+            tone="ink"
+            caption="가사를 따라 부르려고 발음을 찾고, 발음을 찾다 문법에 닿습니다."
+          />
+
+          <PhotoFrame
+            src={photo('dalgona-shapes').src}
+            alt={photo('dalgona-shapes').alt}
+            width={photo('dalgona-shapes').width}
+            height={photo('dalgona-shapes').height}
+            aspect="4 / 3"
+            tone="ink"
+            caption="화면 밖으로 나온 것은 장면이 아니라 낱말이었습니다. 달고나 · 딱지 · 무궁화꽃이 피었습니다."
+          />
+        </div>
 
         {/* ── 연표 ──────────────────────────────────────
             줄마다 출처가 다르다. 넷플릭스 시청 수와 듀오링고 등록 수는
