@@ -39,7 +39,8 @@ export type PhotoId =
   | 'seoul-night'
   | 'hunmin-preface'
   | 'hallyu-lightsticks'
-  | 'dalgona-shapes';
+  | 'dalgona-shapes'
+  | 'hojakdo';
 
 export interface Photo {
   id: PhotoId;
@@ -193,6 +194,38 @@ export const PHOTOS: Readonly<Record<PhotoId, Photo>> = Object.freeze({
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:Squid_Game_dalgona_cookies.jpg',
     license: CC_BY_SA_4,
     usedAt: '랜딩 한류 구간 — 화면 밖으로 나온 것이 무엇인지 보이는 자리',
+  },
+
+  /*
+   * 호작도(虎鵲圖) — 조선의 민화. 케이팝 데몬 헌터스를 보이는 방법이다.
+   *
+   * 그 영화의 스틸컷 · 캐릭터 · 로고는 전부 막혀 있다. 로고는 저작권이
+   * 풀린 판본이 공용에 있지만 상표가 남아서, 유료 상품의 랜딩에 놓으면
+   * 제휴 관계로 읽힌다. 저작권과 상표는 다른 층이다.
+   *
+   * 그런데 이 그림은 그 영화의 대역이 아니라 출처다.
+   * 영화에 나오는 호랑이(Derpy)와 까치(Sussie)가 민화에서 왔다는 것은
+   * 제작진이 밝힌 사실이고, 위키백과가 Salon 기사를 출처로 달아 두었다.
+   * 대역으로 때운 것이 아니라 원본을 보이는 것이라서 이쪽이 더 세다.
+   *
+   * 그리고 이 사진이 이 랜딩의 척추를 잇는다 — 훈민정음 구간이 "옛것" 을
+   * 말하고 한류 구간이 "지금" 을 말하는데, 조선의 그림이 2025년 넷플릭스
+   * 1위 영화가 됐다는 사실이 그 둘을 한 문장으로 묶는다.
+   *
+   * 종이색이 --hanji 와 거의 같아서 한지 구간에 놓으면 사라진다.
+   * 먹 구간에 놓아야 산다 — 검은 바닥에서 유일하게 따뜻한 것이 된다.
+   */
+  hojakdo: {
+    id: 'hojakdo',
+    src: '/photos/hojakdo.jpg',
+    width: 900,
+    height: 1094,
+    alt: '조선의 민화 호작도. 눈이 크고 표정이 우스운 호랑이가 앉아 있고 소나무 가지에 까치가 앉아 내려다본다',
+    photographer: '조선시대 · 작자 미상',
+    sourceUrl:
+      'https://commons.wikimedia.org/wiki/File:Tiger_and_Magpie,_72x59.4_cm,_priviate_collection,_Japan.jpg',
+    license: PD_OLD,
+    usedAt: '랜딩 한류 구간 — 지금 세계가 보는 것이 어디서 왔는지',
   },
 
   /*
