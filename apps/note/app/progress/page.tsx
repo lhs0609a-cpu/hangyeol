@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TopBar } from '../ui';
+import { LoadError, Loading, TopBar } from '../ui';
 
 /*
  * 진도 대시보드 — 02번 문서 D-08.
@@ -21,15 +21,25 @@ interface Progress {
 
 export default function ProgressPage() {
   const [data, setData] = useState<Progress | null>(null);
+  const [error, setError] = useState(false);
+
+  async function load() {
+    setError(false);
+    try {
+      const response = await fetch('/api/note/progress');
+      if (!response.ok) throw new Error('load');
+      const result = await response.json();
+      if (!result) throw new Error('empty');
+      setData(result);
+    } catch { setError(true); }
+  }
 
   useEffect(() => {
-    fetch('/api/note/progress')
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setData)
-      .catch(() => setData(null));
+    void load();
   }, []);
 
-  if (!data) return <p style={{ textAlign: 'center', paddingTop: 40, color: 'var(--ink-3)' }}>불러오는 중</p>;
+  if (error) return <LoadError onRetry={() => void load()} />;
+  if (!data) return <Loading />;
 
   const level = data.levelCode.replace('topik', '');
 
@@ -37,13 +47,13 @@ export default function ProgressPage() {
     <div className="hg-rise">
       <TopBar />
 
-      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 22 }}>지금까지</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 22 }}>나의 진도 / My progress</h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 20 }}>
-        <Stat label="지금 급" value={`${level}급`} sub={data.levelAssignedAt ? '레벨 테스트로 배정' : '아직 테스트 전'} />
-        <Stat label="차시" value={String(data.currentLessonNo)} sub={`수업 ${data.lessons}회`} />
-        <Stat label="배운 표현" value={String(data.vocab.total)} sub={`${data.vocab.graduated}개는 외웠어요`} />
-        <Stat label="함께한 기간" value={data.weeks > 0 ? `${data.weeks}주` : '첫 주'} sub="" />
+        <Stat label="수준 / Level" value={`${level}급`} sub={data.levelAssignedAt ? '레벨 테스트로 배정 / Assessed' : '아직 테스트 전 / Not assessed'} />
+        <Stat label="차시 / Lesson" value={String(data.currentLessonNo)} sub={`수업 ${data.lessons}회 / lessons`} />
+        <Stat label="표현 / Words" value={String(data.vocab.total)} sub={`${data.vocab.graduated}개 완료 / learned`} />
+        <Stat label="기간 / Together" value={data.weeks > 0 ? `${data.weeks}주` : '첫 주'} sub="Weeks of learning" />
       </div>
 
       {!data.levelAssignedAt && (
@@ -57,7 +67,7 @@ export default function ProgressPage() {
           }}
         >
           <p style={{ margin: 0, fontSize: 'var(--fs-body)', lineHeight: 1.7 }}>
-            아직 레벨 테스트를 안 봤어요. 5분이면 끝나요.
+            아직 레벨 테스트 전이에요. / Take a short level check to choose your next step.
           </p>
           <a
             href="/level-test"
@@ -73,7 +83,7 @@ export default function ProgressPage() {
               textDecoration: 'none',
             }}
           >
-            레벨 테스트 하기
+            레벨 테스트 / Check my level
           </a>
         </div>
       )}

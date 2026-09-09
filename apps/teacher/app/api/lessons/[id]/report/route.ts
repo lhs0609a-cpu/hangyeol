@@ -8,6 +8,7 @@ interface Body {
   expressions: string[];
   errors?: string[];
   outcome: 'pass' | 'repeat';
+  independentPerformance?: boolean;
 }
 
 /**
@@ -26,7 +27,8 @@ export function POST(req: Request, { params }: { params: { id: string } }) {
       lessonId: BigInt(params.id),
       expressions: body.expressions ?? [],
       errors: body.errors ?? [],
-      outcome: body.outcome ?? 'pass',
+      outcome: body.outcome,
+      independentPerformance: body.independentPerformance,
     });
   });
 }

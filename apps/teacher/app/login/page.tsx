@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Button, Eyebrow, Logo, Panel } from '@hangyeol/ui';
 import { post } from '../api-client';
+import { AuthFrame } from '../AuthFrame';
 
 /*
  * 강사 로그인 — 02번 문서 A-01. 소셜 로그인은 P2 다.
@@ -35,6 +36,7 @@ function LoginForm() {
   const ready = form.email.trim() !== '' && form.password.length >= 10;
 
   async function submit() {
+    if (!ready || busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -55,17 +57,18 @@ function LoginForm() {
   }
 
   return (
-    <main style={{ maxWidth: 380, margin: '0 auto', padding: '80px 20px' }}>
+    <AuthFrame>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center' }}>
         <Logo size={20} />
         <span style={{ fontSize: 'var(--fs-h2)', fontWeight: 600 }}>사맛</span>
       </div>
 
       <Panel style={{ marginTop: 26 }}>
-        <Eyebrow>로그인</Eyebrow>
+        <Eyebrow>강사 로그인 / Teacher login</Eyebrow>
+        <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
 
         <LabeledInput
-          label="이메일"
+          label="이메일 / Email"
           type="email"
           value={form.email}
           onChange={(v) => setForm((f) => ({ ...f, email: v }))}
@@ -73,7 +76,7 @@ function LoginForm() {
         />
 
         <LabeledInput
-          label="비밀번호"
+          label="비밀번호 / Password"
           type="password"
           value={form.password}
           onChange={(v) => setForm((f) => ({ ...f, password: v }))}
@@ -81,15 +84,16 @@ function LoginForm() {
         />
 
         {error && (
-          <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>
+          <p role="alert" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>
         )}
 
         <div style={{ marginTop: 18 }}>
-          <Button kind="primary" size="lg" full disabled={!ready || busy} onClick={submit}>
+          <Button kind="primary" size="lg" full disabled={!ready || busy} type="submit">
             {busy ? '처리하는 중' : !ready ? '이메일과 10자 이상 비밀번호를 입력하세요' : '로그인'}
           </Button>
         </div>
 
+        </form>
         <p
           style={{
             fontSize: 'var(--fs-caption)',
@@ -109,7 +113,7 @@ function LoginForm() {
         온보딩 · 트레이닝 · 교재 · 도구는 전부 무료입니다.
         활성 학생이 생긴 뒤에만 요금이 발생합니다.
       </p>
-    </main>
+    </AuthFrame>
   );
 }
 
@@ -133,11 +137,15 @@ function LabeledInput({
       <span style={{ display: 'block', fontSize: 'var(--fs-body-sm)', fontWeight: 600, marginBottom: 5 }}>{label}</span>
       <input
         type={type}
+        required
+        autoComplete={type === 'password' ? 'current-password' : 'email'}
+        minLength={type === 'password' ? 10 : undefined}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         style={{
           width: '100%',
+          minHeight: 'var(--touch-min)',
           padding: '9px 11px',
           fontSize: 'var(--fs-body)',
           fontFamily: 'inherit',

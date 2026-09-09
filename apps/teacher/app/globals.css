@@ -1,4 +1,5 @@
 @import '@hangyeol/ui/tokens.css';
+@import './learning.css';
 
 /*
  * 06번 문서(UX/UI 디자인 시스템)의 토큰을 그대로 옮긴 것이다.
@@ -10,33 +11,33 @@
 
 :root {
   /* 잉크 — 청색 기운이 도는 먹 */
-  --ink: #14161c;
-  --ink-2: #3b4254;
-  --ink-3: #6b7284;
-  --ink-4: #9ba1af;
+  --ink: #183c34;
+  --ink-2: #385249;
+  --ink-3: #5b6d63;
+  --ink-4: #66746c;
 
   /* 선 */
-  --rule: #e3e5ea;
-  --rule-soft: #eff0f3;
+  --rule: #dcded2;
+  --rule-soft: #f0f1e9;
 
   /* 캔버스 */
-  --canvas: #fafafb;
-  --surface: #ffffff;
-  --hanji: #f2f0ea;
-  --hanji-card: #fbfaf7;
-  --hanji-rule: #e2ded2;
+  --canvas: #faf8f2;
+  --surface: #fffefa;
+  --hanji: #f0eddf;
+  --hanji-card: #fffdf6;
+  --hanji-rule: #dcded2;
 
   /* 쪽빛 — 주 강조 */
-  --indigo: #26418f;
-  --indigo-2: #3d5ccc;
-  --indigo-w: #edf0fb;
+  --indigo: #194b42;
+  --indigo-2: #245f51;
+  --indigo-w: #e4ede5;
 
   /* 청자 — 성공 · 통과 */
   --jade: #1e7a5f;
   --jade-w: #e6f2ed;
 
   /* 치자 — 경고 · 휴면 */
-  --chija: #a9761a;
+  --chija: #8a601a;
   --chija-w: #f7f0df;
 
   /* 홍화 — 오류 · 위험 */
@@ -86,7 +87,7 @@ body {
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-latin), var(--font-sans), system-ui, -apple-system, sans-serif;
   font-size: var(--fs-body);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -110,6 +111,31 @@ body {
 
 a {
   color: var(--indigo-2);
+}
+
+.teacher-shell-nav { overflow-x: auto; scrollbar-width: thin; min-width: 0; }
+.teacher-shell-nav a { white-space: nowrap; }
+.teacher-welcome { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 10px 20px; }
+.teacher-welcome h1 { margin-block: 10px; }
+.teacher-welcome p { margin: 0; }
+.teacher-workbook-link { display: inline-flex; align-items: center; padding: 12px 18px; min-height: 48px; border: 1px solid var(--rule); border-radius: var(--r-md); text-decoration: none; white-space: nowrap; background: var(--surface); }
+.teacher-demo-notice { border: 1px solid var(--hanji-rule); background: var(--hanji); padding: 12px 16px; border-radius: var(--r-md); font-size: var(--fs-body-sm); }
+.teacher-student-row > div { min-width: 0; overflow-wrap: anywhere; }
+.teacher-launch-panel { --ink-4: #c6cad6; --jade: #c1d6b9; }
+.admin-mobile-nav { display: none; }
+@media (max-width: 700px) {
+  .teacher-admin-rail { display: none; }
+  .teacher-shell-main.with-admin-rail { padding-left: 20px !important; }
+  .admin-mobile-nav { display: flex; gap: 12px; align-items: center; padding: 14px 20px; }
+  .admin-mobile-nav label { font-size: var(--fs-body-sm); white-space: nowrap; }
+  .admin-mobile-nav select { flex: 1; min-width: 0; min-height: 44px; font: inherit; padding: 8px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-sm); color: var(--ink); }
+  .teacher-welcome { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .teacher-metrics { grid-template-columns: minmax(0, 1fr) !important; }
+  .teacher-student-row { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .teacher-student-row > div:last-child { grid-column: 1 / -1; }
+  .teacher-shell-header { padding-inline: 12px !important; }
+  .teacher-shell-header > div { flex-wrap: wrap; padding-block: 10px; }
+  .teacher-shell-nav { order: 3; flex-basis: 100%; margin-left: 0 !important; }
 }
 
 :focus-visible {

@@ -133,8 +133,8 @@ export const VALUE_PROPS = [
 
 /** 랜딩 하단 — 우리가 실제로 갖고 있는 것. 과장하지 않는다. */
 export const BUILD_STATUS = {
-  levels: '1급 · 2급',
-  unitsWritten: 70,
+  levels: '1~6급 편성 초안',
+  unitsWritten: 250,
   unitsTarget: 250,
-  note: '3급 이상은 순차 공개됩니다',
+  note: '전체 교안은 초안이며 교육 전문가 검수가 필요합니다',
 } as const;

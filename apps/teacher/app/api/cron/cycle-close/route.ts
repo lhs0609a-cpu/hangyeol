@@ -1,10 +1,10 @@
-import { apiError, handle, runCycleClose, runInvoiceCreate, runLockEnforce } from '@hangyeol/core';
+import { apiError, handle, runCycleClose, runInvoiceCreate, runLockEnforce, runPaymentCollection, runNotifications } from '@hangyeol/core';
 import { safeEqual } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 // 요청 헤더·쿠키를 읽으므로 정적 렌더링 대상이 아니다.
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * 배치 엔드포인트 — 10번 문서 §6.
@@ -23,6 +23,8 @@ export function GET(req: Request) {
     const job = new URL(req.url).searchParams.get('job') ?? 'cycle-close';
 
     switch (job) {
+      case 'payment-collect': return { job, ...(await runPaymentCollection()) };
+      case 'notifications': return { job, ...(await runNotifications()) };
       case 'cycle-close':
         return { job, ...(await runCycleClose()) };
       case 'invoice-create':

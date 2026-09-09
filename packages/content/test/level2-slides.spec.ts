@@ -24,7 +24,7 @@ describe('2급 커리큘럼 — 31~70차시', () => {
 
   it('1급과 이어 붙여도 번호가 겹치거나 비지 않는다', () => {
     const nos = ALL_UNITS.map((u) => u.unitNo);
-    expect(nos).toEqual(Array.from({ length: 70 }, (_, i) => i + 1));
+    expect(nos).toEqual(Array.from({ length: 250 }, (_, i) => i + 1));
   });
 
   it('은/는 대조는 이/가와 을/를을 충분히 쓴 뒤에 나온다', () => {

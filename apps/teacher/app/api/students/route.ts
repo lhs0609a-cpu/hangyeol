@@ -34,7 +34,11 @@ export function POST(req: Request) {
     const body = await readJson<Body>(req);
     requireFields(body, ['name', 'email', 'l1Code', 'platform']);
 
-    const result = await createStudent({ teacherId: ctx.teacherId, ...body });
+    const result = await createStudent({
+      teacherId: ctx.teacherId, name: body.name, nameKo: body.nameKo,
+      email: body.email, l1Code: body.l1Code, countryCode: body.countryCode,
+      platform: body.platform, platformUrl: body.platformUrl, goalTrack: body.goalTrack,
+    });
 
     return json(
       {

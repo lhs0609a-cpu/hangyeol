@@ -12,14 +12,7 @@ import type { Prisma } from '@hangyeol/db';
 import { apiError } from './errors.js';
 import { db } from './guard.js';
 
-/*
- * 레벨 테스트 — 02번 문서 B-06.
- *
- * 상태를 서버에 두지 않고 매 요청에 실어 보낸다.
- * 학생이 중간에 창을 닫아도 세션이 새지 않고, 서버에 임시 테이블이 필요 없다.
- * 대신 상태를 그대로 믿으면 조작이 가능하므로 서버에서 채점한다 —
- * 클라이언트는 어느 문항을 골랐는지만 보낸다.
- */
+// Score answer history on the server; never accept client-provided scores.
 
 export interface NextQuestionResponse {
   done: boolean;
@@ -37,7 +30,7 @@ export function startTest(): NextQuestionResponse {
 }
 
 function serveNext(state: TestState): NextQuestionResponse {
-  const q = nextQuestion(state);
+  const q = nextQuestion(state, () => 0);
 
   if (!q || state.asked.length >= LEVEL_TEST_LENGTH) {
     return {
@@ -66,7 +59,7 @@ export function answerQuestion(state: TestState, questionId: string, choiceIndex
     throw apiError('VALIDATION_FAILED', '이미 답한 문항입니다');
   }
 
-  if (!Number.isInteger(choiceIndex) || choiceIndex < 0 || choiceIndex >= q.choices.length) {
+  if (!Number.isInteger(choiceIndex) || choiceIndex < -1 || choiceIndex >= q.choices.length) {
     throw apiError('VALIDATION_FAILED', '선택지 범위를 벗어났습니다');
   }
 
@@ -130,4 +123,16 @@ export async function latestLevelTest(studentId: bigint) {
     weakPoints: [...new Set(answers?.missed ?? [])].slice(0, 5),
     completedAt: row.completedAt.toISOString(),
   };
+}
+
+export function replayLevelAnswers(answers: unknown): NextQuestionResponse {
+  if (!Array.isArray(answers) || answers.length > LEVEL_TEST_LENGTH) throw apiError('VALIDATION_FAILED');
+  let step = startTest();
+  for (const answer of answers) {
+    if (!answer || answer.questionId !== step.question?.id || !Number.isInteger(answer.choiceIndex)) {
+      throw apiError('VALIDATION_FAILED', 'Invalid answer history. Please restart the test.');
+    }
+    step = answerQuestion(step.state, answer.questionId, answer.choiceIndex);
+  }
+  return step;
 }

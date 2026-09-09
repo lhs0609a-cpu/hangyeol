@@ -41,6 +41,16 @@ export default function LicensesPage() {
       </p>
 
       <Panel style={{ marginTop: 20 }}>
+        <Eyebrow>입문 교재 일러스트 / First Steps illustrations</Eyebrow>
+        <p className="t-body-sm" style={{ marginTop: 12, lineHeight: 1.8 }}>
+            서울 골목·카페·식당·교통·가게·대화·다시 말해 달라고 부탁하기·하루 일과 장면의 8개 일러스트는 2026년 9월 제작한 AI 생성 교육용 이미지입니다.
+          실제 수강생이나 고객 후기 사진이 아닙니다. 교재의 한국어 문장은 이미지와 분리해 조판했습니다.
+        </p>
+        <p className="t-body-sm" lang="en" style={{ marginTop: 10, lineHeight: 1.8 }}>
+            Eight original AI-generated educational illustrations, created September 2026. These depict learning situations, not real students or testimonials. Korean text is typeset separately from the artwork.
+        </p>
+      </Panel>
+      <Panel style={{ marginTop: 20 }}>
         <Eyebrow>사용 중 · {usable.length}건</Eyebrow>
         <div style={{ marginTop: 12 }}>
           {usable.map((a) => (

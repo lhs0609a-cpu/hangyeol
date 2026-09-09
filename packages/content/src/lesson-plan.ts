@@ -4,6 +4,7 @@ import { LESSON_PLANS_16_22 } from './lesson-plans-16-22.js';
 import { LESSON_PLANS_23_30 } from './lesson-plans-23-30.js';
 import { LESSON_PLANS_31_50 } from './lesson-plans-31-50.js';
 import { LESSON_PLANS_51_70 } from './lesson-plans-51-70.js';
+import { EXTENDED_PLANS } from './extended-lessons.js';
 
 /*
  * 강사 지도안 — 08번 문서 §2. 이 제품의 본체다.
@@ -46,6 +47,8 @@ export interface LessonPlan {
   unitNo: number;
   title: string;
   goalStatement: string;
+  modelDialogue?: string[];
+  modelExample?: string;
   /** 이 차시에서 학생이 반드시 말하게 되는 문장. 통과 판정의 기준이다. */
   exitTicket: string[];
   /** 모국어별로 다르게 다뤄야 할 점. 08번 §1 분기표에서 온다. */
@@ -64,7 +67,7 @@ export interface LessonPlan {
 
 const UNIT_1: LessonPlan = {
   unitNo: 1,
-  title: '한글 1시간 완성',
+  title: '한글 첫걸음',
   goalStatement: '자기 이름을 한글로 쓰고 읽을 수 있다',
   exitTicket: ['(자기 이름을 한글로 쓴다)', '제 이름은 ○○○이에요'],
   l1Notes: {
@@ -266,6 +269,7 @@ export const LESSON_PLANS: readonly LessonPlan[] = Object.freeze(
     ...LESSON_PLANS_23_30,
     ...LESSON_PLANS_31_50,
     ...LESSON_PLANS_51_70,
+    ...EXTENDED_PLANS,
   ].sort((a, b) => a.unitNo - b.unitNo),
 );
 
@@ -277,6 +281,5 @@ export const LESSON_PLAN_STATUS = {
   written: LESSON_PLANS.length,
   target: 250,
   note:
-    '1급 30차시 + 2급 40차시 작성. 전부 AI 초안이며 한국어교원 자격 2급 검수를 거쳐야 한다. ' +
-    '검수 전에는 실제 수업에 쓰지 않는다. 3급(71~120차시)은 같은 밀도로 이어 쓴다.',
+    '1~250차시 교안 초안. 71~250차시는 단원별 질문·응답·수행 과제에 공통 6단계 진행 틀을 적용했다. 한국어교원 검수와 실제 수업 검증이 필요하다. 등급 표시는 편성 구간이며 TOPIK 성적을 보장하지 않는다.',
 } as const;

@@ -17,6 +17,6 @@ export function POST(req: Request) {
     const ctx = await requireTeacher(req);
     const body = await readJson<Body>(req);
     requireFields(body, ['pgBillingKey']);
-    return registerBillingKey({ teacherId: ctx.teacherId, ...body });
+    return registerBillingKey({ teacherId: ctx.teacherId, pgBillingKey: body.pgBillingKey, cardLast4: body.cardLast4 });
   });
 }

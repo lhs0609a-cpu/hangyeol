@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { IBM_Plex_Mono, IBM_Plex_Sans_KR } from 'next/font/google';
+import localFont from 'next/font/local';
 import { noteHome, verifyStudentToken } from '@hangyeol/core';
 import './globals.css';
 
@@ -29,25 +29,27 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const sans = IBM_Plex_Sans_KR({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+const sans = localFont({
+  src: '../../../packages/ui/fonts/noto-sans-kr.woff2',
+  weight: '400 600',
   variable: '--font-sans',
   display: 'swap',
+  preload: false,
+  adjustFontFallback: false,
 });
 
-const mono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-mono',
+const latin = localFont({
+  src: '../../../packages/ui/fonts/dm-sans.woff2',
+  weight: '400 600',
+  variable: '--font-latin',
   display: 'swap',
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="ko" className={`${sans.variable} ${latin.variable}`}>
       <body className="register-student">
-        <main style={{ maxWidth: 460, margin: '0 auto', padding: '26px 18px 60px' }}>{children}</main>
+        <main style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px 70px' }}>{children}</main>
       </body>
     </html>
   );

@@ -6,6 +6,8 @@ dist/
 .env.local
 .DS_Store
 coverage/
+packages/ui/fonts/*.ttf
+output/design-review/
 
 # 원본 문서 번들 — docs/ 에 동일 내용이 있다
 files (1).zip
@@ -20,3 +22,7 @@ files (1)/
 
 # Supabase CLI 가 만드는 로컬 상태 — 링크된 프로젝트 ref 뿐이다
 supabase/.temp/
+output/operations-db/
+output/npm-cache/
+output/pglite-cache/
+output/browser-check/

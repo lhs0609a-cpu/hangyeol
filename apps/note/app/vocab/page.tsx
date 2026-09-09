@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TopBar } from '../ui';
+import { LoadError, Loading, TopBar } from '../ui';
 
 /*
  * 개인 단어장 — 02번 문서 D-09.
@@ -21,45 +21,53 @@ interface Card {
 }
 
 const STATE_LABEL: Record<string, string> = {
-  learning: '배우는 중',
-  review: '복습 중',
-  graduated: '외웠어요',
+  learning: '배우는 중 / Learning',
+  review: '복습 중 / Reviewing',
+  graduated: '외웠어요 / Learned',
 };
 
 export default function VocabPage() {
   const [items, setItems] = useState<Card[] | null>(null);
   const [total, setTotal] = useState(0);
+  const [error, setError] = useState(false);
+
+  async function load() {
+    setError(false);
+    try {
+      const response = await fetch('/api/note/vocab');
+      if (!response.ok) throw new Error('load');
+      const data = await response.json();
+      setItems(data.items ?? []);
+      setTotal(data.total ?? 0);
+    } catch { setError(true); }
+  }
 
   useEffect(() => {
-    fetch('/api/note/vocab')
-      .then((r) => (r.ok ? r.json() : { items: [], total: 0 }))
-      .then((d) => {
-        setItems(d.items ?? []);
-        setTotal(d.total ?? 0);
-      })
-      .catch(() => setItems([]));
+    void load();
   }, []);
 
-  if (!items) return <p style={{ textAlign: 'center', paddingTop: 40, color: 'var(--ink-3)' }}>불러오는 중</p>;
+  if (error) return <LoadError onRetry={() => void load()} />;
+  if (!items) return <Loading />;
 
   return (
     <div className="hg-rise">
       <TopBar right={`${total}개`} />
 
-      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 22 }}>내 단어장</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 22 }}>내 단어장 / My words</h1>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.7 }}>
         수업에서 나온 표현이 여기에 쌓여요. 직접 넣지 않아도 돼요.
       </p>
+      <p lang="en" className="t-body-sm" style={{ color: 'var(--ink-3)' }}>Useful expressions from your lessons appear here automatically.</p>
 
       {items.length === 0 ? (
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-4)', marginTop: 30, textAlign: 'center' }}>
-          아직 표현이 없어요. 첫 수업이 끝나면 여기에 나타나요
+          아직 표현이 없어요. 첫 수업 후에 만나요. / Your words will appear after your first lesson.
         </p>
       ) : (
         <div style={{ marginTop: 18 }}>
           {items.map((c) => (
             <div key={c.id} style={{ padding: '14px 0', borderTop: '1px solid var(--hanji-rule)' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
                 <span style={{ fontSize: 'var(--fs-h2)', fontWeight: 600 }}>{c.term}</span>
                 <span
                   className="mono"

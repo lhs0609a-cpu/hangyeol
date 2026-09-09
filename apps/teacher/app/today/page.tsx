@@ -35,17 +35,19 @@ export default async function TodayPage() {
   return (
     <Shell>
       <>
+        <section className="teacher-welcome"><div><p className="eyebrow">오늘의 수업</p><h1 className="t-h1">학생과 나눌 다음 이야기를 준비해요.</h1><p className="t-body tone-muted">학생을 선택하면 지난 표현과 오늘의 지도안을 바로 볼 수 있어요.</p></div><Link href="/learn" className="teacher-workbook-link">그림으로 배우는 입문 교재 ↗</Link></section>
+        {!data.live && <p className="teacher-demo-notice" role="status">체험용 예시 데이터입니다. 실제 학생의 수업 기록이나 청구 내역이 아닙니다.</p>}
         {/* 15분 이내 수업이 없으면 패널 자체를 렌더하지 않는다. 빈 자리를 남기지 않는다 (07번 T-01) */}
         {data.imminent && <LaunchPanel {...data.imminent} />}
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 26 }}>
-          <Metric eyebrow="이번 달 청구" value={won(data.monthTotal)} note={`활성 ${billable.length}명 · 티어 ${data.tier}`} big />
-          <Metric eyebrow="이번 주 수업" value="11" note="지난주 9회" />
-          <Metric eyebrow="평균 학생 발화" value="47%" note="목표 50% 이상" />
+        <section className="teacher-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 26 }}>
+          <Metric eyebrow="현재 학생 기준 예상 이용료" value={won(data.monthTotal)} note={`28일 이용 기준 · 활성 ${billable.length}명`} big />
+          <Metric eyebrow="전체 학생" value={`${data.students.length}명`} note="등록된 학생" />
+          <Metric eyebrow="활성 학생" value={`${billable.length}명`} note="현재 수업을 이어 가는 학생" />
         </section>
 
         <section style={{ marginTop: 34 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
             <div className="eyebrow">학생 {data.students.length}명</div>
             {/* 우회 심리를 사전에 차단하는 카피. 07번 문서에서 삭제 금지로 명시돼 있다. */}
             <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)' }}>수업 자료는 학생을 선택해야 열립니다</div>
@@ -61,11 +63,8 @@ export default async function TodayPage() {
         <NewStudentCard />
 
         <p style={{ marginTop: 40, fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', lineHeight: 1.7 }}>
-          {data.live
-            ? '데이터베이스의 실제 학생 레코드입니다.'
-            : '데이터베이스가 연결되지 않아 목업 데이터로 렌더됩니다.'}{' '}
-          금액은 packages/billing 의 계산식(티어 {data.tier} {won(TIER_PRICE[data.tier])}
-          {data.discountPct > 0 ? ` · 볼륨 할인 ${data.discountPct}%` : ''})으로 산출합니다.
+          예상 금액은 현재 학생 수와 이용 구간(학생당 {won(TIER_PRICE[data.tier])}
+          {data.discountPct > 0 ? ` · 학생 수 할인 ${data.discountPct}%` : ''})으로 계산합니다. 실제 청구 내역은 청구 화면에서 확인해 주세요.
         </p>
       </>
     </Shell>
@@ -84,7 +83,7 @@ function LaunchPanel(props: {
 }) {
   return (
     <section
-      className="hg-rise"
+      className="hg-rise teacher-launch-panel"
       style={{ background: 'var(--ink)', borderRadius: 10, padding: 20, color: '#fff' }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
@@ -181,6 +180,7 @@ function StudentRow({ student, first }: { student: TodayStudent; first: boolean 
 
   return (
     <div
+      className="teacher-student-row"
       style={{
         display: 'grid',
         gridTemplateColumns: 'minmax(150px, 1.5fr) 1fr 1fr auto',
@@ -244,7 +244,7 @@ function StudentRow({ student, first }: { student: TodayStudent; first: boolean 
 function SmallButton({ label, kind }: { label: string; kind: 'ghost' | 'primary' }) {
   const primary = kind === 'primary';
   return (
-    <button
+    <span
       className="hg-tap"
       style={{
         padding: '7px 12px',
@@ -252,13 +252,16 @@ function SmallButton({ label, kind }: { label: string; kind: 'ghost' | 'primary'
         borderRadius: 7,
         fontFamily: 'inherit',
         cursor: 'pointer',
+        minHeight: 44,
+        display: 'inline-flex',
+        alignItems: 'center',
         background: primary ? 'var(--ink)' : 'var(--surface)',
         color: primary ? '#fff' : 'var(--ink-2)',
         border: primary ? '1px solid var(--ink)' : '1px solid var(--rule)',
       }}
     >
       {label}
-    </button>
+    </span>
   );
 }
 

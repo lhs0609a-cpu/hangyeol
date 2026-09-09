@@ -132,9 +132,9 @@ export async function runCycleClose(now = new Date()) {
 
   const students = await prisma.student.findMany({
     where: { id: { in: openCycles.map((c) => c.studentId) } },
-    select: { id: true, currentLessonNo: true, teacherId: true },
+    select: { id: true, _count: { select: { lessons: true } }, teacherId: true },
   });
-  const lessonNoOf = new Map(students.map((s) => [Number(s.id), s.currentLessonNo]));
+  const lessonNoOf = new Map(students.map((s) => [Number(s.id), s._count.lessons]));
 
   const teachers = await prisma.teacher.findMany({
     where: { id: { in: [...new Set(openCycles.map((c) => c.teacherId))] } },
@@ -156,7 +156,7 @@ export async function runCycleClose(now = new Date()) {
         where: { studentId: c.studentId, startedAt: { gte: c.periodStart, lt: c.periodEnd } },
       }),
       prisma.studentActivity.count({
-        where: { studentId: c.studentId, occurredAt: { gte: c.periodStart, lt: c.periodEnd } },
+        where: { studentId: c.studentId, kind: { notIn: ['learning_adjustment', 'learning_performance'] }, occurredAt: { gte: c.periodStart, lt: c.periodEnd } },
       }),
     ]);
     counts.set(`${c.studentId}:${c.periodStart.toISOString()}`, { lessonCount, activityCount });
@@ -275,21 +275,16 @@ export async function runInvoiceCreate(now = new Date()) {
 
   let created = 0;
 
-  for (const plan of plans) {
-    if (!plan.invoice) continue;
-
-    const existing = await prisma.invoice.findUnique({
-      where: {
-        teacherId_billingMonth: {
-          teacherId: BigInt(plan.teacherId),
-          billingMonth: new Date(plan.invoice.billingMonth),
-        },
-      },
-    });
-    // (teacher_id, billing_month) 유니크가 중복 청구를 막는 유일한 방벽이다.
-    if (existing) continue;
-
-    await prisma.$transaction(async (tx) => {
+  for (const candidate of plans) {
+    if (!candidate.invoice) continue;
+    const didCreate = await prisma.$transaction(async (tx) => {
+      const teacherId = BigInt(candidate.teacherId);
+      await tx.$queryRaw`SELECT id FROM teachers WHERE id = ${teacherId} FOR UPDATE`;
+      const teacher = await tx.teacher.findUniqueOrThrow({ where: { id: teacherId }, include: { billingCycles: { where: { status: 'billable' } } } });
+      const plan = planInvoiceCreate({ now, teachers: [{ teacherId: Number(teacherId), creditBalance: teacher.creditBalance, cycles: teacher.billingCycles.map(toDomainCycle) }] })[0];
+      if (!plan?.invoice) return false;
+      const existing = await tx.invoice.findUnique({ where: { teacherId_billingMonth: { teacherId, billingMonth: new Date(plan.invoice.billingMonth) } } });
+      if (existing) return false;
       const invoice = await tx.invoice.create({
         data: {
           teacherId: BigInt(plan.teacherId),
@@ -319,9 +314,10 @@ export async function runInvoiceCreate(now = new Date()) {
         where: { id: BigInt(plan.teacherId) },
         data: { creditBalance: plan.creditBalanceAfter },
       });
+      return true;
     });
 
-    created += 1;
+    if (didCreate) created += 1;
   }
 
   return { created };
@@ -349,6 +345,10 @@ export async function runLockEnforce(now = new Date()) {
 
   for (const plan of plans) {
     await prisma.$transaction(async (tx) => {
+      const teacherId = BigInt(plan.teacherId);
+      await tx.$queryRaw`SELECT id FROM teachers WHERE id = ${teacherId} FOR UPDATE`;
+      const current = await tx.invoice.findUnique({ where: { id: BigInt(plan.invoiceId) } });
+      if (!current || current.status !== 'grace' || !current.graceUntil || current.graceUntil > now) return;
       await tx.invoice.update({ where: { id: BigInt(plan.invoiceId) }, data: { status: 'locked' } });
       await tx.teacher.update({
         where: { id: BigInt(plan.teacherId) },

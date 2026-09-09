@@ -489,7 +489,7 @@ model Invoice {
   chargeAmount  Int @map("charge_amount")
 
   status     String    @default("pending") // pending|paid|failed|grace|locked|void
-  pgTid      String?   @map("pg_tid")
+  pgTid      String?   @unique @map("pg_tid")
   paidAt     DateTime? @map("paid_at") @db.Timestamptz(6)
   failedAt   DateTime? @map("failed_at") @db.Timestamptz(6)
   retryCount Int       @default(0) @map("retry_count") @db.SmallInt
@@ -524,7 +524,7 @@ model CreditTopup {
   paidAmount    Int      @map("paid_amount")
   grantedAmount Int      @map("granted_amount")
   bonusPct      Int      @map("bonus_pct") @db.SmallInt
-  pgTid         String?  @map("pg_tid")
+  pgTid         String?  @unique @map("pg_tid")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   teacher Teacher @relation(fields: [teacherId], references: [id])
@@ -569,9 +569,131 @@ model Notification {
   scheduledAt DateTime  @map("scheduled_at") @db.Timestamptz(6)
   sentAt      DateTime? @map("sent_at") @db.Timestamptz(6)
   channel     String // email|webpush|kakao
+  attempts    Int       @default(0)
+  lockedUntil DateTime? @map("locked_until") @db.Timestamptz(6)
+  lastError   String?   @map("last_error")
 
   @@index([scheduledAt], map: "idx_notif_due")
   @@map("notifications")
+}
+
+model PaymentOrder {
+  id           String   @id @default(uuid())
+  teacherId    BigInt   @map("teacher_id")
+  studentId    BigInt?  @map("student_id")
+  invoiceId    BigInt?  @unique @map("invoice_id")
+  kind         String
+  name         String
+  amount       Int
+  status       String   @default("pending")
+  paymentKey   String?  @unique @map("payment_key")
+  requestKey   String   @default(uuid()) @map("request_key")
+  refundKey    String   @default(uuid()) @map("refund_key")
+  paidAt       DateTime? @map("paid_at") @db.Timestamptz(6)
+  refundedAt   DateTime? @map("refunded_at") @db.Timestamptz(6)
+  refundReason String?  @map("refund_reason")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@index([teacherId, createdAt])
+  @@index([studentId, createdAt])
+  @@map("payment_orders")
+}
+
+model BillingMandate {
+  teacherId   BigInt @id @map("teacher_id")
+  customerKey String @unique @default(uuid()) @map("customer_key")
+  billingKey  String? @map("billing_key")
+  acceptedAt  DateTime? @map("accepted_at") @db.Timestamptz(6)
+  @@map("billing_mandates")
+}
+
+model CourseOffer {
+  id String @id @default(uuid())
+  teacherId BigInt @map("teacher_id")
+  title String
+  description String
+  sessions Int
+  minutes Int @default(50)
+  amount Int
+  feeBps Int @map("fee_bps")
+  published Boolean @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@index([teacherId])
+  @@map("course_offers")
+}
+
+model CourseApplication {
+  id String @id @default(uuid())
+  offerId String @map("offer_id")
+  name String
+  emailHash String @map("email_hash")
+  emailEnc Bytes @map("email_enc")
+  language String
+  timezone String
+  goal String
+  status String @default("pending")
+  studentId BigInt? @map("student_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@unique([offerId, emailHash])
+  @@map("course_applications")
+}
+
+model TuitionEnrollment {
+  id String @id @default(uuid())
+  applicationId String @unique @map("application_id")
+  orderId String @unique @map("order_id")
+  studentId BigInt @map("student_id")
+  teacherId BigInt @map("teacher_id")
+  sessions Int
+  used Int @default(0)
+  feeBps Int @map("fee_bps")
+  amount Int
+  status String @default("pending")
+  refundAmount Int @default(0) @map("refund_amount")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@index([studentId, status])
+  @@map("tuition_enrollments")
+}
+
+model TuitionUsage {
+  id String @id @default(uuid())
+  enrollmentId String @map("enrollment_id")
+  lessonId BigInt @unique @map("lesson_id")
+  teacherId BigInt @map("teacher_id")
+  gross Int
+  fee Int
+  net Int
+  status String @default("reserved")
+  payoutId String? @map("payout_id")
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  @@index([teacherId, status, payoutId])
+  @@map("tuition_usage")
+}
+
+model TeacherPayout {
+  id String @id @default(uuid())
+  teacherId BigInt @map("teacher_id")
+  amount Int
+  status String @default("pending")
+  transferReference String? @unique @map("transfer_reference")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  paidAt DateTime? @map("paid_at") @db.Timestamptz(6)
+  @@index([teacherId, createdAt])
+  @@map("teacher_payouts")
+}
+
+model LearningProgress {
+  studentId BigInt @id @map("student_id")
+  completed String[] @default([])
+  notes Json @default("{}")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@map("learning_progress")
+}
+
+model TeacherTraining {
+  teacherId BigInt @id @map("teacher_id")
+  completed String[] @default([])
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@map("teacher_training")
 }
 
 model LangGateSnapshot {

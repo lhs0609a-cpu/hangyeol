@@ -17,7 +17,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 
 /** 로그인 없이 볼 수 있는 곳. 이 목록에 없으면 전부 막힌다. */
-const PUBLIC = ['/', '/login', '/signup', '/licenses'];
+const PUBLIC = ['/', '/login', '/signup', '/licenses', '/learn', '/learn/print', '/courses', '/student-area'];
 
 const COOKIE = 'hg_access';
 

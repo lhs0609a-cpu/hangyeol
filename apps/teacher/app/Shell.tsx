@@ -16,7 +16,11 @@ import { useMode } from './mode';
 
 const NAV = [
   { href: '/today', label: '오늘' },
+  { href: '/students', label: '학생' },
+  { href: '/training', label: '수업 준비' },
+  { href: '/learn', label: '입문 교재' },
   { href: '/billing', label: '청구' },
+  { href: '/earnings', label: '수강·정산' },
   { href: '/settings', label: '설정' },
   { href: '/licenses', label: '출처' },
 ];
@@ -34,11 +38,12 @@ export function Shell({ children, wide = true }: { children: ReactNode; wide?: b
   return (
     <>
       <header
+        className="teacher-shell-header"
         style={{
           position: 'sticky',
           top: 0,
           zIndex: 10,
-          height: 54,
+          minHeight: 64,
           display: 'flex',
           alignItems: 'center',
           padding: '0 20px',
@@ -65,16 +70,20 @@ export function Shell({ children, wide = true }: { children: ReactNode; wide?: b
             <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600, letterSpacing: '-0.01em' }}>사맛</span>
           </Link>
 
-          <nav style={{ display: 'flex', gap: 4, marginLeft: 14 }}>
+          <nav className="teacher-shell-nav" aria-label="강사 메뉴" style={{ display: 'flex', gap: 4, marginLeft: 14 }}>
             {nav.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? 'page' : undefined}
                   style={{
                     fontSize: 'var(--fs-body)',
                     padding: '5px 10px',
+                    minHeight: 44,
+                    display: 'inline-flex',
+                    alignItems: 'center',
                     borderRadius: 7,
                     textDecoration: 'none',
                     color: active ? 'var(--ink)' : 'var(--ink-3)',
@@ -95,6 +104,7 @@ export function Shell({ children, wide = true }: { children: ReactNode; wide?: b
       <AdminRail />
 
       <main
+        className={`teacher-shell-main ${showRail ? 'with-admin-rail' : ''}`}
         style={{
           maxWidth: wide ? 1100 : 720,
           margin: '0 auto',

@@ -1,3 +1,4 @@
+import { adjustedNextUnit, latestAdjustment } from './adaptive-learning.js';
 import {
   openCycle,
   shouldOpenCycleOnLesson,
@@ -9,6 +10,9 @@ import { apiError } from './errors.js';
 import { db } from './guard.js';
 import { linkScheduleToLesson } from './schedule.js';
 import { allocationFor } from './strands.js';
+import { unitByNo } from '@hangyeol/content';
+import { nextUnitNo } from './lesson-progress.js';
+import { reserveTuition, completeTuition } from './tuition.js';
 
 /**
  * 수업 진행 — 02번 문서 C-03·C-07·C-08.
@@ -47,9 +51,12 @@ export async function startLesson(params: {
   const now = params.now ?? new Date();
 
   return prisma.$transaction(async (tx) => {
+    // Serialize starts for this student, including retries and separate browser tabs.
+    await tx.$queryRaw`SELECT id FROM teachers WHERE id = ${params.teacherId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM students WHERE id = ${params.studentId} FOR UPDATE`;
     const student = await tx.student.findUnique({
       where: { id: params.studentId },
-      select: { id: true, teacherId: true, status: true, currentLessonNo: true, firstLessonAt: true },
+      select: { id: true, teacherId: true, status: true, currentLessonNo: true, levelCode: true, firstLessonAt: true },
     });
     if (!student || student.teacherId !== params.teacherId) throw apiError('NOT_FOUND');
 
@@ -60,7 +67,28 @@ export async function startLesson(params: {
     if (!teacher) throw apiError('NOT_FOUND');
     if (teacher.billingStatus === 'locked') throw apiError('TEACHER_LOCKED');
 
-    const lessonNo = student.currentLessonNo + 1;
+    const previous = await tx.lesson.findFirst({
+      where: { studentId: student.id }, orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+    });
+    if (previous && !previous.reportSubmittedAt) {
+      return { lessonId: previous.id, lessonNo: previous.lessonNo, unitId: previous.unitId,
+        billing: { cycleOpened: false, amount: null, cycleNo: null } };
+    }
+    if (student.currentLessonNo === 0 && !await tx.levelTest.findFirst({ where: { studentId: student.id }, select: { id: true } })) {
+      throw apiError('VALIDATION_FAILED', '첫 수업 전에 학생 학습 노트의 수준 진단을 완료해 주세요. Complete the placement test before the first lesson.');
+    }
+    const adjustment = await latestAdjustment(tx, student.id);
+    const lessonNo = adjustedNextUnit(nextUnitNo(student.currentLessonNo, previous?.outcome, student.levelCode), previous, adjustment);
+    const draft = unitByNo(lessonNo);
+    if (!draft) throw apiError('VALIDATION_FAILED', '현재 공개된 과정을 마쳤습니다. 복습할 단원을 교수 플랜에서 확인하세요.');
+    const unit = await tx.curriculumUnit.upsert({
+      where: { unitNo: lessonNo }, update: {},
+      create: { unitNo: lessonNo, levelCode: draft.levelCode, title: draft.title,
+        goalStatement: draft.goalStatement, targetForms: draft.targetForms,
+        targetVocab: draft.targetVocab, recycleFrom: draft.recycleFrom },
+    });
+    if (params.unitId && params.unitId !== unit.id) throw apiError('VALIDATION_FAILED', '현재 학습 단원과 일치하지 않습니다');
+    const sessionNo = await tx.lesson.count({ where: { studentId: student.id } }) + 1;
 
     const openCycleRow = await tx.billingCycle.findFirst({
       where: { studentId: student.id, status: 'open' },
@@ -69,7 +97,7 @@ export async function startLesson(params: {
 
     const mustOpen = shouldOpenCycleOnLesson({
       studentStatus: student.status as StudentStatus,
-      lessonNo,
+      lessonNo: sessionNo,
       hasOpenCycle: Boolean(openCycleRow),
     });
 
@@ -118,7 +146,7 @@ export async function startLesson(params: {
         studentId: student.id,
         teacherId: params.teacherId,
         lessonNo,
-        unitId: params.unitId ?? null,
+        unitId: unit.id,
         startedAt: now,
         billingCycleId: cycleRowId,
         // 지도안 배분을 지금 박아 둔다. 나중에 지도안이 바뀌어도
@@ -139,13 +167,14 @@ export async function startLesson(params: {
       },
     });
 
+    await reserveTuition(tx, student.id, params.teacherId, lesson.id);
     // 예약이 있으면 연결한다. 그래야 오늘 목록에서 사라진다.
     await linkScheduleToLesson({
       teacherId: params.teacherId,
       studentId: student.id,
       lessonId: lesson.id,
       now,
-    });
+    }, tx);
 
     return {
       lessonId: lesson.id,
@@ -166,6 +195,7 @@ export interface SubmitReportInput {
   expressions: string[];
   errors: string[];
   outcome: 'pass' | 'repeat';
+  independentPerformance?: boolean;
   now?: Date;
 }
 
@@ -183,6 +213,7 @@ export interface SubmitReportResult {
  * 이 함수는 네트워크를 전혀 건드리지 않는다. 그게 요구사항이다.
  */
 export async function submitReport(input: SubmitReportInput): Promise<SubmitReportResult> {
+  if (!['pass', 'repeat'].includes(input.outcome)) throw apiError('VALIDATION_FAILED');
   if (input.expressions.length < 1 || input.expressions.length > MAX_EXPRESSIONS) {
     throw apiError('REPORT_LIMIT', `표현은 1~${MAX_EXPRESSIONS}개여야 합니다`);
   }
@@ -194,12 +225,18 @@ export async function submitReport(input: SubmitReportInput): Promise<SubmitRepo
   const now = input.now ?? new Date();
 
   return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM lessons WHERE id = ${input.lessonId} FOR UPDATE`;
     const lesson = await tx.lesson.findUnique({
       where: { id: input.lessonId },
-      select: { id: true, teacherId: true, studentId: true },
+      select: { id: true, teacherId: true, studentId: true, lessonNo: true, reportSubmittedAt: true },
     });
     if (!lesson || lesson.teacherId !== input.teacherId) throw apiError('NOT_FOUND');
+    if (lesson.reportSubmittedAt) return { ok: true as const, vocabCreated: 0, srsScheduled: [], externalApiCalls: 0 as const };
+    await completeTuition(tx, input.teacherId, lesson.id, now);
+    const adjustment=await latestAdjustment(tx,lesson.studentId);
+    if(input.outcome==='pass' && adjustment?.mode==='supplement' && adjustment.targetUnitNo===lesson.lessonNo && String(lesson.id)!==adjustment.anchorLessonId && input.independentPerformance!==true)throw apiError('VALIDATION_FAILED','보충 학습 후 도움 없이 수행했는지 확인해야 원래 진도로 돌아갑니다.');
 
+    if(input.independentPerformance===true)await tx.studentActivity.create({data:{studentId:lesson.studentId,kind:'learning_performance',meta:{lessonId:String(lesson.id),teacherId:String(input.teacherId),independentPerformance:true,outcome:input.outcome}}});
     await tx.lessonReportItem.deleteMany({ where: { lessonId: lesson.id } });
 
     await tx.lessonReportItem.createMany({

@@ -9,23 +9,25 @@
  */
 
 :root {
-  --ink: #14161c;
-  --ink-2: #3b4254;
-  --ink-3: #6b7284;
-  --ink-4: #9ba1af;
+  --ink: #183c34;
+  --ink-2: #385249;
+  --ink-3: #5b6d63;
+  --ink-4: #66746c;
 
-  --hanji: #f2f0ea;
-  --hanji-card: #fbfaf7;
-  --hanji-rule: #e2ded2;
-  --surface: #ffffff;
+  --hanji: #faf8f2;
+  --hanji-card: #fffdf6;
+  --hanji-rule: #dcded2;
+  --surface: #fffefa;
+  --rule: #dcded2;
+  --rule-soft: #f0f1e9;
 
-  --indigo: #26418f;
-  --indigo-2: #3d5ccc;
-  --indigo-w: #edf0fb;
+  --indigo: #194b42;
+  --indigo-2: #245f51;
+  --indigo-w: #e4ede5;
 
   --jade: #1e7a5f;
   --jade-w: #e6f2ed;
-  --chija: #a9761a;
+  --chija: #8a601a;
   --chija-w: #f7f0df;
   --honghwa: #b23a2e;
   --honghwa-w: #faebe8;
@@ -44,7 +46,7 @@ body {
 body {
   background: var(--hanji);
   color: var(--ink);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-latin), var(--font-sans), system-ui, -apple-system, sans-serif;
   font-size: var(--fs-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;

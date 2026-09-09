@@ -1,219 +1,25 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import type { TestState } from '@hangyeol/content';
+import { useState } from 'react';
 import { TopBar } from '../ui';
-
-/*
- * 레벨 테스트 — 02번 문서 B-06.
- *
- * "첫 수업 전에 완료." 레벨을 수업에서 재면 50분 중 20분이 날아간다.
- * 학생이 링크를 열었을 때 5분 안에 끝내고 오면 강사는 첫 수업부터 가르친다.
- *
- * 적응형이라 맞히면 어려워지고 틀리면 쉬워진다.
- * 학생이 자기 수준 근처에서만 풀어서 좌절하지 않는다.
- */
-
-interface Question {
-  id: string;
-  prompt: string;
-  choices: string[];
-}
-
-interface StepResponse {
-  done: boolean;
-  progress: { asked: number; total: number };
-  question: Question | null;
-  state: TestState;
-}
-
-interface Result {
-  levelCode: string;
-  level: number;
-  correct: number;
-  asked: number;
-  weakPoints: string[];
-}
-
+type Answer = { questionId: string; choiceIndex: number };
+type Step = { done: boolean; progress: { asked: number; total: number }; question: { id: string; prompt: string; choices: string[] } | null; result?: { level: number; startUnitNo: number; weakPoints: string[] }; placementApplied?: boolean };
 export default function LevelTestPage() {
-  const [step, setStep] = useState<StepResponse | null>(null);
-  const [result, setResult] = useState<Result | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/api/note/level-test')
-      .then(async (r) => {
-        const body = await r.json();
-        if (!r.ok) throw new Error(body?.error?.message ?? '시작하지 못했어요');
-        return body as StepResponse;
-      })
-      .then(setStep)
-      .catch((e: Error) => setError(e.message));
-  }, []);
-
-  async function answer(choiceIndex: number) {
-    if (!step?.question || busy) return;
-    setBusy(true);
-    setError(null);
-
+  const [step,setStep]=useState<Step|null>(null),[answers,setAnswers]=useState<Answer[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  async function request(next?: Answer[]) {
+    if(busy)return;setBusy(true);setError('');
     try {
-      const res = await fetch('/api/note/level-test', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          state: step.state,
-          questionId: step.question.id,
-          choiceIndex,
-        }),
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body?.error?.message ?? '처리하지 못했어요');
-
-      const next = body as StepResponse;
-
-      if (next.done) {
-        const fin = await fetch('/api/note/level-test', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ state: next.state, finish: true }),
-        });
-        const finBody = await fin.json();
-        if (!fin.ok) throw new Error(finBody?.error?.message ?? '저장하지 못했어요');
-        setResult(finBody as Result);
-      } else {
-        setStep(next);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '처리하지 못했어요');
-    } finally {
-      setBusy(false);
-    }
+      const response=await fetch('/api/note/level-test',next?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({answers:next})}:undefined);
+      const data=await response.json();if(!response.ok)throw new Error(data?.error?.message??'Please try again.');
+      setStep(data);setAnswers(next??[]);
+    }catch(e){setError((e as Error).message);}finally{setBusy(false);}
   }
-
-  if (error && !step) {
-    return (
-      <div style={{ textAlign: 'center', paddingTop: 50 }}>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-3)' }}>{error}</p>
-      </div>
-    );
-  }
-
-  if (result) {
-    return (
-      <div className="hg-rise" style={{ textAlign: 'center', paddingTop: 40 }}>
-        <div className="eyebrow">레벨 배정 완료</div>
-        <div className="mono" style={{ fontSize: 'var(--fs-display)', fontWeight: 500, marginTop: 12, letterSpacing: '-0.03em' }}>
-          {result.level}급
-        </div>
-        <p className="mono" style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-4)', marginTop: 4 }}>
-          {result.correct} / {result.asked} 정답
-        </p>
-
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-2)', marginTop: 22, lineHeight: 1.8 }}>
-          여기서 시작해요.
-          <br />
-          선생님이 이 결과를 보고 첫 수업을 준비해요.
-        </p>
-
-        {result.weakPoints.length > 0 && (
-          <div
-            style={{
-              marginTop: 22,
-              padding: 16,
-              background: 'var(--hanji-card)',
-              border: '1px solid var(--hanji-rule)',
-              borderRadius: 10,
-              textAlign: 'left',
-            }}
-          >
-            <div className="eyebrow">먼저 볼 것</div>
-            <div style={{ marginTop: 8 }}>
-              {result.weakPoints.map((w) => (
-                <div key={w} style={{ fontSize: 'var(--fs-body)', marginBottom: 3 }}>
-                  · {w}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <a
-          href="/"
-          style={{
-            display: 'inline-block',
-            marginTop: 24,
-            padding: '13px 22px',
-            borderRadius: 8,
-            background: 'var(--indigo)',
-            color: '#fff',
-            fontSize: 'var(--fs-body-lg)',
-            fontWeight: 600,
-            textDecoration: 'none',
-          }}
-        >
-          오늘의 학습으로
-        </a>
-      </div>
-    );
-  }
-
-  if (!step) {
-    return <p style={{ textAlign: 'center', paddingTop: 40, color: 'var(--ink-3)' }}>준비 중</p>;
-  }
-
-  const pct = (step.progress.asked / step.progress.total) * 100;
-
-  return (
-    <div className="hg-rise">
-      <TopBar right={`${step.progress.asked + 1} / ${step.progress.total}`} />
-
-      <div style={{ height: 3, borderRadius: 99, background: 'var(--hanji-rule)', marginTop: 14 }}>
-        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: 'var(--indigo)', transition: 'width .3s' }} />
-      </div>
-
-      <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', marginTop: 18, lineHeight: 1.7 }}>
-        빈칸에 알맞은 것을 고르세요. 모르면 아무거나 골라도 괜찮아요.
-      </p>
-
-      <div
-        style={{
-          marginTop: 16,
-          padding: '28px 20px',
-          background: 'var(--hanji-card)',
-          border: '1px solid var(--hanji-rule)',
-          borderRadius: 10,
-          fontSize: 'var(--fs-h1)',
-          lineHeight: 1.7,
-          textAlign: 'center',
-        }}
-      >
-        {step.question?.prompt}
-      </div>
-
-      <div style={{ display: 'grid', gap: 8, marginTop: 16 }}>
-        {step.question?.choices.map((choice, i) => (
-          <button
-            key={choice}
-            className="hg-tap"
-            disabled={busy}
-            onClick={() => answer(i)}
-            style={{
-              padding: '16px 18px',
-              fontSize: 'var(--fs-h2)',
-              textAlign: 'left',
-              borderRadius: 8,
-              border: '1px solid var(--hanji-rule)',
-              background: 'var(--surface)',
-              opacity: busy ? 0.6 : 1,
-            }}
-          >
-            {choice}
-          </button>
-        ))}
-      </div>
-
-      {error && <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{error}</p>}
-    </div>
-  );
+  const buttonStyle={padding:'16px',border:'1px solid var(--hanji-rule)',borderRadius:8,background:'var(--hanji-card)',color:'var(--ink)',fontSize:'var(--fs-body-lg)',textAlign:'left' as const};
+  return <div className="hg-rise"><TopBar/><h1 className="t-h1">Find your starting point</h1><p>한국어 수준 진단</p>
+    {!step&&<section><p>20 questions · About 5–10 minutes. Choose “I don’t know” whenever you need to.</p><p>20문항으로 첫 교재를 정해요. 모르면 ‘모르겠어요’를 선택하세요.</p><p>This is a grammar placement check, not an official TOPIK score. Your teacher will check speaking and reading Hangul in your first lesson.</p><button style={buttonStyle} disabled={busy} onClick={()=>request()}>Start my level check / 진단 시작</button></section>}
+    {step?.result?<section><h2>Suggested course level {step.result.level}</h2><p>{step.placementApplied?`Your first lesson starts at unit ${step.result.startUnitNo}.`:'Your teacher can review this new result. Your existing lesson progress is preserved.'}</p><p>첫 수업에서 선생님이 말하기와 한글 읽기를 확인하고 난이도를 점검해요.</p>{step.result.weakPoints.length>0&&<><h3>Practise with your teacher / 함께 연습할 표현</h3><ul>{step.result.weakPoints.map(w=><li key={w}>{w}</li>)}</ul></>}<a href="/">Back to my learning notebook →</a></section>:step?.question&&<section>
+      <p aria-live="polite">Question {step.progress.asked+1} of {step.progress.total}</p><progress value={step.progress.asked} max={step.progress.total} aria-label="Test progress" style={{width:'100%'}}/>
+      <p>Choose the best answer for the blank. / 빈칸에 알맞은 답을 고르세요.</p><h2 style={{fontSize:'var(--fs-h1)',lineHeight:1.8}}>{step.question.prompt}</h2>
+      <div style={{display:'grid',gap:10}}>{[...step.question.choices,'I don’t know / 모르겠어요'].map((choice,i)=><button key={`${step.question!.id}-${i}`} style={buttonStyle} disabled={busy} onClick={()=>request([...answers,{questionId:step.question!.id,choiceIndex:i===step.question!.choices.length?-1:i}])}>{choice}</button>)}</div>
+    </section>}{busy&&<p role="status">Saving… / 처리 중</p>}{error&&<p role="alert">{error} Your last answer was not advanced. Please retry. / 다시 시도해 주세요.</p>}
+  </div>;
 }

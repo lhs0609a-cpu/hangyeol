@@ -1,21 +1,22 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans_KR } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { ModeProvider } from './mode';
 
-// 06번 문서: Noto Sans KR 을 쓰지 않는다. 모두가 쓰는 기본값이라 제품에 성격이 생기지 않는다.
-// IBM Plex Sans KR 은 각진 종단부 때문에 "도구"처럼 읽힌다.
-const sans = IBM_Plex_Sans_KR({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+// 15번 재설계: 영문 안내와 한글 학습 문장을 구분하되 두 앱에서 동일하게 제공한다.
+const sans = localFont({
+  src: '../../../packages/ui/fonts/noto-sans-kr.woff2',
+  weight: '400 600',
   variable: '--font-sans',
   display: 'swap',
+  preload: false,
+  adjustFontFallback: false,
 });
 
-const mono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-mono',
+const latin = localFont({
+  src: '../../../packages/ui/fonts/dm-sans.woff2',
+  weight: '400 600',
+  variable: '--font-latin',
   display: 'swap',
 });
 
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="ko" className={`${sans.variable} ${latin.variable}`}>
       <body>
         <ModeProvider>{children}</ModeProvider>
       </body>

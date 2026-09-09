@@ -75,7 +75,7 @@ export default function LessonPage({ params }: { params: { studentId: string } }
           />
         )}
         {step === 3 && lesson && (
-          <StepReport lessonId={lesson.lessonId} onDone={() => router.push('/')} />
+          <StepReport lessonId={lesson.lessonId} onDone={() => router.push(`/plan/${params.studentId}`)} />
         )}
       </div>
 
@@ -303,10 +303,10 @@ function StepUnit({
 
       <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
         <Button kind="jade" size="lg" style={{ flex: 1 }} onClick={onNext}>
-          통과 — 다음 차시 열기
+          수행 평가와 리포트 작성
         </Button>
         <Button size="lg" onClick={onNext}>
-          재수행
+          기록으로 이동
         </Button>
       </div>
     </Panel>
@@ -322,6 +322,8 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
   const [errors, setErrors] = useState<string[]>([]);
   const [expInput, setExpInput] = useState('');
   const [errInput, setErrInput] = useState('');
+  const [outcome,setOutcome]=useState<'pass'|'repeat'>('repeat');
+  const [independentPerformance,setIndependentPerformance]=useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ vocabCreated: number; srsScheduled: string[]; externalApiCalls: number } | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -335,7 +337,7 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
     try {
       const r = await post<{ vocabCreated: number; srsScheduled: string[]; externalApiCalls: number }>(
         `/api/lessons/${lessonId}/report`,
-        { expressions, errors, outcome: 'pass' },
+        { expressions, errors, outcome, independentPerformance },
       );
       setResult(r);
     } catch (err) {
@@ -363,7 +365,7 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
 
         <div style={{ marginTop: 20 }}>
           <Button kind="primary" full onClick={onDone}>
-            학생 목록으로
+            실제 수행 확인 · 교재 조정으로
           </Button>
         </div>
       </Panel>
@@ -411,6 +413,8 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
         disabled={errors.length >= MAX_ERR}
       />
 
+      <fieldset style={{marginTop:18}}><legend>실제 수행 결과</legend><label><input type="radio" name="outcome" value="repeat" checked={outcome==='repeat'} onChange={()=>setOutcome('repeat')}/>다시 연습 · 같은 단원 유지</label><br/><label><input type="radio" name="outcome" value="pass" checked={outcome==='pass'} onChange={()=>setOutcome('pass')}/>통과 · 다음 학습으로</label>
+      {outcome==='pass'&&<label style={{display:'block',marginTop:10}}><input type="checkbox" checked={independentPerformance} onChange={e=>setIndependentPerformance(e.target.checked)}/>학생이 예문이나 강사 도움 없이 단원 목표를 수행하는 것을 확인했습니다.</label>}</fieldset>
       {failure && (
         <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--honghwa)', marginTop: 12 }}>{failure}</p>
       )}
@@ -420,7 +424,7 @@ function StepReport({ lessonId, onDone }: { lessonId: string; onDone: () => void
           kind="primary"
           size="lg"
           full
-          disabled={expressions.length === 0 || busy}
+          disabled={expressions.length === 0 || busy || (outcome==='pass'&&!independentPerformance)}
           onClick={save}
         >
           {busy

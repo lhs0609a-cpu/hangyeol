@@ -20,3 +20,5 @@ export * from './status.js';
 export * from './hangeul.js';
 export * from './demand.js';
 export * from './track-kpop.js';
+export * from './first-steps.js';
+export * from './teacher-training.js';

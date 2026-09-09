@@ -200,6 +200,7 @@ for (const root of SCAN) {
   for (const file of [
     'packages/ui/src/tokens.css',
     'apps/teacher/app/globals.css',
+    'apps/teacher/app/learning.css',
     'apps/note/app/globals.css',
   ]) {
     let text;

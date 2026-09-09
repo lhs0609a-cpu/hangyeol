@@ -17,3 +17,9 @@ export * from './admin.js';
 export * from './storage.js';
 export * from './payments.js';
 export * from './http.js';
+export * from './checkout.js';
+export * from './payment-provider.js';
+export * from './notifications.js';
+export * from './tuition.js';
+
+export * from './adaptive-learning.js';

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Eyebrow, Panel } from '@hangyeol/ui';
+import { AuthFrame } from '../AuthFrame';
 
 /*
  * 강사 신청 — 02번 문서 A-01.
@@ -34,6 +35,7 @@ export default function SignupPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setError(null);
     setBusy(true);
     try {
@@ -98,7 +100,7 @@ export default function SignupPage() {
         </p>
 
         <form onSubmit={submit} style={{ marginTop: 22 }}>
-          <Field label="이름" hint="학생에게 보일 이름입니다">
+          <Field label="이름 / Name" hint="학생에게 보일 이름입니다">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -108,7 +110,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="이메일" hint="승인된 뒤 로그인할 때 쓰는 주소입니다">
+          <Field label="이메일 / Email" hint="승인된 뒤 로그인할 때 쓰는 주소입니다">
             <input
               type="email"
               value={email}
@@ -119,7 +121,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="비밀번호" hint={`${MIN_PASSWORD}자 이상`}>
+          <Field label="비밀번호 / Password" hint={`${MIN_PASSWORD}자 이상`}>
             <input
               type="password"
               value={password}
@@ -222,17 +224,5 @@ function Field({
 }
 
 function Center({ children }: { children: React.ReactNode }) {
-  return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: 'var(--canvas)',
-        display: 'grid',
-        placeItems: 'center',
-        padding: '40px 20px',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: 440 }}>{children}</div>
-    </main>
-  );
+  return <AuthFrame>{children}</AuthFrame>;
 }

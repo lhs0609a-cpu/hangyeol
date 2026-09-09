@@ -4,13 +4,9 @@
 import type { CSSProperties } from 'react';
 
 /*
- * 슬라이드 렌더러 — 06번 문서의 시각 언어로 그린다.
- *
- * 장식이 없다. 그라디언트도, 그림자도, 아이콘도 없다.
- * 선은 전부 의미를 갖고, 강조는 색 하나로만 한다.
- *
- * 한 화면에 한 가지만 둔다. 수업 중에 학생이 보는 화면이라
- * 정보가 두 개면 둘 다 안 읽힌다.
+ * 슬라이드 렌더러 — 15번 재설계.
+ * 문장과 장면을 분리해 배치하고, 긴 대화는 내용 높이에 맞춰 늘어난다.
+ * 모바일에서는 장면 아래에 학습 문장을 놓는다.
  */
 
 export type SlideKind =
@@ -33,6 +29,7 @@ export interface SlideView {
   lines?: string[];
   chips?: string[];
   imageAssetId?: string;
+  illustration?: { src: string; alt: string };
   teacherNote?: string;
 }
 
@@ -60,40 +57,29 @@ export interface SlideRendererProps {
 
 export function SlideRenderer({ slide, watermark, imageUrl }: SlideRendererProps) {
   const accent = ACCENT[slide.kind];
+  const illustration = imageUrl ?? slide.illustration?.src;
 
   return (
     <div
+      className={`teaching-slide teaching-slide-${slide.kind} ${illustration ? 'teaching-slide-illustrated' : ''}`}
       // 자료는 못 빼간다 — 09번 §3. 선택·드래그·우클릭을 막는다.
       onContextMenu={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
       style={{
         position: 'relative',
-        aspectRatio: '16 / 9',
+        minHeight: 300,
         background: 'var(--surface)',
         border: '1px solid var(--rule)',
         borderRadius: 'var(--r-lg)',
-        overflow: 'hidden',
+        overflow: 'clip',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         display: 'flex',
         flexDirection: 'column',
-        padding: '5.5% 6%',
+        padding: '5% 5% 9%',
       }}
     >
-      {imageUrl && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: `url(${imageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            // 글자가 읽혀야 한다. 그림은 배경이다.
-            opacity: 0.14,
-          }}
-        />
-      )}
+      {illustration && <img className="teaching-slide-art" src={illustration} alt={slide.illustration?.alt ?? '수업 장면 그림'} />}
 
       {/* 좌측 획 — 종류를 색 하나로 알린다 */}
       <div
@@ -101,7 +87,7 @@ export function SlideRenderer({ slide, watermark, imageUrl }: SlideRendererProps
         style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: accent }}
       />
 
-      <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="teaching-slide-text" style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div className="t-eyebrow" style={{ color: accent }}>
           {slide.eyebrow}
         </div>

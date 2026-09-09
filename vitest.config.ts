@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     include: ['packages/**/test/**/*.spec.ts', 'tools/**/test/**/*.spec.ts', 'apps/**/test/**/*.spec.ts'],
     environment: 'node',
+    maxWorkers: 2,
+    minWorkers: 1,
   },
   resolve: {
     alias: {

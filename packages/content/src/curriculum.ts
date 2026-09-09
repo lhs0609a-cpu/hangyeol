@@ -29,7 +29,7 @@ const u = (
 ): CurriculumUnitDraft => ({ unitNo, levelCode: 'topik1', title, goalStatement, targetForms, targetVocab, recycleFrom });
 
 export const LEVEL1_UNITS: CurriculumUnitDraft[] = [
-  u(1, '한글 1시간 완성', '자기 이름을 한글로 쓰고 읽을 수 있다', [], ['자음', '모음', '받침'], []),
+  u(1, '한글 첫걸음', '자기 이름을 한글로 쓰고 읽을 수 있다', [], ['자음', '모음', '받침'], []),
 
   u(2, '이에요 / 예요', '자기 이름과 국적을 말할 수 있다', ['-이에요/예요'], ['이름', '나라', '사람'], [1]),
   u(3, '이거 뭐예요?', '사물의 이름을 묻고 답할 수 있다', ['이거/그거/저거', '뭐예요?'], ['책', '가방', '물'], [2]),

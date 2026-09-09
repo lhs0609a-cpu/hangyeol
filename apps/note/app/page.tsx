@@ -37,7 +37,9 @@ export default async function NoteHomePage() {
     return (
       <div style={{ textAlign: 'center', paddingTop: 60, color: 'var(--ink-3)' }}>
         <SyllableProgress done={0} size={96} />
-        <p style={{ marginTop: 20 }}>선생님이 보내드린 링크로 들어와 주세요</p>
+        <h1 className="t-h1" lang="en" style={{ marginTop: 20 }}>Your Korean learning notebook</h1>
+        <p lang="en" style={{ marginTop: 14 }}>Open the personal link your teacher sent you to see your lessons and review cards.</p>
+        <p className="t-body-sm" style={{ marginTop: 14 }}>선생님이 보내드린 링크로 들어와 주세요</p>
       </div>
     );
   }
@@ -47,17 +49,20 @@ export default async function NoteHomePage() {
       <div style={{ textAlign: 'center' }}>
         <SyllableProgress done={home.syllableProgress.done} />
         <div className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 8 }}>
-          {home.syllableProgress.done} / {home.syllableProgress.total} · 이번 주 글자
+          {home.syllableProgress.done} / {home.syllableProgress.total} · 이번 주 글자 / This week
         </div>
       </div>
 
       <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, marginTop: 26, marginBottom: 2 }}>
         안녕하세요, {home.studentNameKo} 씨
       </h1>
+      <p lang="en" className="t-body-lg" style={{ margin: '8px 0 12px', color: 'var(--ink-2)' }}>A little Korean, one step at a time.</p>
       <p style={{ fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)', margin: 0 }}>
-        {home.teacherDisplayName} 선생님의 학습 노트
+        {home.teacherDisplayName} 선생님의 학습 노트 / Learning notebook
         {home.streakDays > 0 ? ` · ${home.streakDays}일 연속` : ''}
       </p>
+
+      <section style={{ marginTop: 24 }}><h2 className="t-h2">Before your first lesson / 첫 수업 준비</h2><p>Complete your level check so your teacher can choose your starting textbook.</p><Link href="/level-test">Start my level check / 수준 진단 시작 →</Link></section>
 
       <section style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {home.tasks.map((task, i) => (
@@ -96,6 +101,7 @@ export default async function NoteHomePage() {
             </span>
             <span style={{ flex: 1 }}>
               <span style={{ display: 'block', fontSize: 'var(--fs-body-lg)', fontWeight: 600 }}>{task.label}</span>
+              {task.id === 'srs' && <span lang="en" className="t-body-sm">Review your words</span>}
               <span style={{ display: 'block', fontSize: 'var(--fs-body-sm)', color: 'var(--ink-3)' }}>{task.sub}</span>
             </span>
             <span className="mono" style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)' }}>
@@ -115,7 +121,7 @@ export default async function NoteHomePage() {
             padding: 18,
           }}
         >
-          <div className="eyebrow">지난 수업에서</div>
+          <div className="eyebrow">지난 수업에서 / Your last lesson</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
             {home.lastLesson.expressions.map((e) => (
               <span
@@ -142,8 +148,10 @@ export default async function NoteHomePage() {
 
       <nav style={{ display: 'flex', gap: 8, marginTop: 26 }}>
         {[
-          { href: '/vocab', label: '내 단어장' },
-          { href: '/progress', label: '지금까지' },
+          { href: '/vocab', label: '단어장 / My words' },
+            { href: '/workbook', label: '입문 / First steps' },
+            { href: '/coursebook', label: '수업 교재 / My lessons' },
+          { href: '/progress', label: '진도 / Progress' },
         ].map((item) => (
           <Link
             key={item.href}

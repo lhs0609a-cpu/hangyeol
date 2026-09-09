@@ -56,7 +56,7 @@ export default function ContentPage() {
             return (
               <Link
                 key={u.unitNo}
-                href={`/admin/images?unit=${u.unitNo}`}
+                href={`/training?unit=${u.unitNo}`}
                 title={u.title}
                 className="mono"
                 style={{
@@ -76,8 +76,7 @@ export default function ContentPage() {
           })}
         </div>
         <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--ink-4)', marginTop: 10 }}>
-          1~30차시가 1급, 31~70차시가 2급입니다. 초록은 지도안이 있는 차시이고,
-          눌러서 그 차시의 이미지 자산으로 갑니다.
+          1~70차시는 초급, 71~170차시는 중급, 171~250차시는 고급 편성 초안입니다. 초록은 지도안이 있다는 뜻이며 검수 완료를 뜻하지 않습니다. 눌러서 수업 준비실로 갑니다.
         </p>
       </Panel>
 
@@ -96,8 +95,8 @@ export default function ContentPage() {
           <Row label="발음 시트" value={`${PRONUNCIATION_ITEMS.length}항목`} done />
           <Row label="체험수업 팩" value={`${TRIAL_PACKS.length} / 4`} done={TRIAL_PACKS.length >= 4} />
           <Row
-            label="이미지 자산"
-            value={`0 / ${IMAGE_ASSET_STATUS.total}`}
+            label="별도 이미지 제작 목록"
+            value={`${IMAGE_ASSET_STATUS.total}개 프롬프트 · 공용 삽화 6종 제작`}
             done={false}
             note="프롬프트는 준비됨 — 관리자가 생성해 올린다"
           />

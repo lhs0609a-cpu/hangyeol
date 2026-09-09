@@ -1,291 +1,82 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import {
-  applyTopup,
-  enforceLock,
-  isDuplicateWebhook,
-  onPaymentFailure,
-  onPaymentSuccess,
-  type InvoiceState,
-} from '@hangyeol/billing';
+import { applyTopup, enforceLock, onPaymentFailure, type InvoiceState } from '@hangyeol/billing';
+import { z } from 'zod';
 import { apiError } from './errors.js';
 import { db } from './guard.js';
 
-/*
- * 결제 — 02번 문서 E-06·E-07·E-09, 05번 문서 §6·§7.
- *
- * 카드번호는 절대 보관하지 않는다. PG 빌링키만 갖는다 (09번 문서 §4).
- * 판정 로직은 전부 packages/billing 의 순수 함수가 한다. 여기서는 반영만 한다.
- */
-
-function toInvoiceState(row: {
-  status: string;
-  failedAt: Date | null;
-  graceUntil: Date | null;
-  retryCount: number;
-  paidAt: Date | null;
-  pgTid: string | null;
-}): InvoiceState {
-  return {
-    status: row.status as InvoiceState['status'],
-    failedAt: row.failedAt,
-    graceUntil: row.graceUntil,
-    retryCount: row.retryCount,
-    paidAt: row.paidAt,
-    pgTid: row.pgTid,
-  };
+export async function registerBillingKey(_params: { teacherId: bigint; pgBillingKey: string; cardLast4?: string }) {
+  throw apiError('VALIDATION_FAILED', '결제 화면에서 본인 인증 후 카드를 등록해 주세요');
 }
-
-/** 빌링키 등록. 카드번호는 우리에게 오지 않는다 — PG 위젯이 발급한 키만 받는다. */
-export async function registerBillingKey(params: {
-  teacherId: bigint;
-  pgBillingKey: string;
-  cardLast4?: string;
-}) {
-  if (!/^[A-Za-z0-9_-]{8,128}$/.test(params.pgBillingKey)) {
-    throw apiError('VALIDATION_FAILED', '빌링키 형식이 올바르지 않습니다');
-  }
-  if (params.cardLast4 && !/^\d{4}$/.test(params.cardLast4)) {
-    throw apiError('VALIDATION_FAILED', '카드 뒷자리는 숫자 4자리입니다');
-  }
-
-  await db().teacher.update({
-    where: { id: params.teacherId },
-    data: {
-      pgCustomerId: params.pgBillingKey,
-      cardLast4: params.cardLast4 ?? null,
-      // 등록만으로 잠금이 풀리지는 않는다. 결제가 성공해야 풀린다.
-      ...(await hasUnpaid(params.teacherId) ? {} : { billingStatus: 'ok' }),
-    },
-  });
-
-  return { ok: true, cardLast4: params.cardLast4 ?? null };
-}
-
-async function hasUnpaid(teacherId: bigint): Promise<boolean> {
-  const count = await db().invoice.count({
-    where: { teacherId, status: { in: ['pending', 'failed', 'grace', 'locked'] } },
-  });
-  return count > 0;
-}
-
-/** 크레딧 선충전 — 05번 문서 §7. 목적은 이자 수익이 아니라 락인이다. */
-export async function topupCredits(params: {
-  teacherId: bigint;
-  paidAmount: number;
-  pgTid: string;
-  now?: Date;
-}) {
-  const prisma = db();
-  const now = params.now ?? new Date();
-
-  // 같은 pg_tid 로 두 번 적립하면 안 된다.
-  const dup = await prisma.creditTopup.findFirst({ where: { pgTid: params.pgTid } });
-  if (dup) {
-    const teacher = await prisma.teacher.findUnique({
-      where: { id: params.teacherId },
-      select: { creditBalance: true },
-    });
-    return {
-      duplicate: true,
-      grantedAmount: dup.grantedAmount,
-      bonusPct: dup.bonusPct,
-      balanceAfter: teacher?.creditBalance ?? 0,
-    };
-  }
-
-  const teacher = await prisma.teacher.findUnique({
-    where: { id: params.teacherId },
-    select: { creditBalance: true },
-  });
-  if (!teacher) throw apiError('NOT_FOUND');
-
-  const result = applyTopup({
-    paidAmount: params.paidAmount,
-    currentBalance: teacher.creditBalance,
-    now,
-  });
-
-  await prisma.$transaction([
-    prisma.creditTopup.create({
-      data: {
-        teacherId: params.teacherId,
-        paidAmount: result.paidAmount,
-        grantedAmount: result.grantedAmount,
-        bonusPct: result.bonusPct,
-        pgTid: params.pgTid,
-      },
-    }),
-    prisma.teacher.update({
-      where: { id: params.teacherId },
-      data: { creditBalance: result.balanceAfter },
-    }),
-  ]);
-
-  return {
-    duplicate: false,
-    grantedAmount: result.grantedAmount,
-    bonusPct: result.bonusPct,
-    balanceAfter: result.balanceAfter,
-    expiresAt: result.expiresAt,
-  };
-}
-
-/**
- * PG 웹훅 서명 검증 — 04번 문서 J.
- * 서명이 없거나 틀리면 본문을 읽지도 않는다.
- */
-export function verifyPgSignature(rawBody: string, signature: string | null): void {
-  const secret = process.env.PG_WEBHOOK_SECRET;
-  if (!secret) throw apiError('INTERNAL', 'PG_WEBHOOK_SECRET 이 설정되지 않았습니다');
-  if (!signature) throw apiError('UNAUTHENTICATED', '서명이 없습니다');
-
-  const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
-  const a = Buffer.from(signature);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    throw apiError('UNAUTHENTICATED', '서명이 일치하지 않습니다');
-  }
-}
-
-export interface PgWebhookPayload {
-  pgTid: string;
-  invoiceId?: string;
-  teacherId?: string;
-  status: 'paid' | 'failed';
-  kind?: 'invoice' | 'topup';
-  amount?: number;
-}
-
-/**
- * PG 결제 결과 수신 — 04번 문서 J.
- *
- * 멱등키는 pg_tid 다. 중복 수신 시 무시한다.
- * PG 는 같은 이벤트를 여러 번 보낸다. 그때마다 상태를 다시 쓰면
- * 이미 복원한 학생 상태를 또 덮어쓰게 된다.
- */
-export async function handlePgWebhook(payload: PgWebhookPayload, now = new Date()) {
-  const prisma = db();
-
-  if (payload.kind === 'topup') {
-    if (!payload.teacherId || !payload.amount) {
-      throw apiError('VALIDATION_FAILED', '충전 웹훅에 teacherId 와 amount 가 필요합니다');
+export async function topupCredits(params: { teacherId: bigint; paidAmount: number; pgTid: string; now?: Date }) {
+  if (!Number.isSafeInteger(params.paidAmount) || params.paidAmount < 10_000 || params.paidAmount > 5_000_000) throw apiError('VALIDATION_FAILED', '충전 금액이 올바르지 않습니다');
+  return db().$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM teachers WHERE id = ${params.teacherId} FOR UPDATE`;
+    const teacher = await tx.teacher.findUnique({ where: { id: params.teacherId } });
+    if (!teacher) throw apiError('NOT_FOUND');
+    const order = await tx.paymentOrder.findUnique({ where: { paymentKey: params.pgTid } });
+    if (!order || order.status !== 'paid' || order.teacherId !== params.teacherId || order.amount !== params.paidAmount) throw apiError('VALIDATION_FAILED', '확인된 충전 주문이 없습니다');
+    const duplicate = await tx.creditTopup.findUnique({ where: { pgTid: params.pgTid } });
+    if (duplicate) {
+      if (duplicate.teacherId !== params.teacherId || duplicate.paidAmount !== params.paidAmount) throw apiError('VALIDATION_FAILED', '거래 정보가 일치하지 않습니다');
+      return { duplicate: true, grantedAmount: duplicate.grantedAmount, bonusPct: duplicate.bonusPct, balanceAfter: teacher.creditBalance };
     }
-    if (payload.status !== 'paid') return { ignored: true, reason: 'topup-not-paid' };
-    return topupCredits({
-      teacherId: BigInt(payload.teacherId),
-      paidAmount: payload.amount,
-      pgTid: payload.pgTid,
-      now,
-    });
-  }
-
-  if (!payload.invoiceId) throw apiError('VALIDATION_FAILED', 'invoiceId 가 필요합니다');
-
-  const invoice = await prisma.invoice.findUnique({ where: { id: BigInt(payload.invoiceId) } });
-  if (!invoice) throw apiError('NOT_FOUND');
-
-  const state = toInvoiceState(invoice);
-
-  if (isDuplicateWebhook(state, payload.pgTid)) {
-    return { ignored: true, reason: 'duplicate-pg-tid' };
-  }
-
-  if (payload.status === 'paid') {
-    const result = onPaymentSuccess(state, now, payload.pgTid);
-
-    await prisma.$transaction(async (tx) => {
-      await tx.invoice.update({
-        where: { id: invoice.id },
-        data: { status: 'paid', paidAt: now, pgTid: payload.pgTid },
-      });
-      await tx.invoiceLine.findMany({ where: { invoiceId: invoice.id } }).then((lines) =>
-        tx.billingCycle.updateMany({
-          where: { id: { in: lines.map((l) => l.billingCycleId) } },
-          data: { status: result.cycleStatusAfter },
-        }),
-      );
-      await tx.teacher.update({
-        where: { id: invoice.teacherId },
-        data: { billingStatus: result.teacherBillingStatus },
-      });
-
-      if (result.unlockStudents) {
-        // 잠금 직전 상태로 복원한다. 전원 active 로 되살리면
-        // dormant·completed 학생까지 살아난다.
-        await tx.$executeRaw`
-          UPDATE students
-          SET status = COALESCE(status_before_lock, 'active'), status_before_lock = NULL
-          WHERE teacher_id = ${invoice.teacherId} AND status = 'locked'
-        `;
-      }
-    });
-
-    return { ok: true, status: 'paid' as const, unlocked: result.unlockStudents };
-  }
-
-  const result = onPaymentFailure(state, now);
-
-  await prisma.$transaction([
-    prisma.invoice.update({
-      where: { id: invoice.id },
-      data: {
-        status: result.invoice.status,
-        failedAt: result.invoice.failedAt,
-        graceUntil: result.invoice.graceUntil,
-      },
-    }),
-    prisma.teacher.update({
-      where: { id: invoice.teacherId },
-      data: { billingStatus: result.teacherBillingStatus },
-    }),
-    prisma.notification.create({
-      data: {
-        targetType: 'teacher',
-        targetId: invoice.teacherId,
-        kind: 'payment_failed',
-        scheduledAt: now,
-        channel: 'email',
-        payload: { invoiceId: String(invoice.id), graceUntil: result.invoice.graceUntil },
-      },
-    }),
-  ]);
-
-  // D+0 에는 아무것도 잠그지 않는다. 3일 유예가 먼저다.
-  return { ok: true, status: 'grace' as const, graceUntil: result.invoice.graceUntil };
+    const result = applyTopup({ paidAmount: params.paidAmount, currentBalance: teacher.creditBalance, now: params.now ?? new Date() });
+    await tx.creditTopup.create({ data: { teacherId: params.teacherId, paidAmount: result.paidAmount, grantedAmount: result.grantedAmount, bonusPct: result.bonusPct, pgTid: params.pgTid } });
+    const updated = await tx.teacher.update({ where: { id: params.teacherId }, data: { creditBalance: { increment: result.grantedAmount } } });
+    return { duplicate: false, grantedAmount: result.grantedAmount, bonusPct: result.bonusPct, balanceAfter: updated.creditBalance };
+  });
 }
-
-/** payment-retry 배치가 실제로 PG 를 다시 긁는다. */
-export async function retryInvoice(invoiceId: bigint, charge: (args: { billingKey: string; amount: number }) => Promise<{ ok: boolean; pgTid: string }>, now = new Date()) {
+export function verifyPgSignature(rawBody: string, signature: string | null) {
+  const secret = process.env.PG_WEBHOOK_SECRET;
+  if (!secret || !signature) throw apiError('UNAUTHENTICATED');
+  const expected = Buffer.from(createHmac('sha256', secret).update(rawBody).digest('hex'));
+  const actual = Buffer.from(signature);
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) throw apiError('UNAUTHENTICATED');
+}
+const payloadSchema = z.object({
+  pgTid: z.string().min(1).max(300), invoiceId: z.string().regex(/^\d+$/).optional(),
+  teacherId: z.string().regex(/^\d+$/).optional(), status: z.enum(['paid', 'failed']),
+  kind: z.enum(['invoice', 'topup']).optional(), amount: z.number().int().nonnegative().optional(),
+});
+export type PgWebhookPayload = z.infer<typeof payloadSchema>;
+export async function handlePgWebhook(input: PgWebhookPayload, now = new Date()) {
+  const parsed = payloadSchema.safeParse(input);
+  if (!parsed.success) throw apiError('VALIDATION_FAILED', '결제 응답 형식이 올바르지 않습니다');
+  const payload = parsed.data;
+  if (payload.kind === 'topup') {
+    if (!payload.teacherId || !payload.amount) throw apiError('VALIDATION_FAILED', '충전 정보가 없습니다');
+    if (payload.status !== 'paid') return { ignored: true };
+    const order = await db().paymentOrder.findUnique({ where: { paymentKey: payload.pgTid } });
+    if (!order || order.kind !== 'topup' || order.teacherId !== BigInt(payload.teacherId) || order.amount !== payload.amount || order.status !== 'paid') throw apiError('VALIDATION_FAILED', '확인된 충전 주문이 없습니다');
+    return topupCredits({ teacherId: BigInt(payload.teacherId), paidAmount: payload.amount, pgTid: payload.pgTid, now });
+  }
+  if (!payload.invoiceId) throw apiError('VALIDATION_FAILED', '청구서가 없습니다');
   const prisma = db();
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
-    include: { teacher: { select: { pgCustomerId: true } } },
+  const identity = await prisma.invoice.findUnique({ where: { id: BigInt(payload.invoiceId) } });
+  if (!identity) throw apiError('NOT_FOUND');
+  return prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM teachers WHERE id = ${identity.teacherId} FOR UPDATE`;
+    const invoice = await tx.invoice.findUniqueOrThrow({ where: { id: identity.id } });
+    if (payload.status === 'paid' && payload.amount !== invoice.chargeAmount) throw apiError('VALIDATION_FAILED', '청구 금액과 승인 금액이 일치하지 않습니다');
+    if (['paid', 'void'].includes(invoice.status)) return { ignored: true, reason: 'terminal-state' };
+    if (payload.status === 'paid') {
+      const reused = await tx.invoice.findFirst({ where: { pgTid: payload.pgTid, id: { not: invoice.id } } });
+      if (reused) throw apiError('VALIDATION_FAILED', '이미 사용한 결제 거래입니다');
+      await tx.invoice.update({ where: { id: invoice.id }, data: { status: 'paid', paidAt: now, pgTid: payload.pgTid } });
+      const lines = await tx.invoiceLine.findMany({ where: { invoiceId: invoice.id } });
+      await tx.billingCycle.updateMany({ where: { id: { in: lines.map(l => l.billingCycleId) } }, data: { status: 'paid' } });
+      const remaining = await tx.invoice.findMany({ where: { teacherId: invoice.teacherId, status: { in: ['failed', 'grace', 'locked'] } } });
+      const locked = remaining.some(i => i.status === 'locked');
+      await tx.teacher.update({ where: { id: invoice.teacherId }, data: { billingStatus: locked ? 'locked' : remaining.length ? 'failed' : 'ok' } });
+      if (!locked) await tx.$executeRaw`UPDATE students SET status = COALESCE(status_before_lock, 'active'), status_before_lock = NULL WHERE teacher_id = ${invoice.teacherId} AND status = 'locked'`;
+      return { ok: true, status: 'paid' };
+    }
+    if (invoice.status === 'locked') return { ignored: true, reason: 'already-locked' };
+    const result = onPaymentFailure({ ...invoice, status: invoice.status as InvoiceState['status'] }, now);
+    await tx.invoice.update({ where: { id: invoice.id }, data: { status: 'grace', failedAt: result.invoice.failedAt, graceUntil: result.invoice.graceUntil } });
+    await tx.teacher.updateMany({ where: { id: invoice.teacherId, billingStatus: { not: 'locked' } }, data: { billingStatus: 'failed' } });
+    if (!invoice.failedAt) await tx.notification.create({ data: { targetType: 'teacher', targetId: invoice.teacherId, kind: 'payment_failed', channel: 'email', scheduledAt: now, payload: { invoiceId: String(invoice.id) } } });
+    return { ok: true, status: 'grace' };
   });
-  if (!invoice) throw apiError('NOT_FOUND');
-  if (!invoice.teacher.pgCustomerId) {
-    return { skipped: true, reason: 'no-billing-key' };
-  }
-
-  await prisma.invoice.update({
-    where: { id: invoiceId },
-    data: { retryCount: { increment: 1 } },
-  });
-
-  const res = await charge({
-    billingKey: invoice.teacher.pgCustomerId,
-    amount: invoice.chargeAmount,
-  });
-
-  return handlePgWebhook(
-    {
-      pgTid: res.pgTid,
-      invoiceId: String(invoiceId),
-      status: res.ok ? 'paid' : 'failed',
-      kind: 'invoice',
-    },
-    now,
-  );
 }
-
-/** lock-enforce 가 부르는 상태 판정 재노출 — 배치에서 같은 함수를 쓴다. */
 export { enforceLock };

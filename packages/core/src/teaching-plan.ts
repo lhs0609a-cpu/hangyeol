@@ -1,4 +1,6 @@
-import { LESSON_FRAME, planFor, type LessonPlan } from '@hangyeol/content';
+import { adjustedNextUnit, latestAdjustment } from './adaptive-learning.js';
+import { LESSON_FRAME, planFor, unitByNo, type LessonPlan } from '@hangyeol/content';
+import { nextUnitNo } from './lesson-progress.js';
 import { addDays } from '@hangyeol/shared';
 import { apiError } from './errors.js';
 import { db } from './guard.js';
@@ -89,7 +91,7 @@ function howToFix(errorText: string): string {
  * 복습 이행률이 낮거나 공백이 길면 복습을 늘리고 본 차시를 줄인다 —
  * 진도를 지키는 것보다 학생이 따라오는 것이 먼저다.
  */
-function allocate(mode: PlanMode, srsCompletion: number): TimeAllocation[] {
+export function allocate(mode: PlanMode, srsCompletion: number): TimeAllocation[] {
   const base = LESSON_FRAME.map((f) => ({
     phase: f.phase as string,
     label: f.label as string,
@@ -102,9 +104,7 @@ function allocate(mode: PlanMode, srsCompletion: number): TimeAllocation[] {
         ? { ...b, minutes: 10, adjustedBecause: '2주 이상 공백 — 복습을 10분으로 늘립니다' }
         : b.phase === 'drill'
           ? { ...b, minutes: 5, adjustedBecause: '복습에 시간을 넘겼습니다' }
-          : b.phase === 'free'
-            ? { ...b, minutes: 5, adjustedBecause: '복습에 시간을 넘겼습니다' }
-            : b,
+          : b,
     );
   }
 
@@ -151,6 +151,7 @@ export async function teachingPlan(
       nameKo: true,
       l1Code: true,
       currentLessonNo: true,
+      levelCode: true,
       lastLessonAt: true,
     },
   });
@@ -158,9 +159,9 @@ export async function teachingPlan(
 
   const [lastLesson, recentErrors, dueCards, doneCards] = await Promise.all([
     prisma.lesson.findFirst({
-      where: { studentId, reportSubmittedAt: { not: null } },
-      orderBy: { startedAt: 'desc' },
-      select: { outcome: true, unitId: true, reportItems: { orderBy: { ord: 'asc' } } },
+      where: { studentId },
+      orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+      select: { id: true, lessonNo: true, reportSubmittedAt: true, outcome: true, unitId: true, reportItems: { orderBy: { ord: 'asc' } } },
     }),
     // 최근 5회 수업의 오류를 모아 반복되는 것을 찾는다.
     prisma.lessonReportItem.findMany({
@@ -170,7 +171,7 @@ export async function teachingPlan(
       select: { body: true },
     }),
     prisma.vocabCard.count({ where: { studentId, state: { not: 'graduated' }, dueAt: { lte: now } } }),
-    prisma.vocabCard.count({ where: { studentId, reps: { gt: 0 } } }),
+    prisma.vocabCard.count({ where: { studentId, OR: [{ state: 'graduated' }, { dueAt: { gt: now } }] } }),
   ]);
 
   const totalCards = dueCards + doneCards;
@@ -181,8 +182,9 @@ export async function teachingPlan(
     : 0;
 
   // 재수행이면 같은 차시를 다시 한다. 통과 못 했는데 넘어가지 않는다.
-  const repeat = lastLesson?.outcome === 'repeat';
-  const nextLessonNo = repeat ? student.currentLessonNo : student.currentLessonNo + 1;
+  const repeat = student.currentLessonNo > 0 && lastLesson?.outcome !== 'pass';
+  const adjustment = await latestAdjustment(prisma,studentId);
+  const nextLessonNo = adjustedNextUnit(nextUnitNo(student.currentLessonNo, lastLesson?.outcome, student.levelCode), lastLesson, adjustment);
 
   const mode: PlanMode =
     student.currentLessonNo === 0
@@ -200,10 +202,8 @@ export async function teachingPlan(
     normal: '정상 진행입니다.',
   }[mode];
 
-  const unit = await prisma.curriculumUnit.findUnique({
-    where: { unitNo: nextLessonNo },
-    select: { unitNo: true, title: true, goalStatement: true },
-  });
+  const draft = unitByNo(nextLessonNo);
+  const unit = draft ? { unitNo: draft.unitNo, title: draft.title, goalStatement: draft.goalStatement } : null;
 
   const plan = planFor(nextLessonNo);
 
@@ -236,7 +236,7 @@ export async function teachingPlan(
     studentName: student.nameKo ?? student.name,
     nextLessonNo,
     mode,
-    modeReason,
+    modeReason: adjustment && nextLessonNo!==nextUnitNo(student.currentLessonNo,lastLesson?.outcome,student.levelCode) ? `강사 확인에 따른 ${adjustment.mode==='supplement'?'기초 보충':'교재 재배정'}: ${adjustment.reason}` : modeReason,
     unit,
     plan,
     allocation: allocate(mode, srsCompletion),
@@ -291,7 +291,7 @@ export async function masteryPlan(
 
   // 1급 30차시 기준. 다음 급까지 남은 차시를 현재 속도로 나눈다.
   const levelEnd = { topik1: 30, topik2: 70, topik3: 120, topik4: 170, topik5: 210, topik6: 250 }[
-    student.levelCode
+    unitByNo(student.currentLessonNo)?.levelCode ?? student.levelCode
   ];
   const remaining = levelEnd ? levelEnd - student.currentLessonNo : null;
   const weeksToNextLevel =

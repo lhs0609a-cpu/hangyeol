@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: { cpus: 2 },
   // 워크스페이스 패키지를 TS 소스 그대로 가져다 쓴다.
   // 과금 로직을 별도 빌드 산출물로 복사하지 않아야 명세와 화면이 어긋나지 않는다.
   transpilePackages: ['@hangyeol/shared', '@hangyeol/billing', '@hangyeol/core', '@hangyeol/ui', '@hangyeol/content', '@hangyeol/watermark', '@hangyeol/langgate'],

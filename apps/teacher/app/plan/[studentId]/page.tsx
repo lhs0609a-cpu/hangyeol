@@ -1,4 +1,5 @@
 'use client';
+import { AdaptivePanel } from './AdaptivePanel';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -85,6 +86,8 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
           )}
         </Panel>
       )}
+
+      <AdaptivePanel studentId={params.studentId} onSaved={async()=>setData(await get<{teaching:TeachingPlan;mastery:MasteryPlan}>(`/api/students/${params.studentId}/plan`))}/>
 
       {/* 시간 배분 — 학생 상태에 맞춰 조정된다 */}
       <Panel style={{ marginTop: 14 }}>

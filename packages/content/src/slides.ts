@@ -1,15 +1,13 @@
 import { ALL_UNITS } from './curriculum-all.js';
 import { LESSON_PLANS } from './lesson-plan.js';
+import { LEARNING_SCENES, type LearningScene } from './first-steps.js';
 
 /*
  * 슬라이드 생성기 — 08번 문서 §2 "강사 슬라이드 · 이미지 시퀀스 16~20장".
  *
- * 이미지 생성을 기다리지 않는다.
- * 언어 수업 슬라이드에 들어가는 것은 대부분 글자다 — 목표문, 어휘, 문형, 대화문.
- * 그건 지도안과 커리큘럼에 이미 다 있다. 데이터에서 만들면 된다.
- *
- * 그림이 필요한 자리(어휘 카드 배경, 장면 설정)는 imageAssetId 를 달아 두고,
- * 관리자가 올리면 그 자리에만 들어간다. 없어도 슬라이드는 성립한다.
+ * 목표문·어휘·문형·대화문은 지도안과 커리큘럼에서 만든다.
+ * 표지·대화·역할극에는 15번 재설계의 공용 장면 일러스트를 연결한다.
+ * imageAssetId는 기존 관리자의 보호된 교재 업로드 식별자로 유지한다.
  *
  * 손으로 슬라이드를 짜지 않는 이유: 지도안이 바뀌면 슬라이드도 바뀌어야 하는데
  * 두 곳에 적으면 반드시 어긋난다. 30차시 × 18장이면 어긋난 걸 아무도 못 찾는다.
@@ -40,6 +38,8 @@ export interface Slide {
   chips?: string[];
   /** 그림이 있으면 좋은 자리. 없으면 글자만으로 성립한다. */
   imageAssetId?: string;
+  /** Public educational artwork, separate from protected uploaded lesson assets. */
+  illustration?: { src: string; alt: string };
   /** 강사에게만 보이는 진행 지시. 학생 화면에는 나가지 않는다. */
   teacherNote?: string;
 }
@@ -67,7 +67,17 @@ export function buildDeck(unitNo: number): SlideDeck | null {
 
   const plan = LESSON_PLANS.find((p) => p.unitNo === unitNo);
   const slides: Slide[] = [];
-  const push = (s: Omit<Slide, 'no'>) => slides.push({ ...s, no: slides.length + 1 });
+  const context = `${unit.title} ${unit.targetVocab.join(' ')}`;
+  const scene: LearningScene = /카페|커피|아메리카노/.test(context) ? 'cafe'
+    : /음식|먹|밥|맛/.test(context) ? 'restaurant'
+    : /숫자|가격|쇼핑|돈/.test(context) ? 'market'
+    : /장소|어디|교통|길|목적지/.test(context) ? 'transit'
+    : /여행|계획|주말/.test(context) ? 'hero' : 'friends';
+  const artwork = LEARNING_SCENES[scene];
+  const push = (s: Omit<Slide, 'no'>) => slides.push({
+    ...s, no: slides.length + 1,
+    ...(['cover', 'dialogue', 'roleplay'].includes(s.kind) ? { illustration: { src: artwork.src, alt: artwork.alt.ko } } : {}),
+  });
 
   // 1 · 표지
   push({
@@ -95,7 +105,7 @@ export function buildDeck(unitNo: number): SlideDeck | null {
 
   // 4~5 · 모델 대화. 지도안의 model 블록에서 대사만 뽑는다.
   const model = plan?.blocks.find((b) => b.phase === 'model');
-  const dialogue = (model?.say ?? []).filter((l) => l.trim().startsWith('—')).map(stripDash);
+  const dialogue = plan?.modelDialogue ?? (model?.say ?? []).filter((l) => l.trim().startsWith('—')).map(stripDash);
 
   if (dialogue.length > 0) {
     push({
@@ -113,7 +123,7 @@ export function buildDeck(unitNo: number): SlideDeck | null {
       kind: 'form',
       eyebrow: '오늘 배울 것',
       headline: form,
-      lines: dialogue.filter((d) => d.includes(form.replace(/^-|\/.*$/g, ''))).slice(0, 1),
+      lines: plan?.modelExample ? [plan.modelExample] : dialogue.filter((d) => d.includes(form.replace(/^-|\/.*$/g, ''))).slice(0, 1),
       teacherNote: '설명 30초. 나머지는 반복입니다',
     });
   }

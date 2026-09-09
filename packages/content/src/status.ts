@@ -1,5 +1,5 @@
 import { CLASSROOM_ENGLISH_STATUS } from './classroom-english.js';
-import { CURRICULUM_STATUS } from './curriculum.js';
+import { CURRICULUM_ALL_STATUS } from './curriculum-all.js';
 import { LESSON_PLAN_STATUS } from './lesson-plan.js';
 import { PRONUNCIATION_STATUS } from './pronunciation.js';
 import { TRIAL_PACK_STATUS } from './trial-packs.js';
@@ -16,7 +16,7 @@ import { TRIAL_PACK_STATUS } from './trial-packs.js';
  */
 export const CONTENT_STATUS = {
   lessonPlans: LESSON_PLAN_STATUS,
-  curriculum: CURRICULUM_STATUS,
+  curriculum: CURRICULUM_ALL_STATUS,
   classroomEnglish: CLASSROOM_ENGLISH_STATUS,
   pronunciation: PRONUNCIATION_STATUS,
   trialPacks: TRIAL_PACK_STATUS,

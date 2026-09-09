@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { PHOTO_LIST } from '@hangyeol/content';
+import { PHOTO_LIST, LEARNING_SCENES } from '@hangyeol/content';
 
 /*
  * 랜딩 사진이 로그인 게이트에 걸리지 않는지 확인한다.
@@ -26,7 +26,7 @@ function matcher(): RegExp {
 describe('로그인 게이트와 랜딩 사진', () => {
   it('등록된 사진 경로가 게이트에 걸리지 않는다', () => {
     const gate = matcher();
-    for (const p of PHOTO_LIST) {
+    for (const p of [...PHOTO_LIST, ...Object.values(LEARNING_SCENES)]) {
       expect(gate.test(p.src), `${p.src} 가 로그인 게이트에 걸린다`).toBe(false);
     }
   });
@@ -44,5 +44,7 @@ describe('로그인 게이트와 랜딩 사진', () => {
     expect(publicList).not.toBeNull();
     expect(publicList![1]).toContain("'/'");
     expect(publicList![1]).toContain("'/licenses'");
+    expect(publicList![1]).toContain("'/learn'");
+    expect(publicList![1]).toContain("'/learn/print'");
   });
 });

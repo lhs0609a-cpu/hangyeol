@@ -101,11 +101,13 @@ export function Button({
       type={type}
       onClick={disabled ? undefined : onClick}
       aria-disabled={disabled}
+      disabled={disabled}
       style={{
         ...sizes[size],
         ...disabledStyle,
         fontFamily: 'inherit',
         fontWeight: 600,
+        minHeight: 'var(--touch-min)',
         cursor: 'pointer',
         width: full ? '100%' : undefined,
         ...style,

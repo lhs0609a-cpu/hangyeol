@@ -42,6 +42,7 @@ export const RAIL: RailEntry[] = [
   { href: '/admin/teachers', label: '강사 승인', group: '관리자', spec: '02번 A-01' },
   { href: '/admin/images', label: '이미지 자산', group: '관리자', spec: '08번 §2' },
   { href: '/admin/content', label: '콘텐츠 현황', group: '관리자', spec: '08번 §9' },
+  { href: '/admin/courses', label: '수강·정산 관리', group: '관리자' },
 ];
 
 function indexOf(pathname: string): number {
@@ -84,11 +85,12 @@ export function AdminRail() {
   const next = current >= 0 && current < RAIL.length - 1 ? RAIL[current + 1] : null;
 
   return (
-    <aside
+    <><nav className="admin-mobile-nav" aria-label="관리자 화면 이동"><label htmlFor="admin-page-select">관리자 화면</label><select id="admin-page-select" value={current >= 0 ? RAIL[current]!.href : ''} onChange={(event) => router.push(event.target.value)}><option value="" disabled>화면 선택</option>{RAIL.map((entry) => <option key={entry.href} value={entry.href}>{entry.label}</option>)}</select></nav><aside
+      className="teacher-admin-rail"
       style={{
         position: 'fixed',
         left: 0,
-        top: 54,
+        top: 64,
         bottom: 0,
         width: 208,
         overflowY: 'auto',
@@ -152,7 +154,7 @@ export function AdminRail() {
           Alt + ← → 로 이동
         </div>
       </div>
-    </aside>
+    </aside></>
   );
 }
 

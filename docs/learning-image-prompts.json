@@ -1,0 +1,42 @@
+{
+  "tool": "built-in image_gen",
+  "created": "2026-09-08",
+  "directory": "apps/teacher/public/photos/learning",
+  "notes": "Original PNG preserved alongside WebP delivery copies. No generated lettering. Hero filename is seoul-v1.",
+  "prompts": [
+    {
+      "id": "hero",
+      "prompt": "Use case: illustration-story. Asset type: Korean beginner textbook and language learning homepage hero, wide landscape illustration. Primary request: A warm sophisticated editorial gouache illustration of three young adult international friends discovering a small Seoul neighborhood together, one carrying a Korean study notebook, a friendly street cafe, low brick buildings and a subtle distant Seoul tower, abundant soft spring greenery. Eye level, cinematic composed scene with people clearly visible and generous sky. Warm ivory paper texture, deep forest teal, apricot, butter yellow and muted terracotta palette, confident simple forms, subtle pencil texture, contemporary illustrated travel journal for adults. Cheerful, welcoming, culturally plausible, not childish, no flags or stereotypes. No text, letters, signage lettering, speech bubbles, logos or watermarks. Wide 3:2 composition. Final image will sit next to editable headline text, do not draw a website."
+    },
+    {
+      "id": "cafe",
+      "prompt": "Use case: illustration-story. Asset type: situation illustration for an adult beginner Korean textbook. A Korean cafe counter. One adult international visitor in an apricot cardigan politely orders one iced coffee from a Korean barista wearing a deep teal apron. Clearly show the iced coffee in a transparent cup, a cup of water, and a small payment terminal. Both people face each other, natural friendly expressions. Style: polished hand-painted editorial gouache and colored pencil on warm ivory paper, deep forest teal, apricot, muted terracotta, butter yellow, soft green. Warm natural light, sophisticated travel-journal illustration, clear educational focus, readable at small sizes, culturally plausible. Wide 3:2 composition, generous framing, full scene. No text, letters, numerals, logos, speech bubbles, watermarks, flags or stereotypes."
+    },
+    {
+      "id": "restaurant",
+      "prompt": "Use case: illustration-story. Asset type: situation illustration for an adult beginner Korean textbook. A Korean neighborhood restaurant. Two adult friends are ordering with a Korean server. On the table clearly show a bowl of bibimbap with vegetables, a roll of sliced gimbap, a glass of water and a spoon and chopsticks neatly placed beside bowls. A small blank menu, natural friendly expressions. Focus on the meal and the act of ordering. Style: polished hand-painted editorial gouache and colored pencil on warm ivory paper, deep forest teal, apricot, muted terracotta, butter yellow, soft green. Warm natural light, sophisticated travel-journal illustration, clear educational focus, readable at small sizes, culturally plausible. Wide 3:2 composition, generous framing, full scene. No text, letters, numerals, logos, speech bubbles, watermarks, flags or stereotypes."
+    },
+    {
+      "id": "transit",
+      "prompt": "Use case: illustration-story. Asset type: situation illustration for an adult beginner Korean textbook. A Seoul subway station concourse, a young adult international traveler with a small suitcase asks a Korean station attendant for directions. Clearly show a ticket gate with a transit card reader, stairs and a simplified route map without letters. Friendly relaxed interaction, safe platform architecture. Style: polished hand-painted editorial gouache and colored pencil on warm ivory paper, deep forest teal, apricot, muted terracotta, butter yellow, soft green. Warm natural light, sophisticated travel-journal illustration, clear educational focus, readable at small sizes, culturally plausible. Wide 3:2 composition, generous framing, full scene. No text, letters, numerals, logos, speech bubbles, watermarks, flags or stereotypes."
+    },
+    {
+      "id": "market",
+      "prompt": "Use case: illustration-story. Asset type: situation illustration for an adult beginner Korean textbook. A friendly Seoul neighborhood produce and stationery shop counter. An adult international visitor holding two tangerines asks a Korean shopkeeper about the purchase; neatly arranged fruit, a tote bag and a small payment terminal clearly visible. Hands natural, simple clear composition. Style: polished hand-painted editorial gouache and colored pencil on warm ivory paper, deep forest teal, apricot, muted terracotta, butter yellow, soft green. Warm natural light, sophisticated travel-journal illustration, clear educational focus, readable at small sizes, culturally plausible. Wide 3:2 composition, generous framing, full scene. No text, letters, numerals, logos, speech bubbles, watermarks, flags or stereotypes."
+    },
+    {
+      "id": "friends",
+      "prompt": "Use case: illustration-story. Asset type: situation illustration for an adult beginner Korean textbook. Two young adult international friends and a Korean tutor sitting around a sunny Korean cafe table, introducing themselves and making weekend plans together. One holds a small blank notebook. Tea cups, a pencil and simple calendar without lettering. Friendly attentive faces, equal participation, no classroom lecturing. Style: polished hand-painted editorial gouache and colored pencil on warm ivory paper, deep forest teal, apricot, muted terracotta, butter yellow, soft green. Warm natural light, sophisticated travel-journal illustration, clear educational focus, readable at small sizes, culturally plausible. Wide 3:2 composition, generous framing, full scene. No text, letters, numerals, logos, speech bubbles, watermarks, flags or stereotypes."
+    },
+    {
+      "id": "clarification",
+      "created": "2026-09-09",
+      "prompt": "Adult learners in a warm ivory, forest green and coral gouache cafe illustration. One cups an ear and asks a partner to repeat slowly. Clear natural hand gestures, respectful adult learners, empty speech bubble, no lettering or logos. Landscape 3:2."
+    },
+    {
+      "id": "routine",
+      "created": "2026-09-09",
+      "prompt": "A warm gouache triptych showing the same adult learner eating breakfast, reading in the afternoon and walking in the evening. Ivory, forest green, coral and butter yellow palette, no lettering or logos. Landscape 3:2."
+    }
+  ]
+}

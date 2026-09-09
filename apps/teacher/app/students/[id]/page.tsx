@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button, Eyebrow, Panel, StrandBars, Tag, type Strands } from '@hangyeol/ui';
 import { get, post } from '../../api-client';
 import { Shell } from '../../Shell';
+import WorkbookSummary from '../WorkbookSummary';
 
 /*
  * T-04 · 학생 상세 — 07번 문서.
@@ -93,6 +94,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
 
   return (
     <Shell>
+      <WorkbookSummary studentId={params.id} />
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>

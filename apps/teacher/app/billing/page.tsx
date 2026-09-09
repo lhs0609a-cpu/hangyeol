@@ -6,6 +6,7 @@ import type { RateTier } from '@hangyeol/shared';
 import { Button, Eyebrow, Panel, Tag } from '@hangyeol/ui';
 import { get } from '../api-client';
 import { Shell } from '../Shell';
+import PaymentPanel from './PaymentPanel';
 
 /*
  * T-05 · 청구 — 07번 문서.
@@ -62,6 +63,7 @@ export default function BillingPage() {
   return (
     <Shell>
       <Eyebrow>{data.billingMonth.slice(0, 7).replace('-', '년 ')}월 청구</Eyebrow>
+      <PaymentPanel />
 
       <div className="mono" style={{ fontSize: 'var(--fs-display)', fontWeight: 500, letterSpacing: '-0.03em', marginTop: 8 }}>
         {won(data.total)}

@@ -158,9 +158,9 @@ export async function linkScheduleToLesson(params: {
   studentId: bigint;
   lessonId: bigint;
   now?: Date;
-}): Promise<void> {
+}, transaction?: Pick<ReturnType<typeof db>, 'lessonSchedule'>): Promise<void> {
   const now = params.now ?? new Date();
-  const prisma = db();
+  const prisma = transaction ?? db();
 
   // 지금 시각에 가장 가까운 미시작 예약을 찾는다.
   const schedule = await prisma.lessonSchedule.findFirst({

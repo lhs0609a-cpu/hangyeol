@@ -164,7 +164,7 @@ export async function noteHome(studentId: bigint, now = new Date()): Promise<Not
       where: { studentId, state: { not: 'graduated' }, dueAt: { lte: now } },
     }),
     prisma.studentActivity.findMany({
-      where: { studentId, occurredAt: { gte: addDays(now, -1) } },
+      where: { studentId, kind: { notIn: ['learning_adjustment', 'learning_performance'] }, occurredAt: { gte: addDays(now, -1) } },
       select: { kind: true },
     }),
     prisma.lesson.findFirst({
@@ -213,7 +213,7 @@ export async function noteHome(studentId: bigint, now = new Date()): Promise<Not
 /** 이번 주에 복습한 날 수. 최대 4일까지 센다 — 그 이상은 글자가 이미 완성된다. */
 async function weeklyStudyDays(studentId: bigint, now: Date): Promise<number> {
   const rows = await db().studentActivity.findMany({
-    where: { studentId, occurredAt: { gte: addDays(now, -6) } },
+    where: { studentId, kind: { notIn: ['learning_adjustment', 'learning_performance'] }, occurredAt: { gte: addDays(now, -6) } },
     select: { occurredAt: true },
   });
   const days = new Set(rows.map((r) => r.occurredAt.toISOString().slice(0, 10)));
@@ -223,7 +223,7 @@ async function weeklyStudyDays(studentId: bigint, now: Date): Promise<number> {
 /** 연속 학습일. 학생 화면의 유일한 게이미피케이션이다. */
 async function streakDays(studentId: bigint, now: Date): Promise<number> {
   const rows = await db().studentActivity.findMany({
-    where: { studentId, occurredAt: { gte: addDays(now, -60) } },
+    where: { studentId, kind: { notIn: ['learning_adjustment', 'learning_performance'] }, occurredAt: { gte: addDays(now, -60) } },
     select: { occurredAt: true },
     orderBy: { occurredAt: 'desc' },
   });
