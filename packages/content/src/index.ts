@@ -22,3 +22,4 @@ export * from './demand.js';
 export * from './track-kpop.js';
 export * from './first-steps.js';
 export * from './teacher-training.js';
+export * from './coursebook.js';

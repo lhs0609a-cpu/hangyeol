@@ -1,4 +1,4 @@
-import {ALL_UNITS, LESSON_PLANS, LEARNING_SCENES} from '@hangyeol/content';
+import {ALL_UNITS, LESSON_PLANS, LEARNING_SCENES, buildStudentBook, SKILLS} from '@hangyeol/content';
 import {apiError,db,handle,readJson,requireStudentSession,latestAdjustment,adjustedNextUnit} from '@hangyeol/core';
 export const dynamic='force-dynamic';
 async function context(req:Request){
@@ -30,19 +30,26 @@ export function GET(req:Request){return handle(async()=>{
   const progress=await db().learningProgress.findUnique({where:{studentId:student.id}});
   const text=[unit.title,...unit.targetVocab].join(' ');
   const scene=/교통|지하철|버스|길|역|이동/.test(text)?'transit':/카페|커피|주문/.test(text)?'cafe':/식당|음식|먹|요리/.test(text)?'restaurant':/시장|가게|가격|쇼핑/.test(text)?'market':/하루|일과|어제|시간|주말/.test(text)?'routine':/질문|확인|요청|대화/.test(text)?'clarification':'friends';
-  return {learningMessage:available.support?'A little foundation practice to help you speak more comfortably. / 더 편하게 말하기 위한 기초 연습이에요.':null,unit,model:plan.modelDialogue??plan.blocks.find(b=>b.phase==='model')?.say.slice(0,3)??[],tasks:plan.exitTicket,image:LEARNING_SCENES[scene],units:ALL_UNITS.filter(u=>u.unitNo<=max).map(u=>({unitNo:u.unitNo,title:u.title})),answer:(progress?.notes as Record<string,string>|null)?.[`unit-${unitNo}`]??'',submitted:progress?.completed.includes(`unit-${unitNo}`)??false};
+  const book=buildStudentBook(unitNo)!;
+  const help=((progress?.notes as Record<string,string>|null)?.[`help-unit-${unitNo}`]??'').split(',').filter(s=>SKILLS.some(skill=>skill===s));
+  return {book,help,learningMessage:available.support?'A little foundation practice to help you speak more comfortably. / 더 편하게 말하기 위한 기초 연습이에요.':null,unit,model:book.model,tasks:book.tasks,image:LEARNING_SCENES[scene],units:ALL_UNITS.filter(u=>u.unitNo<=max).map(u=>({unitNo:u.unitNo,title:u.title})),answer:(progress?.notes as Record<string,string>|null)?.[`unit-${unitNo}`]??'',submitted:progress?.completed.includes(`unit-${unitNo}`)??false};
 });}
 export function POST(req:Request){return handle(async()=>{
-  const student=await context(req),body=await readJson<{unitNo:number;answer:string;spoken:boolean}>(req);
+  const student=await context(req),body=await readJson<{unitNo:number;answer?:string;spoken?:boolean;action?:string;help?:string[]}>(req);
   const available=await availableUnits(student);
-  if(!Number.isInteger(body.unitNo)||body.unitNo<1||body.unitNo>available.max||!ALL_UNITS.some(u=>u.unitNo===body.unitNo)||typeof body.answer!=='string'||body.answer.trim().length<3||body.answer.length>5000||body.spoken!==true)throw apiError('VALIDATION_FAILED','Write your answer and practise speaking before submitting.');
+  if(!Number.isInteger(body.unitNo)||body.unitNo<1||body.unitNo>available.max||!ALL_UNITS.some(u=>u.unitNo===body.unitNo))throw apiError('VALIDATION_FAILED');
+  if(body.action!==undefined&&body.action!=='help')throw apiError('VALIDATION_FAILED');
+  if(body.help!==undefined&&(!Array.isArray(body.help)||body.help.length>SKILLS.length||body.help.some(s=>!SKILLS.some(skill=>skill===s))))throw apiError('VALIDATION_FAILED');
+  const helpOnly=body.action==='help';
+  if(helpOnly&&!Array.isArray(body.help))throw apiError('VALIDATION_FAILED');
+  if(!helpOnly&&(typeof body.answer!=='string'||body.answer.trim().length<3||body.answer.length>5000||body.spoken!==true))throw apiError('VALIDATION_FAILED','Write your answer and practise speaking before submitting.');
   return db().$transaction(async tx=>{
     await tx.$queryRaw`SELECT id FROM students WHERE id = ${student.id} FOR UPDATE`;
     const previous=await tx.learningProgress.findUnique({where:{studentId:student.id}}),key=`unit-${body.unitNo}`;
-    const notes={...(previous?.notes as Record<string,string>??{}),[key]:body.answer.trim()};
-    const completed=[...new Set([...(previous?.completed??[]),key])];
+    const notes={...(previous?.notes as Record<string,string>??{}),...(!helpOnly?{[key]:body.answer!.trim()}:{}),...(body.help!==undefined?{[`help-unit-${body.unitNo}`]:[...new Set(body.help)].join(',')}:{})};
+    const completed=[...new Set([...(previous?.completed??[]),...(!helpOnly?[key]:[])])];
     await tx.learningProgress.upsert({where:{studentId:student.id},create:{studentId:student.id,notes,completed},update:{notes,completed}});
     await tx.studentActivity.create({data:{studentId:student.id,kind:'worksheet',meta:{unitNo:body.unitNo}}});
-    return {submitted:true};
+    return {submitted:!helpOnly,helpSaved:body.help!==undefined};
   });
 });}

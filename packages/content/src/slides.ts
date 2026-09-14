@@ -1,6 +1,6 @@
 import { ALL_UNITS } from './curriculum-all.js';
 import { LESSON_PLANS } from './lesson-plan.js';
-import { LEARNING_SCENES, type LearningScene } from './first-steps.js';
+import { artworkForUnit } from './coursebook.js';
 
 /*
  * 슬라이드 생성기 — 08번 문서 §2 "강사 슬라이드 · 이미지 시퀀스 16~20장".
@@ -67,16 +67,10 @@ export function buildDeck(unitNo: number): SlideDeck | null {
 
   const plan = LESSON_PLANS.find((p) => p.unitNo === unitNo);
   const slides: Slide[] = [];
-  const context = `${unit.title} ${unit.targetVocab.join(' ')}`;
-  const scene: LearningScene = /카페|커피|아메리카노/.test(context) ? 'cafe'
-    : /음식|먹|밥|맛/.test(context) ? 'restaurant'
-    : /숫자|가격|쇼핑|돈/.test(context) ? 'market'
-    : /장소|어디|교통|길|목적지/.test(context) ? 'transit'
-    : /여행|계획|주말/.test(context) ? 'hero' : 'friends';
-  const artwork = LEARNING_SCENES[scene];
+  const artwork = artworkForUnit(unitNo);
   const push = (s: Omit<Slide, 'no'>) => slides.push({
     ...s, no: slides.length + 1,
-    ...(['cover', 'dialogue', 'roleplay'].includes(s.kind) ? { illustration: { src: artwork.src, alt: artwork.alt.ko } } : {}),
+    ...(['cover', 'dialogue', 'roleplay'].includes(s.kind) ? { illustration: artwork } : {}),
   });
 
   // 1 · 표지

@@ -1,0 +1,33 @@
+{
+  "method": "built-in image_gen",
+  "assets": [
+    {
+      "id": "classroom",
+      "prompt": "Use case: illustration-story. Asset type: Korean language coursebook educational illustration. Create a polished warm editorial gouache illustration of a community learning studio in Korea: two adult learners at a table arranging large blank letter tiles and picture cards, a friendly adult teacher demonstrating a card, visible simple objects book, pencil, bag, cup. Wide landscape composition, tactile cream paper, navy teal terracotta colors, clear readable actions, diverse adults, natural anatomy. No text, no lettering, no logos, no watermark. This is a student activity picture, not a website mockup."
+    },
+    {
+      "id": "workplace",
+      "prompt": "Use case: illustration-story. Asset: adult Korean-language coursebook teaching picture. An office meeting in Korea: three adult colleagues comparing printed charts and a weekly planner at a table, one person presenting a proposed schedule, another asking a question; whiteboard with abstract colored blocks, no letters. Clear objects and gestures for learners to describe. Warm polished editorial gouache on cream paper, navy teal terracotta palette, wide landscape, natural anatomy, diverse adults, clear story and objects. No text, logos, watermarks or UI."
+    },
+    {
+      "id": "health",
+      "prompt": "Use case: illustration-story. Asset: adult Korean-language coursebook teaching picture. A Korean clinic consultation: adult patient pointing to their upper arm, doctor listening and writing on a blank clipboard, a clock and tissue box nearby. Calm ordinary non-emergency scene, no medical procedures. Warm polished editorial gouache on cream paper, navy teal terracotta palette, wide landscape, natural anatomy, diverse adults, clear story and objects. No text, logos, watermarks or UI."
+    },
+    {
+      "id": "home",
+      "prompt": "Use case: illustration-story. Asset: adult Korean-language coursebook teaching picture. Two adults in a Korean apartment discussing a leaking kitchen tap with a repair technician. A small bucket catches water, tool bag on floor, one adult points to the tap. Clear uncluttered action for language learners. Warm polished editorial gouache on cream paper, navy teal terracotta palette, wide landscape, natural anatomy, diverse adults, clear story and objects. No text, logos, watermarks or UI."
+    },
+    {
+      "id": "culture",
+      "prompt": "Use case: illustration-story. Asset: adult Korean-language coursebook teaching picture. Adults at a Korean community cultural workshop making pottery together. Instructor demonstrates shaping clay, two learners compare their bowls, shelves and simple plants. Respectful contemporary everyday cultural exchange. Warm polished editorial gouache on cream paper, navy teal terracotta palette, wide landscape, natural anatomy, diverse adults, clear story and objects. No text, logos, watermarks or UI."
+    },
+    {
+      "id": "research",
+      "prompt": "Use case: illustration-story. Asset: adult Korean-language coursebook teaching picture. Adults in a Korean library comparing two printed reports with clearly visible simple bar charts, one person points to a chart while another checks a book, laptop with abstract blocks. Supports lessons on evidence and source evaluation, no readable text. Warm polished editorial gouache on cream paper, navy teal terracotta palette, wide landscape, natural anatomy, diverse adults, clear story and objects. No text, logos, watermarks or UI."
+    },
+    {
+      "id": "environment",
+      "prompt": "Use case: illustration-story. Asset: adult Korean-language coursebook teaching picture. Neighborhood residents in Korea planning improvements to a small urban park: one points to a map, another holds a recycling bag, bicycles, trees and benches visible. Show everyday environmental choices and community discussion. No written words. Warm polished editorial gouache on cream paper, navy teal terracotta palette, wide landscape, natural anatomy, diverse adults, clear story and objects. No text, logos, watermarks or UI."
+    }
+  ]
+}

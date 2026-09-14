@@ -23,3 +23,4 @@ export * from './notifications.js';
 export * from './tuition.js';
 
 export * from './adaptive-learning.js';
+export * from './teaching-observations.js';

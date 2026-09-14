@@ -156,7 +156,7 @@ export async function adminDashboard(now = new Date()): Promise<AdminDashboard> 
   let bypassSuspects = 0;
   for (const { studentId } of viewed) {
     const acts = await prisma.studentActivity.count({
-      where: { studentId, kind: { notIn: ['learning_adjustment', 'learning_performance'] }, occurredAt: { gte: cutoff } },
+      where: { studentId, kind: { notIn: ['learning_adjustment', 'learning_performance', 'teaching_observation'] }, occurredAt: { gte: cutoff } },
     });
     if (acts === 0) bypassSuspects += 1;
   }

@@ -1,5 +1,6 @@
 'use client';
 import { AdaptivePanel } from './AdaptivePanel';
+import { TeachingWorkspace } from '../../components/TeachingWorkspace';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -39,7 +40,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
 
   if (error) {
     return (
-      <Shell wide={false}>
+      <Shell wide>
         <Panel>
           <p style={{ margin: 0, fontSize: 'var(--fs-body)' }}>{error}</p>
         </Panel>
@@ -49,7 +50,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
 
   if (!data) {
     return (
-      <Shell wide={false}>
+      <Shell wide>
         <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-body)' }}>불러오는 중</p>
       </Shell>
     );
@@ -58,7 +59,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
   const { teaching, mastery } = data;
 
   return (
-    <Shell wide={false}>
+    <Shell wide>
       <Eyebrow>{teaching.studentName} · {teaching.nextLessonNo}차시</Eyebrow>
 
       <h1 style={{ fontSize: 'var(--fs-h1)', fontWeight: 600, letterSpacing: '-0.02em', margin: '8px 0 6px', lineHeight: 1.4 }}>
@@ -87,6 +88,7 @@ export default function PlanPage({ params }: { params: { studentId: string } }) 
         </Panel>
       )}
 
+      {teaching.unit && <TeachingWorkspace key={teaching.unit.unitNo} studentId={params.studentId} unitNo={teaching.unit.unitNo}/>}
       <AdaptivePanel studentId={params.studentId} onSaved={async()=>setData(await get<{teaching:TeachingPlan;mastery:MasteryPlan}>(`/api/students/${params.studentId}/plan`))}/>
 
       {/* 시간 배분 — 학생 상태에 맞춰 조정된다 */}

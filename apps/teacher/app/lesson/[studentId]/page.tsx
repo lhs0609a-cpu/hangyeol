@@ -15,6 +15,7 @@ import {
 } from '@hangyeol/ui';
 import { get, post, ApiClientError } from '../../api-client';
 import { Shell } from '../../Shell';
+import { TeachingWorkspace } from '../../components/TeachingWorkspace';
 
 /*
  * T-02 · 수업 진행 4단계 — 07번 문서.
@@ -61,7 +62,7 @@ export default function LessonPage({ params }: { params: { studentId: string } }
   }
 
   return (
-    <Shell wide={false}>
+    <Shell wide={step === 2}>
       <Stepper steps={STEPS} current={step} />
 
       <div style={{ marginTop: 26 }}>
@@ -253,6 +254,7 @@ function StepUnit({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!deck) return;
+      if (!(e.target instanceof HTMLElement) || !e.target.closest('[data-slide-controls]')) return;
       if (e.key === 'ArrowRight') setPage((p) => Math.min(deck.slides.length - 1, p + 1));
       if (e.key === 'ArrowLeft') setPage((p) => Math.max(0, p - 1));
     }
@@ -264,6 +266,8 @@ function StepUnit({
 
   return (
     <Panel>
+      {unitNo && <TeachingWorkspace key={unitNo} studentId={studentId} unitNo={unitNo}/>}
+      <details style={{marginTop:24}}><summary>기존 수업 슬라이드 보기</summary><div data-slide-controls tabIndex={0}>
       <Eyebrow>차시 목표</Eyebrow>
       <p className="t-body-lg" style={{ margin: '8px 0 16px' }}>
         {deck?.goalStatement ?? (error ? '—' : '불러오는 중')}
@@ -301,6 +305,7 @@ function StepUnit({
         <SlidePlaceholder label="불러오는 중" />
       )}
 
+      </div></details>
       <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
         <Button kind="jade" size="lg" style={{ flex: 1 }} onClick={onNext}>
           수행 평가와 리포트 작성

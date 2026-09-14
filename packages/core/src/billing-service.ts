@@ -156,7 +156,7 @@ export async function runCycleClose(now = new Date()) {
         where: { studentId: c.studentId, startedAt: { gte: c.periodStart, lt: c.periodEnd } },
       }),
       prisma.studentActivity.count({
-        where: { studentId: c.studentId, kind: { notIn: ['learning_adjustment', 'learning_performance'] }, occurredAt: { gte: c.periodStart, lt: c.periodEnd } },
+        where: { studentId: c.studentId, kind: { notIn: ['learning_adjustment', 'learning_performance', 'teaching_observation'] }, occurredAt: { gte: c.periodStart, lt: c.periodEnd } },
       }),
     ]);
     counts.set(`${c.studentId}:${c.periodStart.toISOString()}`, { lessonCount, activityCount });

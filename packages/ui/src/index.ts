@@ -6,3 +6,4 @@ export * from './YearBars.js';
 export * from './DivergingBars.js';
 export * from './SlideRenderer.js';
 export * from './SyllableProgress.js';
+export * from './StudentWorkbook.js';
