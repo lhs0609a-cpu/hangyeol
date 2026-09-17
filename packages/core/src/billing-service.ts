@@ -314,6 +314,24 @@ export async function runInvoiceCreate(now = new Date()) {
         where: { id: BigInt(plan.teacherId) },
         data: { creditBalance: plan.creditBalanceAfter },
       });
+
+      // 09번 §6 — 감사 로그에 과금을 남긴다. 청구서 행만으로는
+      // "언제 어떤 배치가 만들었는지" 를 되짚을 수 없다.
+      await tx.auditLog.create({
+        data: {
+          actorType: 'system',
+          actorId: BigInt(plan.teacherId),
+          action: 'billing.invoice_created',
+          entity: 'invoices',
+          entityId: invoice.id,
+          meta: {
+            totalAmount: plan.invoice!.totalAmount,
+            creditApplied: plan.invoice!.creditApplied,
+            chargeAmount: plan.invoice!.chargeAmount,
+            lines: plan.lines.length,
+          },
+        },
+      });
       return true;
     });
 
@@ -361,6 +379,19 @@ export async function runLockEnforce(now = new Date()) {
         SET status_before_lock = status, status = 'locked'
         WHERE teacher_id = ${BigInt(plan.teacherId)} AND status <> 'locked'
       `;
+
+      // 잠금은 강사가 자료를 못 여는 상태다. 언제 누가 잠갔는지가 남아야
+      // 문의가 왔을 때 "미납 때문이고 언제부터입니다" 를 말할 수 있다.
+      await tx.auditLog.create({
+        data: {
+          actorType: 'system',
+          actorId: teacherId,
+          action: 'billing.locked',
+          entity: 'invoices',
+          entityId: BigInt(plan.invoiceId),
+          meta: { graceUntil: current.graceUntil.toISOString() },
+        },
+      });
     });
   }
 

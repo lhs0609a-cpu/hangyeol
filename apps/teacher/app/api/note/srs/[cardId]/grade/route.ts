@@ -1,4 +1,4 @@
-import { applyGrade, handle, readJson, requireStudentSession, type SrsGrade } from '@hangyeol/core';
+import { applyGrade, handle, readJson, requireConsentedStudent, type SrsGrade } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 // 요청 헤더·쿠키를 읽으므로 정적 렌더링 대상이 아니다.
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  */
 export function POST(req: Request, { params }: { params: { cardId: string } }) {
   return handle(async () => {
-    const claims = await requireStudentSession(req);
+    const claims = await requireConsentedStudent(req);
     const body = await readJson<{ grade: SrsGrade }>(req);
     return applyGrade(BigInt(claims.studentId), BigInt(params.cardId), body.grade);
   });

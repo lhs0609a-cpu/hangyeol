@@ -20,6 +20,15 @@ export interface CreateStudentInput {
   platform: 'italki' | 'preply' | 'direct';
   platformUrl?: string | null;
   goalTrack?: string | null;
+  /**
+   * 09번 §4 — "강사가 학생 이메일을 입력하는 시점에도
+   * '학생 동의를 받았음' 을 강사에게 확인받는다."
+   *
+   * 강사는 남의 개인정보를 대신 입력한다(09번 §5 L3). 확인 없이 받으면
+   * 우리가 그 사실을 몰랐다고 말할 수 없다. 기본값을 두지 않는다 —
+   * 기본값이 있으면 화면이 체크를 빠뜨려도 통과한다.
+   */
+  studentConsentConfirmed: boolean;
 }
 
 export interface CreateStudentResult {
@@ -39,7 +48,15 @@ export function noteBaseUrl(): string {
  * 05번 문서 §8-4: cycle_no 를 이어가고 새 과금은 발생하지 않는다.
  */
 export async function createStudent(input: CreateStudentInput): Promise<CreateStudentResult> {
+  if (!input.studentConsentConfirmed) {
+    throw apiError(
+      'VALIDATION_FAILED',
+      '학생에게 개인정보 수집 동의를 받았는지 확인해 주세요',
+    );
+  }
+
   const prisma = db();
+  const now = new Date();
   const emailHash = hashEmail(input.email);
 
   const existing = await prisma.student.findUnique({
@@ -96,6 +113,8 @@ export async function createStudent(input: CreateStudentInput): Promise<CreateSt
     platformUrl: input.platformUrl ?? null,
     goalTrack: input.goalTrack ?? null,
     status: 'pending',
+    // 강사의 확인 시각. 학생 본인 동의(consent_at)는 학습노트 첫 진입에서 따로 받는다.
+    teacherConsentAt: now,
   };
 
   const created = await prisma.student.create({ data, select: { id: true, status: true } });

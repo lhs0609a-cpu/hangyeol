@@ -35,6 +35,22 @@ export class ApiClientError extends Error {
   }
 }
 
+/*
+ * 관리자 2단계 인증(09번 §6). 로그인은 살아 있고 승급 세션만 없는 상태다.
+ *
+ * 화면마다 처리하면 반드시 하나를 빠뜨리고, 그러면 관리자 화면이
+ * "이유를 알 수 없는 오류" 로 보인다. 판단을 여기 한 곳에 둔다.
+ * fetch 를 직접 쓰는 화면(파일 업로드처럼 본문이 JSON 이 아닌 곳)도 이걸 부른다.
+ */
+export function adminStepUpRedirect(status: number, code: string | undefined): void {
+  if (status !== 403 || code !== 'ADMIN_TOTP_REQUIRED') return;
+  if (typeof window === 'undefined') return;
+  if (window.location.pathname.startsWith('/admin/security')) return;
+
+  const next = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `/admin/security?next=${next}`;
+}
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(path, {
     ...init,
@@ -60,6 +76,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       const next = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.href = `/login?next=${next}`;
     }
+
+    adminStepUpRedirect(res.status, failure.code);
 
     throw new ApiClientError(res.status, failure);
   }

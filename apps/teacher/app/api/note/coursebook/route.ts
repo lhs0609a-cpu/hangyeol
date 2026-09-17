@@ -1,8 +1,8 @@
 import {ALL_UNITS, LESSON_PLANS, LEARNING_SCENES, buildStudentBook, SKILLS} from '@hangyeol/content';
-import {apiError,db,handle,readJson,requireStudentSession,latestAdjustment,adjustedNextUnit} from '@hangyeol/core';
+import {apiError,db,handle,readJson,requireConsentedStudent,latestAdjustment,adjustedNextUnit} from '@hangyeol/core';
 export const dynamic='force-dynamic';
 async function context(req:Request){
-  const claims=await requireStudentSession(req);
+  const claims=await requireConsentedStudent(req);
   const student=await db().student.findUnique({where:{id:BigInt(claims.studentId)},include:{teacher:{select:{billingStatus:true}}}});
   if(!student||student.teacherId!==BigInt(claims.teacherId))throw apiError('NOT_FOUND');
   if(!student.verifiedAt)throw apiError('STUDENT_NOT_VERIFIED');

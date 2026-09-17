@@ -1,4 +1,4 @@
-import { db, handle, requireStudentSession } from '@hangyeol/core';
+import { db, handle, requireConsentedStudent } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 /** GET /api/note/vocab — 02번 문서 D-09 개인 단어장. 수업 표현이 자동 적립된다. */
 export function GET(req: Request) {
   return handle(async () => {
-    const claims = await requireStudentSession(req);
+    const claims = await requireConsentedStudent(req);
     const url = new URL(req.url);
     const page = Math.max(1, Number(url.searchParams.get('page') ?? 1));
     const size = 40;

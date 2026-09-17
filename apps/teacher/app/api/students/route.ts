@@ -22,6 +22,8 @@ interface Body {
   platform: 'italki' | 'preply' | 'direct';
   platformUrl?: string;
   goalTrack?: string;
+  /** 09번 §4 — 강사가 학생에게 동의를 받았다는 확인. */
+  studentConsentConfirmed?: boolean;
 }
 
 /**
@@ -38,6 +40,8 @@ export function POST(req: Request) {
       teacherId: ctx.teacherId, name: body.name, nameKo: body.nameKo,
       email: body.email, l1Code: body.l1Code, countryCode: body.countryCode,
       platform: body.platform, platformUrl: body.platformUrl, goalTrack: body.goalTrack,
+      // 본문의 다른 값과 함께 넘기지 않는다 — 허용 필드만 명시적으로 전달한다(17번 문서).
+      studentConsentConfirmed: body.studentConsentConfirmed === true,
     });
 
     return json(

@@ -1,4 +1,4 @@
-import { db, handle, requireStudentSession } from '@hangyeol/core';
+import { db, handle, requireConsentedStudent } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 export function GET(req: Request) {
   return handle(async () => {
-    const claims = await requireStudentSession(req);
+    const claims = await requireConsentedStudent(req);
     const studentId = BigInt(claims.studentId);
     const prisma = db();
 

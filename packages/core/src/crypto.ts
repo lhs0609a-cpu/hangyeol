@@ -36,15 +36,21 @@ function encKey(): Buffer {
   return key;
 }
 
-/** 저장 형식: [12바이트 IV][16바이트 auth tag][암호문] */
-export function encryptEmail(email: string): Buffer {
+/**
+ * 저장 형식: [12바이트 IV][16바이트 auth tag][암호문]
+ *
+ * 이메일 말고도 평문으로 두면 안 되는 짧은 값이 있다 —
+ * 관리자 TOTP 시크릿(09번 §6)이 그렇다. 형식과 키를 나눠 쓰지 않는다.
+ * 키를 하나 더 만들면 회전 절차가 둘이 되고, 둘이 되면 한쪽이 뒤처진다.
+ */
+export function encryptSecret(plain: string): Buffer {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', encKey(), iv);
-  const body = Buffer.concat([cipher.update(normalizeEmail(email), 'utf8'), cipher.final()]);
+  const body = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
   return Buffer.concat([iv, cipher.getAuthTag(), body]);
 }
 
-export function decryptEmail(blob: Buffer | Uint8Array): string {
+export function decryptSecret(blob: Buffer | Uint8Array): string {
   const buf = Buffer.from(blob);
   const iv = buf.subarray(0, 12);
   const tag = buf.subarray(12, 28);
@@ -52,6 +58,15 @@ export function decryptEmail(blob: Buffer | Uint8Array): string {
   const decipher = createDecipheriv('aes-256-gcm', encKey(), iv);
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(body), decipher.final()]).toString('utf8');
+}
+
+/** 이메일은 정규화한 형태로만 저장한다 — 대소문자가 섞이면 같은 사람이 둘이 된다. */
+export function encryptEmail(email: string): Buffer {
+  return encryptSecret(normalizeEmail(email));
+}
+
+export function decryptEmail(blob: Buffer | Uint8Array): string {
+  return decryptSecret(blob);
 }
 
 /**

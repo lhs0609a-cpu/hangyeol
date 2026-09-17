@@ -23,6 +23,15 @@ export interface RateRule {
 
 export const RULES = {
   login: { limit: 10, windowSec: 600, label: '로그인' },
+  /*
+   * 관리자 2단계 인증 — 09번 §6.
+   *
+   * 여섯 자리는 100만 가지뿐이고 코드 하나가 90초(±1칸) 산다.
+   * 막지 않으면 초당 수백 번을 던져 그 안에 맞힐 수 있다.
+   * 로그인보다 빡빡하게 잡는다 — 여기까지 온 사람은 이미 비밀번호를 통과했고,
+   * 정상 사용자가 10분에 다섯 번 넘게 틀릴 일은 없다.
+   */
+  adminTotp: { limit: 5, windowSec: 600, label: '관리자 2단계 인증' },
   magicLink: { limit: 5, windowSec: 3600, label: '매직링크 발송' },
   assetSign: { limit: 120, windowSec: 60, label: '자료 서명 URL 발급' },
   general: { limit: 600, windowSec: 60, label: '일반 요청' },

@@ -1,4 +1,4 @@
-import { apiError, handle, runCycleClose, runInvoiceCreate, runLockEnforce, runPaymentCollection, runNotifications } from '@hangyeol/core';
+import { apiError, handle, runCycleClose, runInvoiceCreate, runLockEnforce, runPaymentCollection, runNotifications, runRetentionPurge } from '@hangyeol/core';
 import { safeEqual } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
@@ -25,6 +25,8 @@ export function GET(req: Request) {
     switch (job) {
       case 'payment-collect': return { job, ...(await runPaymentCollection()) };
       case 'notifications': return { job, ...(await runNotifications()) };
+      // 09번 §4 보관기간. 기한이 지난 것만 지운다. 되돌릴 수 없다.
+      case 'retention-purge': return { job, ...(await runRetentionPurge()) };
       case 'cycle-close':
         return { job, ...(await runCycleClose()) };
       case 'invoice-create':

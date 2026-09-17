@@ -40,7 +40,7 @@ export function POST(req: Request) {
      */
     const teacher = await db().teacher.findUnique({
       where: { id: BigInt(claims.teacherId) },
-      select: { approvalStatus: true, rejectedReason: true },
+      select: { approvalStatus: true, rejectedReason: true, withdrawnAt: true },
     });
     // 계정이 지워졌는데 토큰만 남아 있는 경우.
     if (!teacher) throw apiError('UNAUTHENTICATED', '다시 로그인해 주세요');

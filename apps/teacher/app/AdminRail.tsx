@@ -43,6 +43,8 @@ export const RAIL: RailEntry[] = [
   { href: '/admin/images', label: '이미지 자산', group: '관리자', spec: '08번 §2' },
   { href: '/admin/content', label: '콘텐츠 현황', group: '관리자', spec: '08번 §9' },
   { href: '/admin/courses', label: '수강·정산 관리', group: '관리자' },
+  { href: '/admin/flags', label: '우회 의심', group: '관리자', spec: '02번 G-03 · 09번 §3' },
+  { href: '/admin/security', label: '관리자 보안 · 2단계 인증', group: '관리자', spec: '09번 §6' },
 ];
 
 function indexOf(pathname: string): number {

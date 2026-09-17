@@ -45,6 +45,7 @@ export function POST(req: Request) {
         billingStatus: true,
         approvalStatus: true,
         rejectedReason: true,
+        withdrawnAt: true,
       },
     });
 

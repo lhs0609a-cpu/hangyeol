@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { noteHome, verifyStudentToken, type NoteHome } from '@hangyeol/core';
+import { consentState, noteHome, verifyStudentToken, type NoteHome } from '@hangyeol/core';
+import { PrivacyFooter } from './PrivacyFooter';
 import { SyllableProgress } from './SyllableProgress';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,19 @@ const TASK_HREF: Record<string, string> = {
  *   □ 예약 · 결제 · 충전 · 강사검색 UI 없음
  */
 
+/** 09번 §4 — 고지와 철회 경로를 학생의 모국어로 붙인다. */
+async function loadPrivacy() {
+  const token = cookies().get('hg_note')?.value;
+  if (!token) return null;
+  try {
+    const claims = await verifyStudentToken(token, 'session');
+    const state = await consentState(BigInt(claims.studentId));
+    return state.withdrawRequestedAt ? null : state.notice;
+  } catch {
+    return null;
+  }
+}
+
 async function loadHome(): Promise<NoteHome | null> {
   const token = cookies().get('hg_note')?.value;
   if (!token) return null;
@@ -31,7 +45,7 @@ async function loadHome(): Promise<NoteHome | null> {
 }
 
 export default async function NoteHomePage() {
-  const home = await loadHome();
+  const [home, privacy] = await Promise.all([loadHome(), loadPrivacy()]);
 
   if (!home) {
     return (
@@ -173,6 +187,8 @@ export default async function NoteHomePage() {
           </Link>
         ))}
       </nav>
+
+      {privacy && <PrivacyFooter strings={privacy} />}
 
       {/*
         강사가 미납으로 잠겨도 학생 화면은 계속 돈다 (TC-10).

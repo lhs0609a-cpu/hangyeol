@@ -1,4 +1,4 @@
-import { handle, noteHome, requireStudentSession } from '@hangyeol/core';
+import { handle, noteHome, requireConsentedStudent } from '@hangyeol/core';
 
 export const runtime = 'nodejs';
 // 요청 헤더·쿠키를 읽으므로 정적 렌더링 대상이 아니다.
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 export function GET(req: Request) {
   return handle(async () => {
-    const claims = await requireStudentSession(req);
+    const claims = await requireConsentedStudent(req);
     return noteHome(BigInt(claims.studentId));
   });
 }

@@ -1,8 +1,8 @@
-import { apiError, db, handle, readJson, requireStudentSession, replayLevelAnswers, saveLevelResult, startTest } from '@hangyeol/core';
+import { apiError, db, handle, readJson, requireConsentedStudent, replayLevelAnswers, saveLevelResult, startTest } from '@hangyeol/core';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 async function studentContext(req: Request) {
-  const claims = await requireStudentSession(req);
+  const claims = await requireConsentedStudent(req);
   const student = await db().student.findUnique({ where: { id: BigInt(claims.studentId) }, include: { teacher: true } });
   if (!student || student.teacherId !== BigInt(claims.teacherId)) throw apiError('NOT_FOUND');
   if (!student.verifiedAt) throw apiError('STUDENT_NOT_VERIFIED');

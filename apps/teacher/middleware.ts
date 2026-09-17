@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { cspNonce, securityHeaders } from '@hangyeol/shared';
 
 /*
  * 로그인 게이트.
@@ -21,6 +22,25 @@ const PUBLIC = ['/', '/login', '/signup', '/licenses', '/learn', '/learn/print',
 
 const COOKIE = 'hg_access';
 
+/**
+ * 09번 문서 §6 의 보안 헤더를 요청마다 건다.
+ *
+ * nonce 를 요청 헤더에도 넣는 이유: Next 가 자기 인라인 스크립트에 이 값을
+ * 붙여 준다. 응답에만 넣으면 Next 가 심은 스크립트가 통행증 없이 죽는다.
+ */
+function secured(req: NextRequest): NextResponse {
+  const nonce = cspNonce();
+  const headers = new Headers(req.headers);
+  headers.set('x-nonce', nonce);
+
+  const applied = securityHeaders(nonce);
+  headers.set('content-security-policy', applied['content-security-policy']!);
+
+  const res = NextResponse.next({ request: { headers } });
+  for (const [key, value] of Object.entries(applied)) res.headers.set(key, value);
+  return res;
+}
+
 export function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const hasSession = Boolean(req.cookies.get(COOKIE)?.value);
@@ -30,8 +50,8 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/today', req.url));
   }
 
-  if (PUBLIC.includes(pathname)) return NextResponse.next();
-  if (hasSession) return NextResponse.next();
+  if (PUBLIC.includes(pathname)) return secured(req);
+  if (hasSession) return secured(req);
 
   /*
    * 어디로 가려 했는지 기억한다. 로그인 뒤에 그 화면으로 돌려보내야

@@ -127,6 +127,7 @@ describe('관리자 API 는 전부 관리자만 통과한다', () => {
     'apps/teacher/app/api/admin/metrics/route.ts',
     'apps/teacher/app/api/admin/images/route.ts',
     'apps/teacher/app/api/admin/images/[assetId]/route.ts',
+    'apps/teacher/app/api/admin/flags/route.ts',
   ];
 
   it('모든 관리자 라우트가 requireAdmin 을 부른다', () => {
@@ -145,7 +146,35 @@ describe('관리자 API 는 전부 관리자만 통과한다', () => {
 
   it('허용목록이 비면 전부 거부한다 — 열어 두는 쪽으로 실패하지 않는다', () => {
     const guard = read('packages/core/src/guard.ts');
-    expect(guard).toMatch(/allowed\.size === 0 \|\|/);
+    // 비어 있을 때 통과시키는 경로가 없어야 한다. 목록이 있고 그 안에 있을 때만 참이다.
+    expect(guard).toMatch(/allowed\.size > 0 && allowed\.has\(email\.toLowerCase\(\)\)/);
+  });
+
+  /*
+   * 09번 §6 "관리자 계정 2FA 필수".
+   *
+   * 이메일 허용목록만으로 통과하는 경로가 생기면 그 순간 2FA 는 장식이 된다.
+   * 등록 여부와 승급 세션을 둘 다 보는지 확인한다.
+   */
+  it('2단계 인증을 등록하고 통과해야 관리자 데이터가 열린다', () => {
+    const guard = read('packages/core/src/guard.ts');
+
+    expect(guard).toMatch(/adminTotpEnrolledAt/);
+    expect(guard).toMatch(/verifyAdminStepUp\(token, String\(ctx\.teacherId\)\)/);
+    expect(guard).toMatch(/ADMIN_TOTP_REQUIRED/);
+  });
+
+  it('2단계 인증 등록·확인만 승급 세션 없이 열린다 — 첫 등록자가 잠기지 않도록', () => {
+    for (const r of ['apps/teacher/app/api/admin/2fa/enroll/route.ts', 'apps/teacher/app/api/admin/2fa/verify/route.ts']) {
+      expect(read(r), r).toMatch(/requireAdminIdentity\(req\)/);
+      expect(read(r), r).not.toMatch(/requireAdmin\(req\)/);
+    }
+  });
+
+  it('IP 허용목록은 설정됐을 때만 강제하고, 목록 밖에는 존재를 알리지 않는다', () => {
+    const guard = read('packages/core/src/guard.ts');
+    expect(guard).toMatch(/rules\.length > 0 && !ipMatches\(clientIp\(req\), rules\)/);
+    expect(guard).toMatch(/없는 주소입니다/);
   });
 });
 
@@ -162,7 +191,7 @@ describe('관리자 승인 API', () => {
   });
 
   it('승인 판단에 필요 없는 개인정보를 내려보내지 않는다', () => {
-    // 09번 문서의 관리자 게이트(IP 허용목록 + 2FA)가 아직 없다.
+    // 게이트가 세 겹이어도 화면에 필요 없는 개인정보는 애초에 내보내지 않는다.
     const selectBlock = src.slice(src.indexOf('select: {'), src.indexOf('});'));
     for (const field of ['phone', 'passwordHash', 'hourlyRateUsd']) {
       expect(selectBlock, field).not.toContain(field);

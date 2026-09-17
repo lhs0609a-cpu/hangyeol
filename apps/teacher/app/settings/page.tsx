@@ -154,6 +154,8 @@ export default function SettingsPage() {
         </div>
       </Panel>
 
+      <WithdrawPanel email={me?.email ?? ''} />
+
       <div style={{ marginTop: 20, textAlign: 'center' }}>
         <Button
           kind="quiet"
@@ -168,6 +170,82 @@ export default function SettingsPage() {
         </Button>
       </div>
     </Shell>
+  );
+}
+
+/*
+ * 탈퇴 — 09번 문서 §4 보관기간.
+ *
+ * 되돌리는 버튼을 만들지 않았다. 되돌릴 수 있게 하려면 탈퇴 상태를
+ * 계속 들고 있어야 하고, 그러면 "탈퇴했는데 데이터가 남아 있다" 가 된다.
+ * 대신 무엇이 언제 지워지는지를 누르기 전에 말한다.
+ */
+function WithdrawPanel({ email }: { email: string }) {
+  const [open, setOpen] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  async function withdraw() {
+    setBusy(true);
+    setFailed(null);
+    try {
+      await post('/api/me/withdraw', { confirmEmail });
+      location.href = '/login';
+    } catch (e) {
+      setFailed(e instanceof Error ? e.message : '처리하지 못했습니다. 다시 시도해 주세요');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel style={{ marginTop: 20 }}>
+      <h2 className="t-h2" style={{ margin: 0 }}>
+        탈퇴
+      </h2>
+      <p className="t-body-sm tone-muted" style={{ margin: '8px 0 0' }}>
+        계정은 바로 막힙니다. 학생의 학습 기록은 90일 뒤에 지워지고, 청구·정산 기록은 거래 근거라
+        더 오래 보관합니다.
+      </p>
+
+      {open ? (
+        <div style={{ marginTop: 14 }}>
+          <label className="t-body-sm" htmlFor="withdraw-email">
+            확인을 위해 <span className="mono">{email}</span> 를 그대로 입력해 주세요
+          </label>
+          <input
+            id="withdraw-email"
+            className="t-body"
+            value={confirmEmail}
+            onChange={(e) => setConfirmEmail(e.target.value)}
+            style={{ ...inputStyle, marginTop: 8 }}
+          />
+          {failed && (
+            <p className="t-body-sm" style={{ color: 'var(--honghwa)', marginTop: 10 }}>
+              {failed}
+            </p>
+          )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <Button kind="ghost" onClick={() => setOpen(false)}>
+              그만두기
+            </Button>
+            <Button
+              kind="primary"
+              disabled={busy || confirmEmail.trim().toLowerCase() !== email.toLowerCase()}
+              onClick={() => void withdraw()}
+            >
+              {busy ? '처리하는 중' : '탈퇴하기'}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ marginTop: 14 }}>
+          <Button kind="ghost" size="sm" onClick={() => setOpen(true)}>
+            탈퇴 진행
+          </Button>
+        </div>
+      )}
+    </Panel>
   );
 }
 

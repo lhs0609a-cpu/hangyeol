@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import localFont from 'next/font/local';
-import { noteHome, verifyStudentToken } from '@hangyeol/core';
+import { consentState, noteHome, verifyStudentToken } from '@hangyeol/core';
+import { ConsentGate, type Notice } from './ConsentGate';
 import './globals.css';
 
 /*
@@ -45,11 +46,39 @@ const latin = localFont({
   display: 'swap',
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+/*
+ * 09번 문서 §4 — 개인정보 필수 동의.
+ *
+ * 동의 화면을 페이지로 만들지 않고 레이아웃에서 가로챈다.
+ * 페이지로 두면 새 화면을 추가할 때마다 리다이렉트를 붙여야 하고,
+ * 언젠가 하나를 빠뜨린다. 빠뜨린 그 화면이 동의 없이 열린다.
+ *
+ * 세션이 없으면 가로채지 않는다 — 링크를 아직 열지 않은 사람에게는
+ * 동의받을 것이 없고, 홈 화면이 "선생님이 보낸 링크로 들어오세요" 를 안내한다.
+ */
+async function consentNeeded(): Promise<Notice | null> {
+  const token = cookies().get('hg_note')?.value;
+  if (!token) return null;
+
+  try {
+    const claims = await verifyStudentToken(token, 'session');
+    const state = await consentState(BigInt(claims.studentId));
+    return state.required ? state.notice : null;
+  } catch {
+    // 세션이 깨졌거나 DB 가 없는 상태. 여기서 막으면 원인을 알 수 없는 빈 화면이 된다.
+    return null;
+  }
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const notice = await consentNeeded();
+
   return (
-    <html lang="ko" className={`${sans.variable} ${latin.variable}`}>
+    <html lang={notice ? notice.locale : 'ko'} className={`${sans.variable} ${latin.variable}`}>
       <body className="register-student">
-        <main style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px 70px' }}>{children}</main>
+        <main style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px 70px' }}>
+          {notice ? <ConsentGate notice={notice} /> : children}
+        </main>
       </body>
     </html>
   );

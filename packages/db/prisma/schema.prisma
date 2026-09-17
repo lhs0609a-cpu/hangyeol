@@ -67,6 +67,22 @@ model Teacher {
   onboardingStage String    @default("signup") @map("onboarding_stage")
   certifiedAt     DateTime? @map("certified_at") @db.Timestamptz(6)
 
+  // 탈퇴 — 09번 §4 보관기간. 표시만 하고 즉시 지우지 않는다.
+  // 학생 학습 기록은 90일 더 살아 있어야 하고, 청구·정산 기록은 더 오래 남는다.
+  // 이 시각부터 로그인은 막힌다.
+  withdrawnAt DateTime? @map("withdrawn_at") @db.Timestamptz(6)
+
+  // 관리자 2단계 인증 — 09번 §6 "관리자 계정 2FA 필수".
+  //
+  // 이 컬럼이 채워졌다고 관리자가 되는 것이 아니다. 관리자 판정은 여전히
+  // ADMIN_EMAILS(환경변수)가 하고, 여기는 그 사람이 통과해야 할 두 번째 관문이다.
+  // 시크릿은 평문으로 두지 않는다 — DB 덤프 하나로 2FA 가 무력화되면 의미가 없다.
+  adminTotpSecret     Bytes?    @map("admin_totp_secret") // AES-256-GCM
+  adminTotpEnrolledAt DateTime? @map("admin_totp_enrolled_at") @db.Timestamptz(6)
+  // 마지막으로 통과한 30초 칸. 같은 코드를 두 번 받지 않으려고 기록한다 —
+  // 어깨너머로 본 사람이 같은 코드로 한 번 더 들어오는 경로를 막는다.
+  adminTotpLastStep   BigInt?   @map("admin_totp_last_step")
+
   // 결제. 카드번호는 절대 보관하지 않는다 — PG 빌링키만.
   pgCustomerId  String? @map("pg_customer_id")
   cardLast4     String? @map("card_last4") @db.Char(4)
@@ -111,6 +127,20 @@ model Student {
 
   status     String    @default("pending") // pending|active|dormant|locked|completed
   verifiedAt DateTime? @map("verified_at") @db.Timestamptz(6)
+
+  // 09번 문서 §4 개인정보 동의.
+  //
+  // 두 개가 필요하다. 강사는 남의 정보를 대신 입력하고(개인정보보호법 L3),
+  // 학생 본인은 그 사실을 모른 채 등록될 수 있다. 그래서 강사에게는
+  // "동의를 받았음" 을 확인받고, 학생에게는 학습노트 첫 진입에서 직접 받는다.
+  teacherConsentAt DateTime? @map("teacher_consent_at") @db.Timestamptz(6)
+  consentAt        DateTime? @map("consent_at") @db.Timestamptz(6)
+  // 고지 내용이 바뀌면 다시 받아야 한다. 무엇에 동의했는지가 남지 않으면
+  // "동의받았다" 는 기록이 아무것도 증명하지 못한다.
+  consentVersion   String?   @map("consent_version")
+  consentLocale    String?   @map("consent_locale")
+  // 철회 요청. 30일 내 파기하고 강사에게 통지한다(09번 §4).
+  withdrawRequestedAt DateTime? @map("withdraw_requested_at") @db.Timestamptz(6)
 
   // 문서에 없던 추가 컬럼.
   // 05번 §6 "결제 성공 시 student.status 를 직전 상태로 복원" 을 구현하려면

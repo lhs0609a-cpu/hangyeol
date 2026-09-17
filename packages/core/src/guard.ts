@@ -1,8 +1,19 @@
 import { canViewAssets } from '@hangyeol/billing';
 import { getPrisma, isDatabaseConfigured } from '@hangyeol/db';
 import type { StudentStatus } from '@hangyeol/shared';
+import {
+  adminCookieFrom,
+  ipMatches,
+  parseIpAllowlist,
+  verifyAdminStepUp,
+  type IpRule,
+} from './admin-security.js';
 import { sessionToken, verifyAccessToken, verifyStudentToken, type TeacherClaims } from './auth.js';
+// 순환 참조로 보이지만 둘 다 함수 선언이라 호출 시점에 풀린다.
+// consent.ts 는 여기의 db() 를, 여기는 consent.ts 의 관문을 부른다.
+import { assertConsented } from './consent.js';
 import { apiError } from './errors.js';
+import { clientIp } from './http.js';
 
 /**
  * 09번 문서 §6 — 권한 검사 5단계.
@@ -43,7 +54,16 @@ export function db() {
 export function assertApproved(teacher: {
   approvalStatus: string;
   rejectedReason?: string | null;
+  withdrawnAt?: Date | null;
 }): void {
+  /*
+   * 탈퇴한 계정은 승인 여부와 무관하게 막는다(09번 §4).
+   * 데이터는 보관기간 동안 남아 있지만 계정은 그 순간부터 남의 것이 아니다.
+   */
+  if (teacher.withdrawnAt) {
+    throw apiError('TEACHER_NOT_APPROVED', '탈퇴한 계정입니다. 다시 쓰시려면 새로 신청해 주세요');
+  }
+
   if (teacher.approvalStatus === 'approved') return;
 
   throw apiError(
@@ -67,18 +87,26 @@ export async function requireTeacher(req: Request): Promise<TeacherContext> {
 }
 
 /*
- * 관리자 게이트.
+ * 관리자 게이트 — 09번 문서 §6.
  *
  * requireTeacher 로는 부족하다 — 그건 "로그인한 강사" 까지만 본다.
  * 관리자 화면에는 다른 강사의 이메일과 가입 신청서가 있고, 승인 버튼이 있다.
  * 강사 아무나 통과하면 자기 계정을 스스로 승인할 수 있다.
  *
- * 09번 문서는 IP 허용목록 + 2FA 를 요구한다. 둘 다 아직 없다.
- * 그때까지는 이메일 허용목록으로 막는다 — 약하지만 없는 것보다 낫고,
- * DB 필드가 아니라 환경변수라 계정이 탈취돼도 권한이 따라오지 않는다.
+ * 세 겹으로 막는다.
  *
- * 환경변수가 비어 있으면 전부 거부한다. 열어 두는 쪽으로 실패하지 않는다 —
+ *   1. 이메일 허용목록(ADMIN_EMAILS)  — 환경변수. DB 가 털려도 권한이 따라오지 않는다
+ *   2. IP 허용목록(ADMIN_IP_ALLOWLIST) — 설정돼 있을 때만. 목록 밖은 404
+ *   3. TOTP 승급 세션                  — 예외 없음. 로그인과 별개로 2시간
+ *
+ * 1번이 비어 있으면 전부 거부한다. 열어 두는 쪽으로 실패하지 않는다 —
  * 배포 환경에 변수를 넣는 걸 잊었을 때 관리자 화면이 공개되면 안 된다.
+ *
+ * 2번은 설정돼 있을 때만 강제한다. 여기만 다른 이유가 있다 —
+ * 서버리스에서 관리자는 고정 IP 를 갖지 못하는 경우가 흔하고,
+ * 비어 있을 때 막아 버리면 아무도 못 들어가는 문이 된다.
+ * 대신 미설정 상태를 관리자 화면이 경고로 계속 보여 준다(/api/admin/2fa).
+ * 문서가 요구하는 "필수" 는 3번이 받는다 — 그쪽은 예외가 없다.
  */
 function adminEmails(): Set<string> {
   return new Set(
@@ -89,14 +117,77 @@ function adminEmails(): Set<string> {
   );
 }
 
-export async function requireAdmin(req: Request): Promise<TeacherContext> {
-  const ctx = await requireTeacher(req);
-  const allowed = adminEmails();
+export function adminIpRules(): IpRule[] {
+  return parseIpAllowlist(process.env.ADMIN_IP_ALLOWLIST);
+}
 
-  if (allowed.size === 0 || !allowed.has(ctx.claims.email.toLowerCase())) {
+export function isAdminEmail(email: string): boolean {
+  const allowed = adminEmails();
+  return allowed.size > 0 && allowed.has(email.toLowerCase());
+}
+
+/**
+ * 1·2단계까지만 본다.
+ *
+ * 2FA 등록·코드 확인 자체는 여기를 쓴다 — 승급 세션을 요구하면
+ * 처음 등록하는 사람이 영원히 들어올 수 없다(관리자 자리의 닭과 달걀).
+ */
+export async function requireAdminIdentity(req: Request): Promise<TeacherContext> {
+  const ctx = await requireTeacher(req);
+
+  if (!isAdminEmail(ctx.claims.email)) {
     // 관리자 화면의 존재를 알려 주지 않는다. 없는 주소와 같은 응답을 준다.
     throw apiError('NOT_FOUND', '없는 주소입니다');
   }
+
+  const rules = adminIpRules();
+  if (rules.length > 0 && !ipMatches(clientIp(req), rules)) {
+    // 허용목록 밖에서는 관리자 계정이라는 사실조차 확인해 주지 않는다.
+    throw apiError('NOT_FOUND', '없는 주소입니다');
+  }
+  return ctx;
+}
+
+/** 관리자 데이터에 닿는 모든 경로. 3단계까지 전부 지난다. */
+export async function requireAdmin(req: Request): Promise<TeacherContext> {
+  const ctx = await requireAdminIdentity(req);
+
+  const teacher = await db().teacher.findUnique({
+    where: { id: ctx.teacherId },
+    select: { adminTotpEnrolledAt: true },
+  });
+
+  if (!teacher?.adminTotpEnrolledAt) {
+    throw apiError(
+      'ADMIN_TOTP_REQUIRED',
+      '관리자 화면을 열려면 2단계 인증을 먼저 등록해 주세요',
+      { stage: 'enroll' },
+    );
+  }
+
+  const token = adminCookieFrom(req);
+  if (!token || !(await verifyAdminStepUp(token, String(ctx.teacherId)))) {
+    throw apiError('ADMIN_TOTP_REQUIRED', undefined, { stage: 'verify' });
+  }
+
+  /*
+   * 09번 §6 — "감사 로그: 자료 열람 · 과금 · 학생 삭제 · **관리자 조회 전건**".
+   *
+   * 조회까지 남기는 이유: 관리자 화면에서 나가는 것은 집계값이지만,
+   * 누가 언제 무엇을 열었는지가 없으면 사고가 났을 때 되짚을 수 없다.
+   * 관리자 트래픽은 하루에 수십 건이라 이 한 줄이 비용이 되지 않는다.
+   */
+  const url = new URL(req.url);
+  await db().auditLog.create({
+    data: {
+      actorType: 'admin',
+      actorId: ctx.teacherId,
+      action: 'admin.access',
+      entity: 'admin',
+      meta: { path: url.pathname, method: req.method },
+    },
+  });
+
   return ctx;
 }
 
@@ -192,4 +283,17 @@ export async function requireStudentSession(req: Request) {
   const match = cookie.match(/(?:^|;\s*)hg_note=([^;]+)/);
   if (!match?.[1]) throw apiError('UNAUTHENTICATED');
   return verifyStudentToken(decodeURIComponent(match[1]), 'session');
+}
+
+/**
+ * 학습 데이터에 닿는 학생 API 의 입구 — 09번 §4 필수 동의.
+ *
+ * 세션과 동의를 따로 부르지 않는다. 두 줄로 나뉘면 새 화면을 만들 때
+ * 한 줄만 복사하는 날이 오고, 그 화면이 동의 없이 열린다.
+ * 동의 화면 자신과 매직링크 착지점만 requireStudentSession 을 직접 쓴다.
+ */
+export async function requireConsentedStudent(req: Request) {
+  const claims = await requireStudentSession(req);
+  await assertConsented(BigInt(claims.studentId));
+  return claims;
 }

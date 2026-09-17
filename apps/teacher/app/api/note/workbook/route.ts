@@ -1,12 +1,12 @@
 import { FIRST_STEPS } from '@hangyeol/content';
-import { apiError, db, handle, readJson, requireStudentSession } from '@hangyeol/core';
+import { apiError, db, handle, readJson, requireConsentedStudent } from '@hangyeol/core';
 export const dynamic = 'force-dynamic';
 export function GET(req: Request){return handle(async()=>{
-  const {studentId}=await requireStudentSession(req);
+  const {studentId}=await requireConsentedStudent(req);
   return await db().learningProgress.findUnique({where:{studentId:BigInt(studentId)}})??{completed:[],notes:{}};
 });}
 export function POST(req:Request){return handle(async()=>{
-  const {studentId}=await requireStudentSession(req);
+  const {studentId}=await requireConsentedStudent(req);
   const body=await readJson<{lessonId:string;note:string;complete?:boolean;answers?:number[];spoken?:boolean}>(req);
   const lesson=FIRST_STEPS.find(l=>l.id===body.lessonId);
   if(!lesson || typeof body.note!=='string' || body.note.length>2000)throw apiError('VALIDATION_FAILED');

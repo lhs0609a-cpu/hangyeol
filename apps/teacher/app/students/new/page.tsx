@@ -52,6 +52,12 @@ export default function NewStudentPage() {
     platformUrl: '',
     goalTrack: 'kcontent',
   });
+  /*
+   * 09번 §4 — 강사는 남의 개인정보를 대신 입력한다.
+   * 그래서 "학생에게 동의를 받았다" 를 여기서 한 번 확인받는다.
+   * 미리 체크해 두지 않는다. 미리 체크된 확인은 확인이 아니다.
+   */
+  const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<CreateResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,13 +66,16 @@ export default function NewStudentPage() {
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const ready = form.name.trim() !== '' && form.email.trim() !== '';
+  const ready = form.name.trim() !== '' && form.email.trim() !== '' && consentConfirmed;
 
   async function submit() {
     setBusy(true);
     setError(null);
     try {
-      const result = await post<CreateResult>('/api/students', form);
+      const result = await post<CreateResult>('/api/students', {
+        ...form,
+        studentConsentConfirmed: consentConfirmed,
+      });
       setDone(result);
     } catch (err) {
       if (err instanceof ApiClientError && err.code === 'DUPLICATE_STUDENT') {
@@ -165,6 +174,32 @@ export default function NewStudentPage() {
           />
         </Field>
 
+        <label
+          style={{
+            display: 'flex',
+            gap: 10,
+            alignItems: 'flex-start',
+            marginTop: 18,
+            padding: 12,
+            borderRadius: 7,
+            border: '1px solid var(--rule)',
+            fontSize: 'var(--fs-body-sm)',
+            lineHeight: 1.6,
+            cursor: 'pointer',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={consentConfirmed}
+            onChange={(e) => setConsentConfirmed(e.target.checked)}
+            style={{ marginTop: 3, width: 18, height: 18, flexShrink: 0 }}
+          />
+          <span>
+            이 학생에게 개인정보 수집·이용 동의를 받았습니다. 학생 본인도 학습 노트를 처음 열 때
+            모국어로 된 안내를 보고 직접 동의합니다.
+          </span>
+        </label>
+
         {error && (
           <div
             style={{
@@ -182,7 +217,13 @@ export default function NewStudentPage() {
 
         <div style={{ marginTop: 20 }}>
           <Button kind="primary" size="lg" full disabled={!ready || busy} onClick={submit}>
-            {busy ? '등록하는 중' : ready ? '등록하고 학습 노트 보내기' : '이름과 이메일을 입력하세요'}
+            {busy
+              ? '등록하는 중'
+              : ready
+                ? '등록하고 학습 노트 보내기'
+                : consentConfirmed
+                  ? '이름과 이메일을 입력하세요'
+                  : '동의 확인에 체크하세요'}
           </Button>
         </div>
 

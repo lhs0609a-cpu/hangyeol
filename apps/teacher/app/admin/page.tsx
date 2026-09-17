@@ -15,8 +15,9 @@ import { Shell } from '../Shell';
  * 경고선을 숫자 옆에 붙인다. 숫자만 보여주면 매번 사람이 판단해야 하고,
  * 판단을 매번 시키면 언젠가 놓친다.
  *
- * 09번 문서는 관리자에 IP 화이트리스트 + 2FA 를 요구한다. 아직 없다.
- * 그래서 이 화면은 개인정보를 일절 내보내지 않는다 — 전부 집계값이다.
+ * 09번 문서가 요구하는 IP 허용목록 + 2FA 는 /admin/security 에서 등록하고,
+ * 관리자 API 는 그 승급 세션 없이는 열리지 않는다.
+ * 그럼에도 이 화면은 개인정보를 일절 내보내지 않는다 — 전부 집계값이다.
  */
 
 interface Metric {
@@ -122,6 +123,16 @@ export default function AdminPage() {
       <Section title="강사 (고객)" metrics={data.teachers} />
       <Section title="결제" metrics={data.payments} />
       <Section title="잠금장치 무결성" metrics={data.integrity} />
+
+      {/*
+        숫자에서 목록으로 가는 길. 건수만 보여 주면 누구를 봐야 하는지 알 수 없고,
+        알 수 없으면 아무도 확인하지 않는다 (02번 G-03 "사람이 확인한다").
+      */}
+      <p style={{ margin: '10px 0 0' }}>
+        <Link href="/admin/flags" style={{ fontSize: 'var(--fs-body-sm)' }}>
+          우회 의심 목록 →
+        </Link>
+      </p>
 
       <Panel style={{ marginTop: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>

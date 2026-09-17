@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Eyebrow, Panel, Tag } from '@hangyeol/ui';
+import { get, post } from '../../api-client';
 import { Shell } from '../../Shell';
 
 /*
@@ -42,9 +43,9 @@ export default function AdminTeachersPage() {
     setRows(null);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/teachers?status=${s}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message ?? '목록을 불러오지 못했어요');
+      // api-client 를 쓰는 이유: 세션 만료와 관리자 2단계 인증(09번 §6)을
+      // 화면마다 따로 처리하지 않기 위해서다. 판단은 거기 한 곳에 있다.
+      const data = await get<{ teachers: Applicant[] }>(`/api/admin/teachers?status=${s}`);
       setRows(data.teachers);
     } catch (e) {
       setError(e instanceof Error ? e.message : '목록을 불러오지 못했어요');
@@ -131,13 +132,7 @@ function Row({ a, status, onDone }: { a: Applicant; status: Status; onDone: () =
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/teachers', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ teacherId: a.id, decision, reason }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message ?? '처리하지 못했어요');
+      await post('/api/admin/teachers', { teacherId: a.id, decision, reason });
       onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : '처리하지 못했어요');

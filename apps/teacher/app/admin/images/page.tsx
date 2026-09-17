@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button, Eyebrow, Panel, Tag } from '@hangyeol/ui';
-import { get } from '../../api-client';
+import { adminStepUpRedirect, get } from '../../api-client';
 import { Shell } from '../../Shell';
 
 /*
@@ -209,7 +209,12 @@ function ImageRow({
         body: file,
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error?.message ?? '업로드하지 못했습니다');
+      if (!res.ok) {
+        // 본문이 JSON 이 아니라 api-client 를 지나지 않는다.
+        // 관리자 2단계 인증 판단만 같은 함수에 맡긴다(09번 §6).
+        adminStepUpRedirect(res.status, body?.error?.code);
+        throw new Error(body?.error?.message ?? '업로드하지 못했습니다');
+      }
       onUploaded();
     } catch (e) {
       setFailure(e instanceof Error ? e.message : '업로드하지 못했습니다');
